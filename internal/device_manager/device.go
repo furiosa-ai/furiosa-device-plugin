@@ -4,15 +4,12 @@ import (
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-type DevicePolicy string
-
 type DeviceInfo interface {
 	DeviceID() string
 	PCIBusID() string
 	NUMANode() int
 	IsHealthy() (bool, error)
 	IsFullDevice() bool
-	AllowedPolicy() []DevicePolicy
 }
 
 type Manifest interface {
