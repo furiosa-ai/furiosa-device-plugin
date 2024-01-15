@@ -1,3 +1,3 @@
-deviceStrategy:
+resourceUnitStrategyConfig:
   strategy: wrong
 debugMode: true

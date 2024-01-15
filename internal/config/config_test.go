@@ -19,8 +19,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:     "./tests/",
 			configFilename: "legacy_strategy.yaml",
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "legacy"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "legacy"},
+				DebugMode:                  true,
 			},
 			expectedError: false,
 		},
@@ -29,38 +29,38 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:     "./tests/",
 			configFilename: "generic_strategy.yaml",
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  true,
 			},
 			expectedError: false,
 		},
 		{
-			description:    "parse single-pe-isolation configuration",
+			description:    "parse single-core configuration",
 			configPath:     "./tests/",
-			configFilename: "single_pe_isolation_strategy.yaml",
+			configFilename: "single_core_strategy.yaml",
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "single-pe-isolation"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "single-core"},
+				DebugMode:                  true,
 			},
 			expectedError: false,
 		},
 		{
-			description:    "parse 2pe-fusion configuration",
+			description:    "parse dual-core configuration",
 			configPath:     "./tests/",
-			configFilename: "two_pe_fusion_strategy.yaml",
+			configFilename: "dual_core_strategy.yaml",
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "2pe-fusion"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "dual-core"},
+				DebugMode:                  true,
 			},
 			expectedError: false,
 		},
 		{
-			description:    "parse 4pe-fusion configuration",
+			description:    "parse quad-core configuration",
 			configPath:     "./tests/",
-			configFilename: "four_pe_fusion_strategy.yaml",
+			configFilename: "quad_core_strategy.yaml",
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "4pe-fusion"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "quad-core"},
+				DebugMode:                  true,
 			},
 			expectedError: false,
 		},
@@ -103,7 +103,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 			description:    "test legacy Strategy",
 			configFilePath: abs("./tests/legacy_strategy.yaml"),
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{
 					Strategy: "legacy",
 				},
 				DebugMode: true,
@@ -114,7 +114,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 			description:    "test generic Strategy",
 			configFilePath: abs("./tests/generic_strategy.yaml"),
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{
 					Strategy: "generic",
 				},
 				DebugMode: true,
@@ -122,33 +122,33 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "test single pe isolation Strategy",
-			configFilePath: abs("./tests/single_pe_isolation_strategy.yaml"),
+			description:    "test single core Strategy",
+			configFilePath: abs("./tests/single_core_strategy.yaml"),
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{
-					Strategy: "single-pe-isolation",
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{
+					Strategy: "single-core",
 				},
 				DebugMode: true,
 			},
 			expectedError: false,
 		},
 		{
-			description:    "two pe fusion Strategy",
-			configFilePath: abs("./tests/two_pe_fusion_strategy.yaml"),
+			description:    "test dual core Strategy",
+			configFilePath: abs("./tests/dual_core_strategy.yaml"),
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{
-					Strategy: "2pe-fusion",
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{
+					Strategy: "dual-core",
 				},
 				DebugMode: true,
 			},
 			expectedError: false,
 		},
 		{
-			description:    "four pe fusion Strategy",
-			configFilePath: abs("./tests/four_pe_fusion_strategy.yaml"),
+			description:    "test quad core Strategy",
+			configFilePath: abs("./tests/quad_core_strategy.yaml"),
 			expectedResult: &Config{
-				DeviceStrategy: DeviceStrategyConfig{
-					Strategy: "4pe-fusion",
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{
+					Strategy: "quad-core",
 				},
 				DebugMode: true,
 			},
@@ -190,61 +190,61 @@ func TestMergeConfig(t *testing.T) {
 		{
 			description: "merge same configs",
 			globalConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 			localConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 			expectedConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 		},
 		{
 			description: "merge device Strategy",
 			globalConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "legacy"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "legacy"},
+				DebugMode:                  false,
 			},
 			localConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 			expectedConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 		},
 		{
 			description: "merge debug mode",
 			globalConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  false,
 			},
 			localConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  true,
 			},
 			expectedConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  true,
 			},
 		},
 		{
 			description: "merge Strategy and debug mode",
 			globalConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "legacy"},
-				DebugMode:      false,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "legacy"},
+				DebugMode:                  false,
 			},
 			localConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  true,
 			},
 			expectedConfig: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: "generic"},
-				DebugMode:      true,
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: "generic"},
+				DebugMode:                  true,
 			},
 		},
 	}
@@ -286,52 +286,52 @@ func TestIsDebugMode(t *testing.T) {
 	}
 }
 
-func TestGetDeviceStrategy(t *testing.T) {
+func TestResourceUnitStrategyConfig(t *testing.T) {
 	tests := []struct {
 		description            string
 		config                 *Config
-		expectedDeviceStrategy DeviceStrategy
+		expectedDeviceStrategy ResourceUnitStrategy
 	}{
 		{
 			description: "test legacy Strategy",
 			config: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: legacyStrategyStr},
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: legacyStrategyStr},
 			},
 			expectedDeviceStrategy: LegacyStrategy,
 		},
 		{
 			description: "test generic Strategy",
 			config: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: genericStrategyStr},
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: genericStrategyStr},
 			},
 			expectedDeviceStrategy: GenericStrategy,
 		},
 		{
-			description: "test single pe isolation Strategy",
+			description: "test single core Strategy",
 			config: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: singlePeIsolationStr},
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: singleCoreStr},
 			},
-			expectedDeviceStrategy: SinglePeIsolation,
+			expectedDeviceStrategy: SingleCoreStrategy,
 		},
 		{
-			description: "test two pe fusion Strategy",
+			description: "test dual core Strategy",
 			config: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: twoPeFusionStr},
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: dualCoreStr},
 			},
-			expectedDeviceStrategy: TwoPeFusion,
+			expectedDeviceStrategy: DualCoreStrategy,
 		},
 		{
-			description: "test four pe fusion Strategy",
+			description: "test quad core Strategy",
 			config: &Config{
-				DeviceStrategy: DeviceStrategyConfig{Strategy: fourPeFusionStr},
+				ResourceUnitStrategyConfig: ResourceUnitStrategyConfig{Strategy: quadCoreStr},
 			},
-			expectedDeviceStrategy: FourPeFusion,
+			expectedDeviceStrategy: QuadCoreStrategy,
 		},
 	}
 
 	for _, tc := range tests {
-		if tc.config.GetDeviceStrategy() != tc.expectedDeviceStrategy {
-			t.Errorf("expected %v but got %v", tc.expectedDeviceStrategy, tc.config.GetDeviceStrategy())
+		if tc.config.GetResourceUnitStrategyConfig() != tc.expectedDeviceStrategy {
+			t.Errorf("expected %v but got %v", tc.expectedDeviceStrategy, tc.config.GetResourceUnitStrategyConfig())
 		}
 	}
 }

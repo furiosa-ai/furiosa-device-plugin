@@ -1,3 +1,0 @@
-deviceStrategy:
-  strategy: single-pe-isolation
-debugMode: true

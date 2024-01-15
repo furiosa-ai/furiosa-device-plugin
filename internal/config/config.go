@@ -14,48 +14,48 @@ const (
 	globalConfigMountPath = "/etc/config/global_config.yaml"
 	legacyStrategyStr     = "legacy"
 	genericStrategyStr    = "generic"
-	singlePeIsolationStr  = "single-pe-isolation"
-	twoPeFusionStr        = "2pe-fusion"
-	fourPeFusionStr       = "4pe-fusion"
+	singleCoreStr         = "single-core"
+	dualCoreStr           = "dual-core"
+	quadCoreStr           = "quad-core"
 )
 
-type DeviceStrategy string
+type ResourceUnitStrategy string
 
 const (
-	LegacyStrategy    DeviceStrategy = legacyStrategyStr
-	GenericStrategy   DeviceStrategy = genericStrategyStr
-	SinglePeIsolation DeviceStrategy = singlePeIsolationStr
-	TwoPeFusion       DeviceStrategy = twoPeFusionStr
-	FourPeFusion      DeviceStrategy = fourPeFusionStr
+	LegacyStrategy     ResourceUnitStrategy = legacyStrategyStr
+	GenericStrategy    ResourceUnitStrategy = genericStrategyStr
+	SingleCoreStrategy ResourceUnitStrategy = singleCoreStr
+	DualCoreStrategy   ResourceUnitStrategy = dualCoreStr
+	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
-type DeviceStrategyConfig struct {
+type ResourceUnitStrategyConfig struct {
 	Strategy string `yaml:"strategy" validate:"required"`
 }
 
 type Config struct {
-	DeviceStrategy DeviceStrategyConfig `yaml:"deviceStrategy" validate:"required"`
-	DebugMode      bool                 `yaml:"debugMode"`
+	ResourceUnitStrategyConfig ResourceUnitStrategyConfig `yaml:"resourceUnitStrategyConfig" validate:"required"`
+	DebugMode                  bool                       `yaml:"debugMode"`
 }
 
 func (c *Config) IsDebugMode() bool {
 	return c.DebugMode
 }
 
-func (c *Config) GetDeviceStrategy() DeviceStrategy {
-	var strategy DeviceStrategy = ""
+func (c *Config) GetResourceUnitStrategyConfig() ResourceUnitStrategy {
+	var strategy ResourceUnitStrategy = ""
 	//Note(@bg): struct validation guarantees that the value is one of following.
-	switch c.DeviceStrategy.Strategy {
+	switch c.ResourceUnitStrategyConfig.Strategy {
 	case legacyStrategyStr:
 		strategy = LegacyStrategy
 	case genericStrategyStr:
 		strategy = GenericStrategy
-	case singlePeIsolationStr:
-		strategy = SinglePeIsolation
-	case twoPeFusionStr:
-		strategy = TwoPeFusion
-	case fourPeFusionStr:
-		strategy = FourPeFusion
+	case singleCoreStr:
+		strategy = SingleCoreStrategy
+	case dualCoreStr:
+		strategy = DualCoreStrategy
+	case quadCoreStr:
+		strategy = QuadCoreStrategy
 	}
 	return strategy
 }
@@ -110,23 +110,23 @@ func getValidatedConfigAndWatch(confUpdateChan chan *fsnotify.Event, configFileP
 
 	validate := validator.New()
 	validate.RegisterStructValidation(func(sl validator.StructLevel) {
-		deviceStrategy := sl.Current().Interface().(DeviceStrategyConfig)
+		deviceStrategy := sl.Current().Interface().(ResourceUnitStrategyConfig)
 		switch deviceStrategy.Strategy {
 		case legacyStrategyStr:
 			return
 		case genericStrategyStr:
 			return
-		case singlePeIsolationStr:
+		case singleCoreStr:
 			return
-		case twoPeFusionStr:
+		case dualCoreStr:
 			return
-		case fourPeFusionStr:
+		case quadCoreStr:
 			return
 		default:
-			sl.ReportError(deviceStrategy.Strategy, "Strategy", "DeviceStrategy", "required", "")
+			sl.ReportError(deviceStrategy.Strategy, "Strategy", "ResourceUnitStrategy", "required", "")
 		}
 
-	}, DeviceStrategyConfig{})
+	}, ResourceUnitStrategyConfig{})
 
 	err = validate.Struct(conf)
 	if err != nil {
