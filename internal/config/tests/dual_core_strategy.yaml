@@ -1,3 +1,4 @@
-resourceUnitStrategyConfig:
-  strategy: dual-core
+resourceStrategyMap:
+  - warboy: dual-core
+  - renegade: dual-core
 debugMode: true

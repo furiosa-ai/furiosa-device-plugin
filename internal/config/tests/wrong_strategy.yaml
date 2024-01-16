@@ -1,3 +1,4 @@
-resourceUnitStrategyConfig:
-  strategy: wrong
+resourceStrategyMap:
+  - warboy: wrong
+  - renegade: wrong
 debugMode: true

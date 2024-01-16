@@ -1,3 +1,4 @@
-resourceUnitStrategyConfig:
-  strategy: legacy
+resourceStrategyMap:
+  - warboy: legacy
+  - renegade: legacy
 debugMode: true

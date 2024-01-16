@@ -1,3 +1,4 @@
 resourceStrategyMap:
+  - warboy: legacy
   - renegade: quad-core
 debugMode: true

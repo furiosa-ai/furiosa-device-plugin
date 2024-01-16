@@ -15,8 +15,9 @@ type DeviceManager interface {
 var _ DeviceManager = (*deviceManager)(nil)
 
 type deviceManager struct {
-	strategy config.ResourceUnitStrategy
-	origin   []device.Device
+	strategy  config.ResourceUnitStrategy
+	origin    []device.Device
+	debugMode bool
 }
 
 func (d deviceManager) HealthCheck() error {
@@ -34,11 +35,12 @@ func (d deviceManager) Devices() []FuriosaDevice {
 	panic("implement me")
 }
 
-func NewDeviceManager(devices []device.Device, conf *config.Config) DeviceManager {
+func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, debugMode bool) DeviceManager {
 	//TODO(@bg): resource name should be validated with NameIsDNSSubdomain(...)
 	//TODO(@bg): create furiosa devices based on the given policy
 	return &deviceManager{
-		strategy: conf.GetResourceUnitStrategyConfig(),
-		origin:   devices,
+		strategy:  strategy,
+		origin:    devices,
+		debugMode: debugMode,
 	}
 }

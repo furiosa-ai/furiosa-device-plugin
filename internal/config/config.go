@@ -17,6 +17,8 @@ const (
 	singleCoreStr         = "single-core"
 	dualCoreStr           = "dual-core"
 	quadCoreStr           = "quad-core"
+	warboyStr             = "warboy"
+	renegadeStr           = "renegade"
 )
 
 type ResourceUnitStrategy string
@@ -29,35 +31,24 @@ const (
 	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
-type ResourceUnitStrategyConfig struct {
-	Strategy string `yaml:"strategy" validate:"required"`
-}
+type ResourceKind string
+
+const (
+	Warboy   ResourceKind = warboyStr
+	Renegade ResourceKind = renegadeStr
+)
 
 type Config struct {
-	ResourceUnitStrategyConfig ResourceUnitStrategyConfig `yaml:"resourceUnitStrategyConfig" validate:"required"`
-	DebugMode                  bool                       `yaml:"debugMode"`
+	ResourceStrategyMap map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
+	DebugMode           bool                                  `yaml:"debugMode"`
 }
 
 func (c *Config) IsDebugMode() bool {
 	return c.DebugMode
 }
 
-func (c *Config) GetResourceUnitStrategyConfig() ResourceUnitStrategy {
-	var strategy ResourceUnitStrategy = ""
-	//Note(@bg): struct validation guarantees that the value is one of following.
-	switch c.ResourceUnitStrategyConfig.Strategy {
-	case legacyStrategyStr:
-		strategy = LegacyStrategy
-	case genericStrategyStr:
-		strategy = GenericStrategy
-	case singleCoreStr:
-		strategy = SingleCoreStrategy
-	case dualCoreStr:
-		strategy = DualCoreStrategy
-	case quadCoreStr:
-		strategy = QuadCoreStrategy
-	}
-	return strategy
+func (c *Config) GetResourceStrategyMap() map[ResourceKind]ResourceUnitStrategy {
+	return c.ResourceStrategyMap
 }
 
 func GetMergedConfigWithWatcher(confUpdateChan chan *fsnotify.Event, localConfigPath string) (*Config, error) {
@@ -110,23 +101,37 @@ func getValidatedConfigAndWatch(confUpdateChan chan *fsnotify.Event, configFileP
 
 	validate := validator.New()
 	validate.RegisterStructValidation(func(sl validator.StructLevel) {
-		deviceStrategy := sl.Current().Interface().(ResourceUnitStrategyConfig)
-		switch deviceStrategy.Strategy {
-		case legacyStrategyStr:
-			return
-		case genericStrategyStr:
-			return
-		case singleCoreStr:
-			return
-		case dualCoreStr:
-			return
-		case quadCoreStr:
-			return
-		default:
-			sl.ReportError(deviceStrategy.Strategy, "Strategy", "ResourceUnitStrategy", "required", "")
-		}
+		conf := sl.Current().Interface().(Config)
 
-	}, ResourceUnitStrategyConfig{})
+		for key, strategy := range conf.ResourceStrategyMap {
+			switch key {
+			case Warboy:
+				switch strategy {
+				case LegacyStrategy:
+				case GenericStrategy:
+				case SingleCoreStrategy:
+				case DualCoreStrategy:
+				default:
+					// Unknown or unsupported strategy(quad core)
+					sl.ReportError(conf.ResourceStrategyMap, "ResourceStrategyMap", "resourceStrategyMap", "required", "")
+				}
+			case Renegade:
+				switch strategy {
+				case LegacyStrategy:
+				case GenericStrategy:
+				case SingleCoreStrategy:
+				case DualCoreStrategy:
+				case QuadCoreStrategy:
+				default:
+					// Unknown strategy
+					sl.ReportError(conf.ResourceStrategyMap, "ResourceStrategyMap", "resourceStrategyMap", "required", "")
+				}
+			default:
+				//Unknown resource kind.
+				sl.ReportError(conf.ResourceStrategyMap, "ResourceStrategyMap", "resourceStrategyMap", "required", "")
+			}
+		}
+	}, Config{})
 
 	err = validate.Struct(conf)
 	if err != nil {
@@ -143,7 +148,8 @@ func getValidatedConfigAndWatch(confUpdateChan chan *fsnotify.Event, configFileP
 
 func getDefaultConfig() *Config {
 	return &Config{
-		DebugMode: false,
+		ResourceStrategyMap: nil,
+		DebugMode:           false,
 	}
 }
 

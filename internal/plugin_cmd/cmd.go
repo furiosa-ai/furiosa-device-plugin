@@ -101,9 +101,13 @@ func start(ctx context.Context) error {
 		return noDeviceError
 	}
 
+	kindToUnitStrategy := conf.GetResourceStrategyMap()
+
 	var pluginServers []server.PluginServer
-	for _, devices := range deviceMap {
-		deviceManager := device_manager.NewDeviceManager(devices, conf)
+	for arch, devices := range deviceMap {
+		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch)]
+
+		deviceManager := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DebugMode)
 		logger.Info().Msg(fmt.Sprintf("starting new plugin server for %s", deviceManager.ResourceName()))
 
 		newPluginServerCtx, newPluginServerCancelFunc := context.WithCancel(context.Background())
