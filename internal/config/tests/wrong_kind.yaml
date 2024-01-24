@@ -1,0 +1,5 @@
+resourceStrategyMap:
+  - warboy: generic
+  - renegade: generic
+  - unknown: generic
+debugMode: true

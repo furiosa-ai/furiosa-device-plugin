@@ -1,0 +1,4 @@
+resourceStrategyMap:
+  - warboy: dual-core
+  - renegade: dual-core
+debugMode: true

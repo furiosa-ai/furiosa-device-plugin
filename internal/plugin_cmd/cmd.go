@@ -1,0 +1,165 @@
+package plugin_cmd
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/server"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+
+	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+)
+
+const (
+	cmdUse                       = "furiosa-device-plugin"
+	cmdShort                     = "Furiosa Device Plugin for Kubernetes"
+	cmdExample                   = "furiosa-device-plugin -localConfigPath = {path}"
+	flagLocalConfigPathName      = "localConfigPath"
+	flagLocalConfigPathShorthand = "l"
+	flagLocalConfigPathValue     = "" //default value
+	flagLocalConfigPathUsage     = "[optional] local configuration file path"
+)
+
+var localConfigPath string
+
+func NewDevicePluginCommand() *cobra.Command {
+	devicePluginCmd := &cobra.Command{
+		Use:     cmdUse,
+		Short:   cmdShort,
+		Example: cmdExample,
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return start(cmd.Context())
+		},
+	}
+
+	// configure flags
+	flagSet := devicePluginCmd.Flags()
+	flagSet.StringVarP(&localConfigPath, flagLocalConfigPathName, flagLocalConfigPathShorthand, flagLocalConfigPathValue, flagLocalConfigPathUsage)
+
+	return devicePluginCmd
+
+}
+
+func start(ctx context.Context) error {
+	// create core loop logger
+	logger := zerolog.New(os.Stdout).With().Timestamp().Str("subject", "core_loop").Logger()
+	_ = logger.WithContext(ctx)
+
+	//filesystem event listener for kubelet socket change by kubelet restart and configuration update
+	fsWatcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+
+	// watch device-plugin path for kubelet restart
+	fsErr := fsWatcher.Add(DevicePluginAPIv1Beta1.DevicePluginPath)
+	if fsErr != nil {
+		logger.Err(fsErr).Msg(fmt.Sprintf("couldn't watch the path %s", DevicePluginAPIv1Beta1.DevicePluginPath))
+		return nil
+	}
+
+	//os signal listener
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGURG, syscall.SIGQUIT)
+
+	//grpc server panic listener
+	grpcErrChan := make(chan error, 1)
+
+	confUpdateChan := make(chan *fsnotify.Event, 1)
+	conf, err := config.GetMergedConfigWithWatcher(confUpdateChan, localConfigPath)
+	if err != nil {
+		logger.Err(err).Msg("couldn't parse configuration")
+		return err
+	}
+
+	defer func() {
+		logger.Info().Msg("closing channels")
+		_ = fsWatcher.Close()
+		signal.Stop(sigChan)
+		close(sigChan)
+		close(grpcErrChan)
+		close(confUpdateChan)
+	}()
+
+	deviceMap, err := server.BuildDeviceMap()
+	if err != nil {
+		logger.Err(err).Msg("couldn't build device-map with device-api")
+		return err
+	}
+
+	if len(deviceMap) == 0 {
+		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
+		logger.Err(noDeviceError).Msg("no device detected")
+		return noDeviceError
+	}
+
+	kindToUnitStrategy := conf.GetResourceStrategyMap()
+
+	var pluginServers []server.PluginServer
+	for arch, devices := range deviceMap {
+		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch)]
+
+		deviceManager := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DebugMode)
+		logger.Info().Msg(fmt.Sprintf("starting new plugin server for %s", deviceManager.ResourceName()))
+
+		newPluginServerCtx, newPluginServerCancelFunc := context.WithCancel(context.Background())
+		newPluginServerLogger := zerolog.New(os.Stdout).With().Timestamp().Str("subject", "plugin_server_"+deviceManager.ResourceName()).Logger()
+		newPluginServerCtx = newPluginServerLogger.WithContext(newPluginServerCtx)
+
+		pluginServer := server.NewPluginServerWithContext(newPluginServerCtx, newPluginServerCancelFunc, deviceManager, conf)
+		if err = startServerWithContext(newPluginServerCtx, pluginServer, grpcErrChan); err != nil {
+			logger.Err(err).Msg(fmt.Sprintf("couldn't start plugin server for %s", deviceManager.ResourceName()))
+			return err
+		}
+
+		pluginServers = append(pluginServers, pluginServer)
+	}
+
+	logger.Info().Msg("start event loop")
+
+Loop:
+	for {
+		select {
+		case fsEvent := <-fsWatcher.Events:
+			// Note(@bg): the device-plugin should be re-registered to kubelet if the kubelet is restarted.
+			// https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/#handling-kubelet-restarts
+			if fsEvent.Name == DevicePluginAPIv1Beta1.KubeletSocket && fsEvent.Op&fsnotify.Create == fsnotify.Create {
+				logger.Err(err).Msg("kubelet socket is newly created, the device plugin should be restarted.")
+				break Loop
+			}
+		case sig := <-sigChan:
+			logger.Err(err).Msg(fmt.Sprintf("signal %d recevied.", sig))
+			break Loop
+		case grpcErr := <-grpcErrChan:
+			logger.Err(grpcErr).Msg("error received from grpc server error channel")
+			break Loop
+		case confChangedEvent := <-confUpdateChan:
+			logger.Info().Msg(fmt.Sprintf("configuration file %s has been changed: %s, restarting device-plugin", confChangedEvent.Name, confChangedEvent.String()))
+			break Loop
+		}
+	}
+
+	logger.Info().Msg("stopping pluginServers")
+	for _, pluginServer := range pluginServers {
+		if err := stopServer(pluginServer); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func startServerWithContext(ctx context.Context, server server.PluginServer, grpcErrChan chan error) error {
+	return server.StartWithContext(ctx, grpcErrChan)
+}
+func stopServer(server server.PluginServer) error {
+	return server.Stop()
+}
