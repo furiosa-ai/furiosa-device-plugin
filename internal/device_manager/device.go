@@ -4,10 +4,14 @@ import (
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
+const (
+	readOnlyOpt = "ro"
+)
+
 type DeviceInfo interface {
-	DeviceID() string
-	PCIBusID() string
-	NUMANode() int
+	DeviceID() (string, error)
+	PCIBusID() (string, error)
+	NUMANode() (int, error)
 	IsHealthy() (bool, error)
 	IsFullDevice() bool
 }
@@ -15,8 +19,8 @@ type DeviceInfo interface {
 type Manifest interface {
 	EnvVars() map[string]string
 	Annotations() map[string]string
-	DeviceNodes() []*DevicePluginAPIv1Beta1.DeviceSpec
-	MountPaths() []*DevicePluginAPIv1Beta1.Mount
+	DeviceSpecs() []*DevicePluginAPIv1Beta1.DeviceSpec
+	Mounts() []*DevicePluginAPIv1Beta1.Mount
 	CDIDevices() []*DevicePluginAPIv1Beta1.CDIDevice
 }
 
