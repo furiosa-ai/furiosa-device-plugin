@@ -107,7 +107,11 @@ func start(ctx context.Context) error {
 	for arch, devices := range deviceMap {
 		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch)]
 
-		deviceManager := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DebugMode)
+		deviceManager, err := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DebugMode)
+		if err != nil {
+			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch))
+			return err
+		}
 		logger.Info().Msg(fmt.Sprintf("starting new plugin server for %s", deviceManager.ResourceName()))
 
 		newPluginServerCtx, newPluginServerCancelFunc := context.WithCancel(context.Background())
