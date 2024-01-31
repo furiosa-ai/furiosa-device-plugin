@@ -1,31 +1,51 @@
 SHELL := /bin/bash
 
+# make assumption that hwloc is installed with brew command "brew install hwloc"
+ifeq ($(shell uname -s),Darwin)
+    CGO_CFLAGS := -I/opt/homebrew/opt/hwloc/include
+    CGO_LDFLAGS := -L/opt/homebrew/opt/hwloc/lib
+endif
+
+define install_deps_function
+    @UNAME_S=$$(uname -s); \
+    if [ "$$UNAME_S" = "Linux" ]; then \
+        echo "Installing for Ubuntu/Debian familly"; \
+        sudo apt-get install hwloc libhwloc-dev; \
+    elif [ "$$UNAME_S" = "Darwin" ]; then \
+        echo "macOS detected. Installing using Homebrew..."; \
+        brew install hwloc; \
+    else \
+        echo "Unsupported Operating System"; \
+        exit 1; \
+    fi
+endef
+
 .PHONY: all
 all: build fmt lint vet test tidy vendor
 
 .PHONY: build
 build:
-	go build cmd/main.go
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go build cmd/main.go
 
 .PHONY: fmt
 fmt:
-	go fmt ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go fmt ./...
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) golangci-lint run
 
 .PHONY: vet
 vet:
-	go vet -v ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go vet -v ./...
 
 .PHONY: test
 test:
-	go test ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test ./...
 
 .PHONY: cover
 cover:
-	go test -coverprofile=coverage.out ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
 
@@ -36,3 +56,7 @@ tidy:
 .PHONY:vendor
 vendor:
 	go mod vendor
+
+.PHONY: install-deps
+install-deps:
+	$(call install_deps_function)
