@@ -1,0 +1,39 @@
+name: test-grid
+
+#on:
+#  pull_request:
+#    types: [labeled]
+
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  go_version : '1.21.3'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        k8s-version: [ 'v1.20.15', 'v1.22.17', 'v1.23.17', 'v1.24.15', 'v1.25.11', 'v1.26.6', 'v1.27.3', 'v1.28.0', 'v1.29.1' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go ${{env.go_version}}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{env.go_version}}
+      - name: Display Go version
+        run: go version
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: device-plugin-e2e-${{ matrix.k8s-version }}
+          config: ./e2e/kind_config/kind_${{ matrix.k8s-version }}.yaml
+          kubectl_version: ${{ matrix.k8s-version }}
+      - name: Get node info
+        run: |
+          sleep 100s
+          kubectl get node -o yaml
+      #build and run e2e test suit
