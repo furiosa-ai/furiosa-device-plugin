@@ -4,7 +4,7 @@ github.com/bradfitz/iter
 # github.com/fsnotify/fsnotify v1.7.0
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.5
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.8
 ## explicit; go 1.21.3
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device/hwloc
