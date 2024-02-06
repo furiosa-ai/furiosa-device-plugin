@@ -1,6 +1,7 @@
 package device_manager
 
 import (
+	"errors"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -11,9 +12,47 @@ var _ FuriosaDevice = (*fullDevice)(nil)
 type fullDevice struct {
 	origin   device.Device
 	manifest manifest.Manifest
+	deviceID string
+	pciBusID string
+	numaNode int
 }
 
-func NewFullDevice(originDevice device.Device) FuriosaDevice {
+func parseDeviceInfo(originDevice device.Device) (deviceID, pciBusID string, numaNode int, err error) {
+	deviceID, err = originDevice.DeviceUUID()
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	busname, err := originDevice.Busname()
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	pciBusID, err = parseBusIDfromBDF(busname)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	unsignedNumaNode, err := originDevice.NumaNode()
+	if err != nil {
+		if errors.Is(err, device.UnexpectedValue) {
+			return deviceID, pciBusID, -1, nil
+		} else {
+			return "", "", 0, err
+		}
+	} else {
+		numaNode = int(unsignedNumaNode)
+	}
+
+	return deviceID, pciBusID, numaNode, err
+}
+
+func NewFullDevice(originDevice device.Device) (FuriosaDevice, error) {
+	deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+	if err != nil {
+		return nil, err
+	}
+
 	var newFullDeviceManifest manifest.Manifest
 	switch originDevice.Arch() {
 	case device.ArchWarboy:
@@ -21,41 +60,26 @@ func NewFullDevice(originDevice device.Device) FuriosaDevice {
 	case device.ArchRenegade:
 		//FIXME(@bg): create right manifest using device arch once manifest is ready for the renegade
 	}
+
 	return &fullDevice{
 		origin:   originDevice,
 		manifest: newFullDeviceManifest,
-	}
+		deviceID: deviceID,
+		pciBusID: pciBusID,
+		numaNode: int(numaNode),
+	}, nil
 }
 
-func (f *fullDevice) DeviceID() (string, error) {
-	uuid, err := f.origin.DeviceUUID()
-	if err != nil {
-		return "", err
-	}
-
-	return uuid, nil
+func (f *fullDevice) DeviceID() string {
+	return f.deviceID
 }
 
-func (f *fullDevice) PCIBusID() (string, error) {
-	busname, err := f.origin.Busname()
-	if err != nil {
-		return "", err
-	}
-
-	busId, err := parseBusIDfromBDF(busname)
-	if err != nil {
-		return "", err
-	}
-
-	return busId, nil
+func (f *fullDevice) PCIBusID() string {
+	return f.pciBusID
 }
 
-func (f *fullDevice) NUMANode() (int, error) {
-	numaNode, err := f.origin.NumaNode()
-	if err != nil {
-		return -1, err
-	}
-	return int(numaNode), nil
+func (f *fullDevice) NUMANode() int {
+	return f.numaNode
 }
 
 func (f *fullDevice) IsHealthy() (bool, error) {

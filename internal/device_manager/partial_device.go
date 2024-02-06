@@ -10,23 +10,23 @@ var _ FuriosaDevice = (*partialDevice)(nil)
 type partialDevice struct {
 }
 
-func NewPartialDevice(originDevice device.Device) FuriosaDevice {
-	return &partialDevice{}
+func NewPartialDevice(originDevice device.Device) (FuriosaDevice, error) {
+	return &partialDevice{}, nil
 }
 
-func (p partialDevice) DeviceID() (string, error) {
+func (p partialDevice) DeviceID() string {
 	//TODO implement me
-	return "", nil
+	return ""
 }
 
-func (p partialDevice) PCIBusID() (string, error) {
+func (p partialDevice) PCIBusID() string {
 	//TODO implement me
-	return "", nil
+	return ""
 }
 
-func (p partialDevice) NUMANode() (int, error) {
+func (p partialDevice) NUMANode() int {
 	//TODO implement me
-	return 0, nil
+	return 0
 }
 
 func (p partialDevice) IsHealthy() (bool, error) {

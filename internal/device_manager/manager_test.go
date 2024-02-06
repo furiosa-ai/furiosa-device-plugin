@@ -1,6 +1,8 @@
 package device_manager
 
 import (
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/bradfitz/iter"
@@ -12,7 +14,7 @@ func MockDeviceSlices() []device.Device {
 	mockDevices := []device.Device{}
 	for i := range iter.N(8) {
 		mockDevices = append(mockDevices,
-			device.NewMockWarboyDevice(uint8(i), 0, "", "", "", "", "", ""))
+			device.NewMockWarboyDevice(uint8(i), 0, fmt.Sprintf("0000:%d:00.0", i), "", "", "", "", strconv.Itoa(i)))
 	}
 	return mockDevices
 }
@@ -57,16 +59,22 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actualDevices := buildFuriosaDevices(tc.devices, newDeviceFuncResolver(tc.strategy))
-		actualDevice := actualDevices[0]
-		if tc.expectFullDevice {
-			if _, ok := actualDevice.(*fullDevice); !ok {
-				t.Errorf("expect full device but type assertion failed")
-			}
-		} else {
-			if _, ok := actualDevice.(*partialDevice); !ok {
-				t.Errorf("expect partial device but type assertion failed")
+		actualDevices, err := buildFuriosaDevices(tc.devices, newDeviceFuncResolver(tc.strategy))
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+		for _, actualDevice := range actualDevices {
+			if tc.expectFullDevice {
+				if _, ok := actualDevice.(*fullDevice); !ok {
+					t.Errorf("expect full device but type assertion failed")
+				}
+			} else {
+				if _, ok := actualDevice.(*partialDevice); !ok {
+					t.Errorf("expect partial device but type assertion failed")
+				}
 			}
 		}
+
 	}
 }

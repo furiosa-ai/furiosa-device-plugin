@@ -9,9 +9,9 @@ const (
 )
 
 type DeviceInfo interface {
-	DeviceID() (string, error)
-	PCIBusID() (string, error)
-	NUMANode() (int, error)
+	DeviceID() string
+	PCIBusID() string
+	NUMANode() int
 	IsHealthy() (bool, error)
 	IsFullDevice() bool
 }

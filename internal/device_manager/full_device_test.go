@@ -9,11 +9,19 @@ import (
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func NewMockFullDevice(mockDevice device.Device) FuriosaDevice {
+func NewMockFullDevice(mockDevice device.Device) (FuriosaDevice, error) {
+	deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
+	if err != nil {
+		return nil, err
+	}
+
 	return &fullDevice{
 		origin:   mockDevice,
 		manifest: manifest2.NewWarboyManifest(mockDevice),
-	}
+		deviceID: deviceID,
+		pciBusID: pciBusID,
+		numaNode: numaNode,
+	}, nil
 }
 
 func TestDeviceID(t *testing.T) {
@@ -24,19 +32,18 @@ func TestDeviceID(t *testing.T) {
 	}{
 		{
 			description:    "test device id",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "", "", "", "", "", "A76AAD68-6855-40B1-9E86-D080852D1C84"),
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "A76AAD68-6855-40B1-9E86-D080852D1C84"),
 			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C84",
 		},
 	}
 
 	for _, tc := range tests {
-		fullDev := NewMockFullDevice(tc.mockDevice)
-		actualResult, err := fullDev.DeviceID()
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
 		if err != nil {
-			t.Errorf("got unexpected error %t", err)
+			t.Errorf("unexpected error %t", err)
 			continue
 		}
-
+		actualResult := fullDev.DeviceID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -63,13 +70,13 @@ func TestPCIBusID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev := NewMockFullDevice(tc.mockDevice)
-		actualResult, err := fullDev.PCIBusID()
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
 		if err != nil {
-			t.Errorf("got unexpected error %t", err)
+			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
+		actualResult := fullDev.PCIBusID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -86,32 +93,32 @@ func TestNUMANode(t *testing.T) {
 	}{
 		{
 			description:    "test numa node 1",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "", "", "", "", "", ""),
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "0"),
 			expectedResult: 0,
 			expectError:    false,
 		},
 		{
 			description:    "test numa node 2",
-			mockDevice:     device.NewMockWarboyDevice(0, 1, "", "", "", "", "", ""),
+			mockDevice:     device.NewMockWarboyDevice(0, 1, "0000:6b:00.0", "", "", "", "", "1"),
 			expectedResult: 1,
 			expectError:    false,
 		},
 		{
 			description:    "test numa node 3",
-			mockDevice:     device.NewMockWarboyDevice(0, -1, "", "", "", "", "", ""),
+			mockDevice:     device.NewMockWarboyDevice(0, -1, "0000:6c:00.0", "", "", "", "", "2"),
 			expectedResult: -1,
 			expectError:    true,
 		},
 	}
 
 	for _, tc := range tests {
-		fullDev := NewMockFullDevice(tc.mockDevice)
-		actualResult, actualErr := fullDev.NUMANode()
-		if actualErr != nil != tc.expectError {
-			t.Errorf("unexpected error %t", actualErr)
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
+		actualResult := fullDev.NUMANode()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %d but got %d", tc.expectedResult, actualResult)
 		}
@@ -127,7 +134,7 @@ func TestDeviceSpecs(t *testing.T) {
 	}{
 		{
 			description: "test warboy full device",
-			mockDevice:  device.NewMockWarboyDevice(0, 0, "", "", "", "", "", ""),
+			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
 			expectedResult: []*DevicePluginAPIv1Beta1.DeviceSpec{
 				{
 					ContainerPath: "/dev/npu0_mgmt",
@@ -180,7 +187,12 @@ func TestDeviceSpecs(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
 		actualResult := fullDev.DeviceSpecs()
 		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
 			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
@@ -196,7 +208,7 @@ func TestMounts(t *testing.T) {
 	}{
 		{
 			description: "test warboy mount",
-			mockDevice:  device.NewMockWarboyDevice(0, 0, "", "", "", "", "", ""),
+			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
 			expectedResult: []*DevicePluginAPIv1Beta1.Mount{
 				{
 					ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
@@ -253,7 +265,12 @@ func TestMounts(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
 		actualResult := fullDev.Mounts()
 		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
 			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
