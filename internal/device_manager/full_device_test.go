@@ -277,3 +277,99 @@ func TestMounts(t *testing.T) {
 		}
 	}
 }
+
+func TestID(t *testing.T) {
+	tests := []struct {
+		description    string
+		mockDevice     device.Device
+		expectedResult string
+	}{
+		{
+			description:    "test id",
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "A76AAD68-6855-40B1-9E86-D080852D1C84"),
+			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C84",
+		},
+	}
+
+	for _, tc := range tests {
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+		actualResult := fullDev.ID()
+		if actualResult != tc.expectedResult {
+			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
+			continue
+		}
+	}
+}
+
+func TestTopologyHintKey(t *testing.T) {
+	tests := []struct {
+		description    string
+		mockDevice     device.Device
+		expectedResult string
+	}{
+		{
+			description:    "test topology hint",
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", ""),
+			expectedResult: "51",
+		},
+	}
+
+	for _, tc := range tests {
+		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
+		actualResult := fullDev.TopologyHintKey()
+		if actualResult != tc.expectedResult {
+			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
+			continue
+		}
+	}
+}
+
+func TestEqual(t *testing.T) {
+	tests := []struct {
+		description      string
+		mockSourceDevice device.Device
+		mockTargetDevice device.Device
+		expected         bool
+	}{
+		{
+			description:      "expect source and target are identical",
+			mockSourceDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
+			mockTargetDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
+			expected:         true,
+		},
+		{
+			description:      "expect source and target are not identical",
+			mockSourceDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
+			mockTargetDevice: device.NewMockWarboyDevice(0, 0, "0000:1a:00.0", "", "", "", "", "5"),
+			expected:         false,
+		},
+	}
+	for _, tc := range tests {
+		source, err := NewMockFullDevice(tc.mockSourceDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
+		target, err := NewMockFullDevice(tc.mockTargetDevice)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
+		actual := source.Equal(target)
+		if actual != tc.expected {
+			t.Errorf("expected %v but got %v", tc.expected, actual)
+			continue
+		}
+	}
+}

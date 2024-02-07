@@ -1,6 +1,7 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -27,4 +28,5 @@ type Manifest interface {
 type FuriosaDevice interface {
 	DeviceInfo
 	Manifest
+	npu_allocator.Device
 }

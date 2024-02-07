@@ -2,8 +2,10 @@ package device_manager
 
 import (
 	"errors"
+
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -148,4 +150,25 @@ func (f *fullDevice) Mounts() []*DevicePluginAPIv1Beta1.Mount {
 func (f *fullDevice) CDIDevices() []*DevicePluginAPIv1Beta1.CDIDevice {
 	//TODO(@bg): CDI will be supported once libfuriosa-kubernetes is ready for CDI and DRA.
 	return nil
+}
+
+func (f *fullDevice) ID() string {
+	return f.DeviceID()
+}
+
+func (f *fullDevice) TopologyHintKey() string {
+	return f.PCIBusID()
+}
+
+func (f *fullDevice) Equal(target npu_allocator.Device) bool {
+	converted, isFullDevice := target.(*fullDevice)
+	if !isFullDevice {
+		return false
+	}
+
+	if f.DeviceID() != converted.DeviceID() {
+		return false
+	}
+
+	return true
 }
