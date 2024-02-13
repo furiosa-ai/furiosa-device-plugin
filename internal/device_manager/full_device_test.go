@@ -368,7 +368,7 @@ func TestEqual(t *testing.T) {
 
 		actual := source.Equal(target)
 		if actual != tc.expected {
-			t.Errorf("expected %v but got %v", tc.expected, actual)
+			t.Errorf("expectedResult %v but got %v", tc.expected, actual)
 			continue
 		}
 	}
