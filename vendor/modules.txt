@@ -9,6 +9,7 @@ github.com/fsnotify/fsnotify
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device/hwloc
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
+github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
 # github.com/gabriel-vasile/mimetype v1.4.2
 ## explicit; go 1.20
 github.com/gabriel-vasile/mimetype
@@ -186,6 +187,9 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
+# gonum.org/v1/gonum v0.14.0
+## explicit; go 1.20
+gonum.org/v1/gonum/stat/combin
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
