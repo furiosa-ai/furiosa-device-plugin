@@ -1,0 +1,24 @@
+name: Build & Push devel container image for PR and new commit of main branch
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  docker_publish:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: benjlevesque/short-sha@v3.0
+        id: short-sha
+        with:
+          length: 10
+      - run: echo ${{ env.SHA }}
+      - name: Build and publish a Docker image for ${{ github.repository }}
+        uses: macbre/push-to-ghcr@v13
+        with:
+          image_name: ${{ github.repository }}
+          image_tag: ${{ env.SHA }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
