@@ -19,7 +19,7 @@ func TestParseBusIDfromBDF(t *testing.T) {
 		},
 		{
 			description:    "test positive2",
-			bdf:            "0011:9e:00.0)",
+			bdf:            "0011:9e:00.0",
 			expectedResult: "9e",
 			expectedError:  false,
 		},
