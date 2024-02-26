@@ -15,26 +15,15 @@ var (
 )
 
 func parseBusIDfromBDF(bdf string) (string, error) {
-	if !bdfRegExp.MatchString(bdf) {
+	matches := bdfRegExp.FindStringSubmatch(bdf)
+	if matches == nil {
 		return "", fmt.Errorf("couldn't parse the given string %s with bdf regex pattern: %s", bdf, bdfPattern)
 	}
 
-	matches := bdfRegExp.FindStringSubmatch(bdf)
-	subExps := bdfRegExp.SubexpNames()
-
-	namedMatches := map[string]string{}
-	for i, match := range matches {
-		subExp := subExps[i]
-		if subExp == "" {
-			continue
-		}
-		namedMatches[subExp] = match
-	}
-
-	busID, ok := namedMatches[subExpKeyBus]
-	if !ok {
+	subExpIndex := bdfRegExp.SubexpIndex(subExpKeyBus)
+	if subExpIndex == -1 {
 		return "", fmt.Errorf("couldn't parse bus id from the given bdf expression %s", bdf)
 	}
 
-	return busID, nil
+	return matches[subExpIndex], nil
 }
