@@ -18,12 +18,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"k8s.io/apimachinery/pkg/util/wait"
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-const socketPathExp = DevicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
+const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
 
-var _ DevicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
+var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
 type PluginServer struct {
 	config                *config.Config
@@ -61,7 +61,7 @@ func dialWithTimeout(socket string, timeout time.Duration) (*grpc.ClientConn, er
 
 func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan error) error {
 	logger := zerolog.Ctx(ctx)
-	DevicePluginAPIv1Beta1.RegisterDevicePluginServer(p.server, p)
+	devicePluginAPIv1Beta1.RegisterDevicePluginServer(p.server, p)
 
 	err := os.Remove(p.socket)
 	if err != nil && !os.IsNotExist(err) {
@@ -94,17 +94,17 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 	_ = conn.Close()
 
 	// register to kubelet
-	conn, err = dialWithTimeout(DevicePluginAPIv1Beta1.KubeletSocket, 5*time.Second)
+	conn, err = dialWithTimeout(devicePluginAPIv1Beta1.KubeletSocket, 5*time.Second)
 	if err != nil {
-		logger.Err(err).Msg(fmt.Sprintf("error received from %s dialer", DevicePluginAPIv1Beta1.KubeletSocket))
+		logger.Err(err).Msg(fmt.Sprintf("error received from %s dialer", devicePluginAPIv1Beta1.KubeletSocket))
 		return err
 	}
 
-	if _, err = DevicePluginAPIv1Beta1.NewRegistrationClient(conn).Register(ctx, &DevicePluginAPIv1Beta1.RegisterRequest{
-		Version:      DevicePluginAPIv1Beta1.Version,
+	if _, err = devicePluginAPIv1Beta1.NewRegistrationClient(conn).Register(ctx, &devicePluginAPIv1Beta1.RegisterRequest{
+		Version:      devicePluginAPIv1Beta1.Version,
 		Endpoint:     path.Base(p.socket),
 		ResourceName: p.deviceManager.ResourceName(),
-		Options: &DevicePluginAPIv1Beta1.DevicePluginOptions{
+		Options: &devicePluginAPIv1Beta1.DevicePluginOptions{
 			PreStartRequired:                false,
 			GetPreferredAllocationAvailable: true,
 		},
@@ -142,33 +142,33 @@ func (p *PluginServer) Stop() error {
 	return nil
 }
 
-func (p *PluginServer) GetDevicePluginOptions(_ context.Context, empty *DevicePluginAPIv1Beta1.Empty) (*DevicePluginAPIv1Beta1.DevicePluginOptions, error) {
-	return &DevicePluginAPIv1Beta1.DevicePluginOptions{
+func (p *PluginServer) GetDevicePluginOptions(_ context.Context, empty *devicePluginAPIv1Beta1.Empty) (*devicePluginAPIv1Beta1.DevicePluginOptions, error) {
+	return &devicePluginAPIv1Beta1.DevicePluginOptions{
 		PreStartRequired:                false,
 		GetPreferredAllocationAvailable: true,
 	}, nil
 }
 
-func (p *PluginServer) ListAndWatch(empty *DevicePluginAPIv1Beta1.Empty, server DevicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
+func (p *PluginServer) ListAndWatch(empty *devicePluginAPIv1Beta1.Empty, server devicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
 	//logger := zerolog.Ctx(ctx)
 	//TODO(@bg): handle health check error here
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *PluginServer) GetPreferredAllocation(ctx context.Context, request *DevicePluginAPIv1Beta1.PreferredAllocationRequest) (*DevicePluginAPIv1Beta1.PreferredAllocationResponse, error) {
+func (p *PluginServer) GetPreferredAllocation(ctx context.Context, request *devicePluginAPIv1Beta1.PreferredAllocationRequest) (*devicePluginAPIv1Beta1.PreferredAllocationResponse, error) {
 	//logger := zerolog.Ctx(ctx)
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *PluginServer) Allocate(ctx context.Context, request *DevicePluginAPIv1Beta1.AllocateRequest) (*DevicePluginAPIv1Beta1.AllocateResponse, error) {
+func (p *PluginServer) Allocate(ctx context.Context, request *devicePluginAPIv1Beta1.AllocateRequest) (*devicePluginAPIv1Beta1.AllocateResponse, error) {
 	//logger := zerolog.Ctx(ctx)
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *PluginServer) PreStartContainer(ctx context.Context, request *DevicePluginAPIv1Beta1.PreStartContainerRequest) (*DevicePluginAPIv1Beta1.PreStartContainerResponse, error) {
+func (p *PluginServer) PreStartContainer(ctx context.Context, request *devicePluginAPIv1Beta1.PreStartContainerRequest) (*devicePluginAPIv1Beta1.PreStartContainerResponse, error) {
 	//logger := zerolog.Ctx(ctx)
 	//TODO implement me
 	panic("implement me")

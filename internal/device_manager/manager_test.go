@@ -2,7 +2,7 @@ package device_manager
 
 import (
 	"fmt"
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	"math/rand"
 	"reflect"
 	"sort"
@@ -316,7 +316,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 		available      []string
 		required       []string
 		request        int
-		expectedResult *DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse
+		expectedResult *devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse
 		expectError    bool
 	}{
 		// start with socket 0
@@ -326,7 +326,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       nil,
 			request:        1,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0"},
 			},
 			expectError: false,
@@ -337,7 +337,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       []string{"3"},
 			request:        1,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"3"},
 			},
 			expectError: false,
@@ -348,7 +348,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       nil,
 			request:        2,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1"},
 			},
 			expectError: false,
@@ -359,7 +359,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       []string{"2", "3"},
 			request:        2,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"2", "3"},
 			},
 			expectError: false,
@@ -370,7 +370,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       []string{"2"},
 			request:        2,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"2", "3"},
 			},
 			expectError: false,
@@ -381,7 +381,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       nil,
 			request:        3,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2"},
 			},
 			expectError: false,
@@ -392,7 +392,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       []string{"3"},
 			request:        3,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "3"},
 			},
 			expectError: false,
@@ -403,7 +403,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       nil,
 			request:        4,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3"},
 			},
 			expectError: false,
@@ -414,7 +414,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3"},
 			required:       []string{"2", "3"},
 			request:        4,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3"},
 			},
 			expectError: false,
@@ -426,7 +426,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"4", "5", "6", "7"},
 			required:       nil,
 			request:        1,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"4"},
 			},
 			expectError: false,
@@ -437,7 +437,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"4", "5", "6", "7"},
 			required:       nil,
 			request:        2,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"4", "5"},
 			},
 			expectError: false,
@@ -448,7 +448,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"4", "5", "6", "7"},
 			required:       nil,
 			request:        3,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"4", "5", "6"},
 			},
 			expectError: false,
@@ -459,7 +459,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"4", "5", "6", "7"},
 			required:       nil,
 			request:        4,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"4", "5", "6", "7"},
 			},
 			expectError: false,
@@ -471,7 +471,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3", "4", "5", "6", "7"},
 			required:       nil,
 			request:        5,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3", "4"},
 			},
 			expectError: false,
@@ -482,7 +482,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3", "4", "5", "6", "7"},
 			required:       nil,
 			request:        6,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3", "4", "5"},
 			},
 			expectError: false,
@@ -493,7 +493,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3", "4", "5", "6", "7"},
 			required:       nil,
 			request:        7,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3", "4", "5", "6"},
 			},
 			expectError: false,
@@ -504,7 +504,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 			available:      []string{"0", "1", "2", "3", "4", "5", "6", "7"},
 			required:       nil,
 			request:        8,
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 				DeviceIDs: []string{"0", "1", "2", "3", "4", "5", "6", "7"},
 			},
 			expectError: false,
@@ -541,16 +541,16 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 		description    string
 		deviceSeedUUID []string
 		deviceIDs      []string
-		expectedResult *DevicePluginAPIv1Beta1.ContainerAllocateResponse
+		expectedResult *devicePluginAPIv1Beta1.ContainerAllocateResponse
 		expectError    bool
 	}{
 		{
 			description:    "allocate one device",
 			deviceSeedUUID: []string{"0"},
 			deviceIDs:      []string{"0"},
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerAllocateResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerAllocateResponse{
 				Envs: nil,
-				Mounts: []*DevicePluginAPIv1Beta1.Mount{
+				Mounts: []*devicePluginAPIv1Beta1.Mount{
 					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/class/npu_mgmt/npu0_mgmt",
@@ -602,7 +602,7 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 				},
-				Devices: []*DevicePluginAPIv1Beta1.DeviceSpec{
+				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",
@@ -658,9 +658,9 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 			description:    "allocate two devices",
 			deviceSeedUUID: []string{"0", "1"},
 			deviceIDs:      []string{"0", "1"},
-			expectedResult: &DevicePluginAPIv1Beta1.ContainerAllocateResponse{
+			expectedResult: &devicePluginAPIv1Beta1.ContainerAllocateResponse{
 				Envs: nil,
-				Mounts: []*DevicePluginAPIv1Beta1.Mount{
+				Mounts: []*devicePluginAPIv1Beta1.Mount{
 					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/class/npu_mgmt/npu0_mgmt",
@@ -762,7 +762,7 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 				},
-				Devices: []*DevicePluginAPIv1Beta1.DeviceSpec{
+				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",

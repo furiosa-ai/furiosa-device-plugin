@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 const (
@@ -60,9 +60,9 @@ func start(ctx context.Context) error {
 	}
 
 	// watch device-plugin path for kubelet restart
-	fsErr := fsWatcher.Add(DevicePluginAPIv1Beta1.DevicePluginPath)
+	fsErr := fsWatcher.Add(devicePluginAPIv1Beta1.DevicePluginPath)
 	if fsErr != nil {
-		logger.Err(fsErr).Msg(fmt.Sprintf("couldn't watch the path %s", DevicePluginAPIv1Beta1.DevicePluginPath))
+		logger.Err(fsErr).Msg(fmt.Sprintf("couldn't watch the path %s", devicePluginAPIv1Beta1.DevicePluginPath))
 		return nil
 	}
 
@@ -135,7 +135,7 @@ Loop:
 		case fsEvent := <-fsWatcher.Events:
 			// Note(@bg): the device-plugin should be re-registered to kubelet if the kubelet is restarted.
 			// https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/#handling-kubelet-restarts
-			if fsEvent.Name == DevicePluginAPIv1Beta1.KubeletSocket && fsEvent.Op&fsnotify.Create == fsnotify.Create {
+			if fsEvent.Name == devicePluginAPIv1Beta1.KubeletSocket && fsEvent.Op&fsnotify.Create == fsnotify.Create {
 				logger.Err(err).Msg("kubelet socket is newly created, the device plugin should be restarted.")
 				break Loop
 			}

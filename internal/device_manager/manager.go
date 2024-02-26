@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
@@ -18,8 +18,8 @@ type DeviceManager interface {
 	Devices() []string
 	HealthCheck() error
 	Contains(deviceIDs []string) bool
-	GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error)
-	GetContainerAllocateResponse(deviceIDs []string) (*DevicePluginAPIv1Beta1.ContainerAllocateResponse, error)
+	GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error)
+	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
 type newDeviceFunc func(originDevice device.Device) (FuriosaDevice, error)
@@ -121,7 +121,7 @@ func fetchByID[T any](furiosaDevices map[string]FuriosaDevice, IDs []string) ([]
 	return found, nil
 }
 
-func (d *deviceManager) GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error) {
+func (d *deviceManager) GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error) {
 	availableDevices, err := fetchByID[npu_allocator.Device](d.furiosaDevices, available)
 	if err != nil {
 		return nil, err
@@ -138,12 +138,12 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 		allocated = append(allocated, allocatedDevice.ID())
 	}
 
-	return &DevicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
+	return &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 		DeviceIDs: allocated,
 	}, nil
 }
 
-func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*DevicePluginAPIv1Beta1.ContainerAllocateResponse, error) {
+func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error) {
 	deviceRequests, err := fetchByID[FuriosaDevice](d.furiosaDevices, deviceIDs)
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*Devic
 
 	// TODO(@bg): filter devices marked disabled in configuration and return error if request contains one of them
 
-	resp := &DevicePluginAPIv1Beta1.ContainerAllocateResponse{}
+	resp := &devicePluginAPIv1Beta1.ContainerAllocateResponse{}
 	for _, deviceRequest := range deviceRequests {
 		maps.Copy(resp.Envs, deviceRequest.EnvVars())
 		resp.Mounts = append(resp.Mounts, deviceRequest.Mounts()...)

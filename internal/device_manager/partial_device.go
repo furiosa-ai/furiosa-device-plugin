@@ -3,7 +3,7 @@ package device_manager
 import (
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 var _ FuriosaDevice = (*partialDevice)(nil)
@@ -49,17 +49,17 @@ func (p partialDevice) Annotations() map[string]string {
 	return nil
 }
 
-func (p partialDevice) DeviceSpecs() []*DevicePluginAPIv1Beta1.DeviceSpec {
+func (p partialDevice) DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec {
 	//TODO implement me
 	return nil
 }
 
-func (p partialDevice) Mounts() []*DevicePluginAPIv1Beta1.Mount {
+func (p partialDevice) Mounts() []*devicePluginAPIv1Beta1.Mount {
 	//TODO implement me
 	return nil
 }
 
-func (p partialDevice) CDIDevices() []*DevicePluginAPIv1Beta1.CDIDevice {
+func (p partialDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	//TODO implement me
 	return nil
 }

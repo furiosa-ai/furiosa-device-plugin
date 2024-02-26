@@ -6,7 +6,7 @@ import (
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 var _ FuriosaDevice = (*fullDevice)(nil)
@@ -105,16 +105,16 @@ func (f *fullDevice) Annotations() map[string]string {
 	return f.manifest.Annotations()
 }
 
-func buildDeviceSpec(node *manifest.DeviceNode) *DevicePluginAPIv1Beta1.DeviceSpec {
-	return &DevicePluginAPIv1Beta1.DeviceSpec{
+func buildDeviceSpec(node *manifest.DeviceNode) *devicePluginAPIv1Beta1.DeviceSpec {
+	return &devicePluginAPIv1Beta1.DeviceSpec{
 		ContainerPath: node.ContainerPath,
 		HostPath:      node.HostPath,
 		Permissions:   node.Permissions,
 	}
 }
 
-func (f *fullDevice) DeviceSpecs() []*DevicePluginAPIv1Beta1.DeviceSpec {
-	var deviceSpecs []*DevicePluginAPIv1Beta1.DeviceSpec
+func (f *fullDevice) DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec {
+	var deviceSpecs []*devicePluginAPIv1Beta1.DeviceSpec
 
 	for _, deviceNode := range f.manifest.DeviceNodes() {
 		deviceSpecs = append(deviceSpecs, buildDeviceSpec(deviceNode))
@@ -123,8 +123,8 @@ func (f *fullDevice) DeviceSpecs() []*DevicePluginAPIv1Beta1.DeviceSpec {
 	return deviceSpecs
 }
 
-func (f *fullDevice) Mounts() []*DevicePluginAPIv1Beta1.Mount {
-	var mounts []*DevicePluginAPIv1Beta1.Mount
+func (f *fullDevice) Mounts() []*devicePluginAPIv1Beta1.Mount {
+	var mounts []*devicePluginAPIv1Beta1.Mount
 
 	for _, mount := range f.manifest.MountPaths() {
 		var readOnly = false
@@ -137,7 +137,7 @@ func (f *fullDevice) Mounts() []*DevicePluginAPIv1Beta1.Mount {
 			}
 		}
 
-		mounts = append(mounts, &DevicePluginAPIv1Beta1.Mount{
+		mounts = append(mounts, &devicePluginAPIv1Beta1.Mount{
 			ContainerPath: mount.ContainerPath,
 			HostPath:      mount.HostPath,
 			ReadOnly:      readOnly,
@@ -147,7 +147,7 @@ func (f *fullDevice) Mounts() []*DevicePluginAPIv1Beta1.Mount {
 	return mounts
 }
 
-func (f *fullDevice) CDIDevices() []*DevicePluginAPIv1Beta1.CDIDevice {
+func (f *fullDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	//TODO(@bg): CDI will be supported once libfuriosa-kubernetes is ready for CDI and DRA.
 	return nil
 }

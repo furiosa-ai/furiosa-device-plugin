@@ -6,7 +6,7 @@ import (
 
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	manifest2 "github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 func NewMockFullDevice(mockDevice device.Device) (FuriosaDevice, error) {
@@ -130,12 +130,12 @@ func TestDeviceSpecs(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     device.Device
-		expectedResult []*DevicePluginAPIv1Beta1.DeviceSpec
+		expectedResult []*devicePluginAPIv1Beta1.DeviceSpec
 	}{
 		{
 			description: "test warboy full device",
 			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
-			expectedResult: []*DevicePluginAPIv1Beta1.DeviceSpec{
+			expectedResult: []*devicePluginAPIv1Beta1.DeviceSpec{
 				{
 					ContainerPath: "/dev/npu0_mgmt",
 					HostPath:      "/dev/npu0_mgmt",
@@ -204,12 +204,12 @@ func TestMounts(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     device.Device
-		expectedResult []*DevicePluginAPIv1Beta1.Mount
+		expectedResult []*devicePluginAPIv1Beta1.Mount
 	}{
 		{
 			description: "test warboy mount",
 			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
-			expectedResult: []*DevicePluginAPIv1Beta1.Mount{
+			expectedResult: []*devicePluginAPIv1Beta1.Mount{
 				{
 					ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
 					HostPath:      "/sys/class/npu_mgmt/npu0_mgmt",
