@@ -10,12 +10,32 @@ import (
 	"k8s.io/apimachinery/pkg/api/validation"
 )
 
+const (
+	defaultDomain = "furiosa.ai"
+	legacyDomain  = "alpha.furiosa.ai"
+
+	coreUnitTagExp     = "%dcore"
+	memoryUnitTagExp   = "%dgb"
+	taggedResourceExp  = "%s-%s.%s"
+	fullResourceExp    = "%s/%s"
+	legacyResourceName = "npu"
+
+	warboyMaxMemory   = 16
+	warboyMaxCores    = 2
+	renegadeMaxMemory = 48
+	renegadeMaxCores  = 8
+
+	singleCore = 1
+	dualCore   = 2
+	quadCore   = 4
+)
+
 func buildDomainName(strategy config.ResourceUnitStrategy) string {
 	if strategy == config.LegacyStrategy {
-		return "alpha.furiosa.ai"
+		return legacyDomain
 	}
 
-	return "furiosa.ai"
+	return defaultDomain
 }
 
 func coreUnitValidator(min, max, core int) error {
@@ -48,32 +68,32 @@ func validateCoreUnit(arch device.Arch, coreUnit int) error {
 }
 
 func buildResourceEndpointCoreUnitTag(coreUnit int) string {
-	return fmt.Sprintf("%dcore", coreUnit)
+	return fmt.Sprintf(coreUnitTagExp, coreUnit)
 }
 
-func buildResourceEndpointMemoryTag(arch device.Arch, coreUnit int) string {
+func buildResourceEndpointMemoryUnitTag(arch device.Arch, coreUnit int) string {
 	if arch == device.ArchWarboy {
-		return fmt.Sprintf("%d", 16/(2/coreUnit))
+		return fmt.Sprintf(memoryUnitTagExp, coreUnit*(warboyMaxMemory/warboyMaxCores))
 	}
 
-	return fmt.Sprintf("%d", 48/(8/coreUnit))
+	return fmt.Sprintf(memoryUnitTagExp, coreUnit*(renegadeMaxMemory/renegadeMaxCores))
 }
 
 func buildResourceEndpointName(arch device.Arch, strategy config.ResourceUnitStrategy) string {
 	if strategy == config.LegacyStrategy {
-		return "npu"
+		return legacyResourceName
 	}
 	return strings.ToLower(string(arch))
 }
 
 func strategyToCoreUnit(strategy config.ResourceUnitStrategy) int {
 	if strategy == config.SingleCoreStrategy {
-		return 1
+		return singleCore
 	} else if strategy == config.DualCoreStrategy {
-		return 2
+		return dualCore
 	}
 
-	return 4
+	return quadCore
 }
 
 func buildFullEndpoint(arch device.Arch, strategy config.ResourceUnitStrategy) (string, error) {
@@ -89,9 +109,9 @@ func buildFullEndpoint(arch device.Arch, strategy config.ResourceUnitStrategy) (
 	}
 
 	coreUnitTag := buildResourceEndpointCoreUnitTag(coreUnit)
-	memoryTag := buildResourceEndpointMemoryTag(arch, coreUnit)
+	memoryTag := buildResourceEndpointMemoryUnitTag(arch, coreUnit)
 
-	return fmt.Sprintf("%s-%s.%sgb", endpointName, coreUnitTag, memoryTag), nil
+	return fmt.Sprintf(taggedResourceExp, endpointName, coreUnitTag, memoryTag), nil
 }
 
 func buildAndValidateFullResourceEndpointName(arch device.Arch, strategy config.ResourceUnitStrategy) (string, error) {
@@ -107,5 +127,5 @@ func buildAndValidateFullResourceEndpointName(arch device.Arch, strategy config.
 		return "", fmt.Errorf("resource name %s is not valid %v", fullEndpoint, errs)
 	}
 
-	return fmt.Sprintf("%s/%s", domainName, fullEndpoint), nil
+	return fmt.Sprintf(fullResourceExp, domainName, fullEndpoint), nil
 }
