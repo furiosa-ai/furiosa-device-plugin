@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
-	manifest2 "github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -17,7 +17,7 @@ func NewMockFullDevice(mockDevice device.Device) (FuriosaDevice, error) {
 
 	return &fullDevice{
 		origin:   mockDevice,
-		manifest: manifest2.NewWarboyManifest(mockDevice),
+		manifest: manifest.NewWarboyManifest(mockDevice),
 		deviceID: deviceID,
 		pciBusID: pciBusID,
 		numaNode: numaNode,
