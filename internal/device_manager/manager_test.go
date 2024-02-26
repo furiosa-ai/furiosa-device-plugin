@@ -5,7 +5,6 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	"math/rand"
 	"reflect"
-	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -140,11 +139,11 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 }
 
-func TestGenericFetchByID_FuriosaDevice(t *testing.T) {
+func TestFetchByID(t *testing.T) {
 	seedUUID := MockDeviceUUIDSeed(8)
 	mockDevices := MockDeviceSlices(8, seedUUID, nil)
 	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchByID[FuriosaDevice](mockFuriosaDevices, seedUUID)
+	actual, err := fetchByID(mockFuriosaDevices, seedUUID)
 	if err != nil {
 		t.Errorf("failed with error %t", err)
 		return
@@ -160,11 +159,11 @@ func TestGenericFetchByID_FuriosaDevice(t *testing.T) {
 	}
 }
 
-func TestGenericFetchByID_DeviceInfo(t *testing.T) {
+func TestFetchDevicesByID(t *testing.T) {
 	seedUUID := MockDeviceUUIDSeed(8)
 	mockDevices := MockDeviceSlices(8, seedUUID, nil)
 	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchByID[DeviceInfo](mockFuriosaDevices, seedUUID)
+	actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
 	if err != nil {
 		t.Errorf("failed with error %t", err)
 		return
@@ -182,102 +181,6 @@ func TestGenericFetchByID_DeviceInfo(t *testing.T) {
 
 	if !reflect.DeepEqual(actualIDs, seedUUID) {
 		t.Errorf("expectedResult %v but got %v", seedUUID, actualIDs)
-	}
-}
-
-func TestGenericFetchByID_Manifest(t *testing.T) {
-	seedUUID := MockDeviceUUIDSeed(8)
-	mockDevices := MockDeviceSlices(8, seedUUID, nil)
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchByID[Manifest](mockFuriosaDevices, seedUUID)
-	if err != nil {
-		t.Errorf("failed with error %t", err)
-		return
-	}
-
-	var actualIDs []string
-	for _, ele := range actual {
-		if furiosaDevice, ok := ele.(FuriosaDevice); !ok {
-			t.Errorf("type assertion failed")
-			return
-		} else {
-			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
-		}
-	}
-
-	if !reflect.DeepEqual(actualIDs, seedUUID) {
-		t.Errorf("expectedResult %v but got %v", seedUUID, actualIDs)
-	}
-}
-
-func TestGenericFetchByID_npu_allocator_Device(t *testing.T) {
-	seedUUID := MockDeviceUUIDSeed(8)
-	mockDevices := MockDeviceSlices(8, seedUUID, nil)
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchByID[npu_allocator.Device](mockFuriosaDevices, seedUUID)
-	if err != nil {
-		t.Errorf("failed with error %t", err)
-		return
-	}
-
-	var actualIDs []string
-	for _, ele := range actual {
-		if furiosaDevice, ok := ele.(FuriosaDevice); !ok {
-			t.Errorf("type assertion failed")
-			return
-		} else {
-			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
-		}
-	}
-
-	if !reflect.DeepEqual(actualIDs, seedUUID) {
-		t.Errorf("expectedResult %v but got %v", seedUUID, actualIDs)
-	}
-}
-
-// NOTE(@bg): all test cases must fail.
-func TestGenericFetchByID_non_implemented_type_and_interface(t *testing.T) {
-	// try empty interface
-	type emptyInterface interface{}
-
-	seedUUID := MockDeviceUUIDSeed(8)
-	mockDevices := MockDeviceSlices(8, seedUUID, nil)
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	_, err := fetchByID[emptyInterface](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
-		return
-	}
-
-	// try non-empty interface
-	type nonEmptyInterface interface {
-		isEmpty() bool
-	}
-
-	_, err = fetchByID[nonEmptyInterface](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
-	}
-
-	// try well known type and interface
-	_, err = fetchByID[int](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
-	}
-
-	_, err = fetchByID[string](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
-	}
-
-	_, err = fetchByID[error](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
-	}
-
-	_, err = fetchByID[sort.Interface](mockFuriosaDevices, seedUUID)
-	if err == nil {
-		t.Errorf("fetchByID is supposed to return error but not")
 	}
 }
 

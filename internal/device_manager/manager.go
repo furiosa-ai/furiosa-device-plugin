@@ -3,7 +3,6 @@ package device_manager
 import (
 	"fmt"
 	"maps"
-	"reflect"
 	"strings"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -71,44 +70,12 @@ func (d *deviceManager) Contains(deviceIDs []string) bool {
 	return true
 }
 
-// isFuriosaDevice checked whether given type T implement FuriosaDevice interface or sub interfaces
-func isFuriosaDevice[T any]() bool {
-	typeT := reflect.TypeOf((*T)(nil)).Elem()
-
-	allowed := []reflect.Type{
-		reflect.TypeOf((*FuriosaDevice)(nil)).Elem(),
-		reflect.TypeOf((*DeviceInfo)(nil)).Elem(),
-		reflect.TypeOf((*Manifest)(nil)).Elem(),
-		reflect.TypeOf((*npu_allocator.Device)(nil)).Elem(),
-	}
-
-	for _, target := range allowed {
-		if typeT.Implements(target) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// NOTE: type T should be FuriosaDevice itself or an interface that FuriosaDevice implements.
-// For example, DeviceInfo, Manifest, npu_allocator.Device
-func fetchByID[T any](furiosaDevices map[string]FuriosaDevice, IDs []string) ([]T, error) {
-	// if type T is an empty interface, we don't need to go further.
-	typeName := reflect.TypeOf((*T)(nil)).Elem().Name()
-	if !isFuriosaDevice[T]() {
-		return nil, fmt.Errorf("the given type %s does not implement FuriosaDevice interface", typeName)
-	}
-
-	var found []T
+func fetchByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]FuriosaDevice, error) {
+	var found []FuriosaDevice
 	var missing []string
 	for _, id := range IDs {
 		if furiosaDevice, exist := furiosaDevices[id]; exist {
-			t, ok := furiosaDevice.(T)
-			if !ok {
-				return nil, fmt.Errorf("couldn't convert furiosaDevice to %s", typeName)
-			}
-			found = append(found, t)
+			found = append(found, furiosaDevice)
 		} else {
 			missing = append(missing, id)
 		}
@@ -121,13 +88,27 @@ func fetchByID[T any](furiosaDevices map[string]FuriosaDevice, IDs []string) ([]
 	return found, nil
 }
 
-func (d *deviceManager) GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error) {
-	availableDevices, err := fetchByID[npu_allocator.Device](d.furiosaDevices, available)
+func fetchDevicesByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]npu_allocator.Device, error) {
+	found, err := fetchByID(furiosaDevices, IDs)
 	if err != nil {
 		return nil, err
 	}
 
-	requiredDevices, err := fetchByID[npu_allocator.Device](d.furiosaDevices, required)
+	var devices []npu_allocator.Device
+	for _, furiosaDevice := range found {
+		devices = append(devices, furiosaDevice)
+	}
+
+	return devices, nil
+}
+
+func (d *deviceManager) GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error) {
+	availableDevices, err := fetchDevicesByID(d.furiosaDevices, available)
+	if err != nil {
+		return nil, err
+	}
+
+	requiredDevices, err := fetchDevicesByID(d.furiosaDevices, required)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +125,7 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 }
 
 func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error) {
-	deviceRequests, err := fetchByID[FuriosaDevice](d.furiosaDevices, deviceIDs)
+	deviceRequests, err := fetchByID(d.furiosaDevices, deviceIDs)
 	if err != nil {
 		return nil, err
 	}
