@@ -2,48 +2,31 @@ package device_manager
 
 import (
 	"fmt"
-	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
-	"math/rand"
 	"reflect"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/bradfitz/iter"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/google/uuid"
+
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
-
-func generateRandomUUID() string {
-	randFunc := func(length int) string {
-		const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-		seed := rand.NewSource(time.Now().UnixNano())
-		random := rand.New(seed)
-
-		result := make([]byte, length)
-		for i := range result {
-			result[i] = charset[random.Intn(len(charset))]
-		}
-		return string(result)
-	}
-
-	// This follow the warboy uuid convention e.g. A76AAD68-6855-40B1-9E86-D080852D1C84
-	return fmt.Sprintf("%s-%s-%s-%s-%s", randFunc(8), randFunc(4), randFunc(4), randFunc(4), randFunc(12))
-}
 
 func MockDeviceUUIDSeed(n int) (ret []string) {
 	cache := map[string]string{}
 	for range iter.N(n) {
-		var uuid string
+		var newSeed string
 		for {
-			tmp := generateRandomUUID()
-			if _, exist := cache[tmp]; !exist {
-				uuid = tmp
+			newUUID, _ := uuid.NewRandom()
+			if _, exist := cache[newUUID.String()]; !exist {
+				newSeed = newUUID.String()
 				break
 			}
 		}
-		ret = append(ret, uuid)
+		ret = append(ret, newSeed)
 	}
 	return ret
 }

@@ -7,6 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.8
 	github.com/go-playground/validator/v10 v10.16.0
+	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
