@@ -21,7 +21,7 @@ type DeviceManager interface {
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
-type newDeviceFunc func(originDevice device.Device) (FuriosaDevice, error)
+type newDeviceFunc func(originDevice device.Device) ([]FuriosaDevice, error)
 
 var _ DeviceManager = (*deviceManager)(nil)
 
@@ -152,9 +152,16 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
-		ret = NewFullDevice
+		ret = func(originDevice device.Device) ([]FuriosaDevice, error) {
+			newFullDevice, err := NewFullDevice(originDevice)
+			if err != nil {
+				return nil, err
+			}
+
+			return []FuriosaDevice{newFullDevice}, nil
+		}
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
-		ret = NewPartialDevice
+		ret = NewPartialDevices
 	}
 
 	return ret
@@ -163,12 +170,14 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 func buildFuriosaDevices(devices []device.Device, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
 	furiosaDevices := map[string]FuriosaDevice{}
 	for _, origin := range devices {
-		furiosaDevice, err := newDevFunc(origin)
+		devices, err := newDevFunc(origin)
 		if err != nil {
 			return nil, err
 		}
-		furiosaDevices[furiosaDevice.DeviceID()] = furiosaDevice
 
+		for _, d := range devices {
+			furiosaDevices[d.DeviceID()] = d
+		}
 	}
 	return furiosaDevices, nil
 }
