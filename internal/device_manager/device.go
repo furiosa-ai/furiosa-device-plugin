@@ -1,7 +1,12 @@
 package device_manager
 
 import (
-	DevicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+)
+
+const (
+	readOnlyOpt = "ro"
 )
 
 type DeviceInfo interface {
@@ -15,12 +20,13 @@ type DeviceInfo interface {
 type Manifest interface {
 	EnvVars() map[string]string
 	Annotations() map[string]string
-	DeviceNodes() []*DevicePluginAPIv1Beta1.DeviceSpec
-	MountPaths() []*DevicePluginAPIv1Beta1.Mount
-	CDIDevices() []*DevicePluginAPIv1Beta1.CDIDevice
+	DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec
+	Mounts() []*devicePluginAPIv1Beta1.Mount
+	CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice
 }
 
 type FuriosaDevice interface {
 	DeviceInfo
 	Manifest
+	npu_allocator.Device
 }
