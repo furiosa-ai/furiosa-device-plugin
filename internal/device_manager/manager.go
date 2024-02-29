@@ -16,7 +16,8 @@ type DeviceManager interface {
 	ResourceName() string
 	Devices() []string
 	HealthCheck() error
-	Contains(deviceIDs []string) bool
+	Contains(deviceIDs []string) (bool, []string)
+	GetListAndWatchResponse() *devicePluginAPIv1Beta1.ListAndWatchResponse
 	GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error)
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
@@ -49,25 +50,31 @@ func (d *deviceManager) HealthCheck() error {
 		}
 
 		if !healthy {
-			return fmt.Errorf("device is not healthy")
+			return fmt.Errorf("device %s is not healthy", dev.DeviceID())
 		}
 	}
 
 	return nil
 }
 
-func (d *deviceManager) Contains(deviceIDs []string) bool {
+func (d *deviceManager) Contains(deviceIDs []string) (bool, []string) {
+	var missing []string
+
 	if len(deviceIDs) == 0 {
-		return false
+		return false, nil
 	}
 
 	for _, id := range deviceIDs {
 		if _, ok := d.furiosaDevices[id]; !ok {
-			return false
+			missing = append(missing, id)
 		}
 	}
 
-	return true
+	if len(missing) > 0 {
+		return false, missing
+	}
+
+	return true, nil
 }
 
 func fetchByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]FuriosaDevice, error) {
@@ -142,6 +149,34 @@ func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devic
 	}
 
 	return resp, nil
+}
+
+func (d *deviceManager) GetListAndWatchResponse() *devicePluginAPIv1Beta1.ListAndWatchResponse {
+	var resp []*devicePluginAPIv1Beta1.Device
+
+	for _, dev := range d.furiosaDevices {
+		var health = devicePluginAPIv1Beta1.Healthy
+		isHealthy, err := dev.IsHealthy()
+		if err != nil || !isHealthy {
+			health = devicePluginAPIv1Beta1.Unhealthy
+		}
+
+		resp = append(resp, &devicePluginAPIv1Beta1.Device{
+			ID:     dev.DeviceID(),
+			Health: health,
+			Topology: &devicePluginAPIv1Beta1.TopologyInfo{
+				Nodes: []*devicePluginAPIv1Beta1.NUMANode{
+					{
+						ID: int64(dev.NUMANode()),
+					},
+				},
+			},
+		})
+	}
+
+	return &devicePluginAPIv1Beta1.ListAndWatchResponse{
+		Devices: resp,
+	}
 }
 
 func (d *deviceManager) ResourceName() string {
