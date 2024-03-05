@@ -68,7 +68,7 @@ func start(ctx context.Context) error {
 
 	//os signal listener
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGURG, syscall.SIGQUIT)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
 	//grpc server panic listener
 	grpcErrChan := make(chan error, 1)
@@ -106,7 +106,6 @@ func start(ctx context.Context) error {
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch)]
-
 		deviceManager, err := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DebugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch))
