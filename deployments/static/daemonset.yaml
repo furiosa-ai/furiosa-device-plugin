@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: furiosa-device-plugin-global-config-cm
+  namespace: kube-system
+data:
+  global: |
+    resourceStrategyMap:
+      - warboy: legacy
+      - renegade: legacy
+    debugMode: false
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: furiosa-device-plugin
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: furiosa-device-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: furiosa-device-plugin
+    spec:
+      priorityClassName:  system-node-critical
+      containers:
+        - name: furiosa-device-plugin
+          image: ghcr.io/furiosa-ai/furiosa-device-plugin:latest
+          command: ["./main"]
+          args: ["--localConfigPath=/etc/config/local_config.yaml"]
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: global-config
+              mountPath: /etc/config/global_config.yaml
+              subPath: global
+            - name: local-config
+              mountPath: /etc/config
+            - name: kubelet-socket
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: dev-fs
+              mountPath: /dev
+            - name: sys-fs
+              mountPath: /sys
+      volumes:
+        - name: global-config
+          configMap:
+            name: furiosa-device-plugin-global-config-cm
+        - name: local-config
+          hostPath:
+            path: /etc/config
+        - name: kubelet-socket
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: sys-fs
+          hostPath:
+            path: /sys
