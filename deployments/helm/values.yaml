@@ -1,0 +1,21 @@
+namespace: kube-system
+
+daemonSet:
+  priorityClassName: system-node-critical
+  image:
+    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    cpu: 100m
+    memory: 64Mi
+
+localConfig:
+  localConfigDir: /etc/config
+  localConfigFile: local_config.yaml
+
+globalConfig:
+  resourceStrategyMap:
+    warboy: legacy
+    renegade: legacy
+  debugMode: false
