@@ -1,39 +1,4 @@
-FROM ubuntu:latest as build
-
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    autoconf \
-    automake \
-    libtool \
-    pkg-config \
-    wget \
-    bzip2
-
-# Get hwloc source code
-WORKDIR /tmp
-ENV HWLOC_MAJOR_VERSION=2.10
-ENV HWLOC_MINOR_VERSION=0
-ENV HWLOC_VERSION=${HWLOC_MAJOR_VERSION}.${HWLOC_MINOR_VERSION}
-RUN wget https://download.open-mpi.org/release/hwloc/v${HWLOC_MAJOR_VERSION}/hwloc-${HWLOC_VERSION}.tar.bz2
-RUN tar -xjf hwloc-${HWLOC_VERSION}.tar.bz2
-
-# Build hwloc
-WORKDIR /tmp/hwloc-${HWLOC_VERSION}
-RUN ./configure && \
-    make && \
-    make install && \
-    make install DESTDIR=/tmp/hwloc
-
-# Install golang
-ENV GO_VERSION=1.21.7
-RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
-    tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
-    mv go /usr/local
-
-# Update Path
-ENV PATH="/usr/local/go/bin:${PATH}"
+FROM ghcr.io/furiosa-ai/libfuriosa-kubernetes:latest as build
 
 # Build device-plugin binary
 WORKDIR /
@@ -43,8 +8,8 @@ RUN make build
 FROM gcr.io/distroless/base-debian12
 
 # Copy hwloc binaries and libraries from the builder stage
-COPY --from=build /tmp/hwloc/usr/local/lib/ /usr/local/lib/
-COPY --from=build /tmp/hwloc/usr/local/include/ /usr/local/include/
+COPY --from=build /usr/local/lib/ /usr/local/lib/
+COPY --from=build /usr/local/include/ /usr/local/include/
 
 # Configure env values
 ENV C_INCLUDE_PATH /usr/local/include:$C_INCLUDE_PATH
