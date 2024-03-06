@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -51,13 +52,27 @@ func (c *Config) GetResourceStrategyMap() map[ResourceKind]ResourceUnitStrategy 
 	return c.ResourceStrategyMap
 }
 
+func ensureLocalConfigExist(localConfigPath string) bool {
+	if localConfigPath == "" {
+		return false
+	}
+
+	_, err := os.Stat(localConfigPath)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func GetMergedConfigWithWatcher(confUpdateChan chan *fsnotify.Event, localConfigPath string) (*Config, error) {
 	globalConf, globalErr := getValidatedConfigAndWatch(confUpdateChan, globalConfigMountPath)
 	if globalErr != nil {
 		return nil, globalErr
 	}
 
-	if localConfigPath == "" {
+	//check whether local config exist
+	if !ensureLocalConfigExist(localConfigPath) {
 		return globalConf, nil
 	}
 
