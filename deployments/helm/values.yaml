@@ -2,13 +2,25 @@ namespace: kube-system
 
 daemonSet:
   priorityClassName: system-node-critical
+  # Use OnDelete for change the plugin strategy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  tolerations:
+      # this should be changed to "furiosa.ai/npu" later
+    - key: npu
+      operator: Exists
   image:
-    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
+    repository: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin
     tag: latest
     pullPolicy: IfNotPresent
   resources:
     cpu: 100m
     memory: 64Mi
+  imagePullSecrets:
+    # locate you image pull secret in your cluster
+    #- name: imagepullsecret
 
 localConfig:
   localConfigDir: /etc/config
@@ -16,6 +28,7 @@ localConfig:
 
 globalConfig:
   resourceStrategyMap:
-    warboy: legacy
-    renegade: legacy
+    warboy: generic
+    renegade: generic
   debugMode: false
+

@@ -10,6 +10,8 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ include "furiosa-device-plugin.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
+  updateStrategy:
+    {{- toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
   template:
     metadata:
       labels:
@@ -24,6 +26,11 @@ spec:
           {{- if .Values.localConfig }}
           args: ["--localConfigPath={{ .Values.localConfig.localConfigDir }}/{{ .Values.localConfig.localConfigFile }}"]
           {{- end }}
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: "spec.nodeName"
           imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
@@ -32,6 +39,11 @@ spec:
             limits:
               cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
               memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+               - ALL
           volumeMounts:
             - name: global-config
               mountPath: /etc/config/global_config.yaml
@@ -46,6 +58,10 @@ spec:
               mountPath: /dev
             - name: sys-fs
               mountPath: /sys
+      {{- with .Values.daemonSet.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: global-config
           configMap:
@@ -64,3 +80,7 @@ spec:
         - name: sys-fs
           hostPath:
             path: /sys
+      {{- with .Values.daemonSet.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
