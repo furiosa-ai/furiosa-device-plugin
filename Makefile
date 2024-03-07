@@ -60,3 +60,11 @@ vendor:
 .PHONY: install-deps
 install-deps:
 	$(call install_deps_function)
+
+.PHONY: image
+build-base:
+	docker build . -t ghcr.io/furiosa-ai/furiosa-device-plugin:devel --progress=plain --platform=linux/amd64
+
+.PHONY: image-no-cache
+build-base-no-cache:
+	docker build . --no-cache -t ghcr.io/furiosa-ai/furiosa-device-plugin:devel --progress=plain --platform=linux/amd64
