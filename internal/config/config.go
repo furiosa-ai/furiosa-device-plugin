@@ -57,7 +57,7 @@ func ensureLocalConfigExist(localConfigPath string) bool {
 		return false
 	}
 
-	if _, err := os.Stat(localConfigPath); err != nil {
+	if info, err := os.Stat(localConfigPath); err != nil || info.IsDir() {
 		return false
 	}
 
