@@ -32,7 +32,6 @@ type PluginServer struct {
 	socket                string
 	server                *grpc.Server
 	deviceHealthCheckChan chan error
-	//stop
 }
 
 func dialWithTimeout(socket string, timeout time.Duration) (*grpc.ClientConn, error) {
@@ -142,36 +141,80 @@ func (p *PluginServer) Stop() error {
 	return nil
 }
 
-func (p *PluginServer) GetDevicePluginOptions(_ context.Context, empty *devicePluginAPIv1Beta1.Empty) (*devicePluginAPIv1Beta1.DevicePluginOptions, error) {
+func (p *PluginServer) GetDevicePluginOptions(_ context.Context, _ *devicePluginAPIv1Beta1.Empty) (*devicePluginAPIv1Beta1.DevicePluginOptions, error) {
 	return &devicePluginAPIv1Beta1.DevicePluginOptions{
 		PreStartRequired:                false,
 		GetPreferredAllocationAvailable: true,
 	}, nil
 }
 
-func (p *PluginServer) ListAndWatch(empty *devicePluginAPIv1Beta1.Empty, server devicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
-	//logger := zerolog.Ctx(ctx)
-	//TODO(@bg): handle health check error here
-	//TODO implement me
-	panic("implement me")
+func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSrv devicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
+	logger := zerolog.Ctx(deviceMgrSrv.Context())
+	logger.Info().Msg(fmt.Sprintf("register devices and report initial states for devices %s", strings.Join(p.deviceManager.Devices(), ", ")))
+	if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
+		return err
+	}
+
+	for healthCheckErr := range p.deviceHealthCheckChan {
+		logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
+		if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (p *PluginServer) GetPreferredAllocation(ctx context.Context, request *devicePluginAPIv1Beta1.PreferredAllocationRequest) (*devicePluginAPIv1Beta1.PreferredAllocationResponse, error) {
-	//logger := zerolog.Ctx(ctx)
-	//TODO implement me
-	panic("implement me")
+	logger := zerolog.Ctx(ctx)
+	var resp []*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse
+
+	for _, req := range request.ContainerRequests {
+		logger.Info().Msg(fmt.Sprintf("received preferred allocation request, available: %s, include: %s, size: %d",
+			strings.Join(req.AvailableDeviceIDs, ", "),
+			strings.Join(req.MustIncludeDeviceIDs, ", "),
+			req.AllocationSize))
+
+		//FIXME(@bg): fix interfaces(Manager, Allocator) to use int32
+		allocResp, err := p.deviceManager.GetContainerPreferredAllocationResponse(req.AvailableDeviceIDs, req.MustIncludeDeviceIDs, int(req.AllocationSize))
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, allocResp)
+	}
+
+	return &devicePluginAPIv1Beta1.PreferredAllocationResponse{
+		ContainerResponses: resp,
+	}, nil
 }
 
 func (p *PluginServer) Allocate(ctx context.Context, request *devicePluginAPIv1Beta1.AllocateRequest) (*devicePluginAPIv1Beta1.AllocateResponse, error) {
-	//logger := zerolog.Ctx(ctx)
-	//TODO implement me
-	panic("implement me")
+	logger := zerolog.Ctx(ctx)
+	var resp []*devicePluginAPIv1Beta1.ContainerAllocateResponse
+
+	for _, req := range request.ContainerRequests {
+		logger.Info().Msg(fmt.Sprintf("received device allocation request for device id(s) %s", strings.Join(req.DevicesIDs, ", ")))
+		exist, missing := p.deviceManager.Contains(req.DevicesIDs)
+		if !exist {
+			return nil, fmt.Errorf("couldn't find device(s) for device id(s) %s", strings.Join(missing, ", "))
+		}
+
+		allocResp, err := p.deviceManager.GetContainerAllocateResponse(req.DevicesIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		resp = append(resp, allocResp)
+	}
+
+	return &devicePluginAPIv1Beta1.AllocateResponse{
+		ContainerResponses: resp,
+	}, nil
 }
 
-func (p *PluginServer) PreStartContainer(ctx context.Context, request *devicePluginAPIv1Beta1.PreStartContainerRequest) (*devicePluginAPIv1Beta1.PreStartContainerResponse, error) {
-	//logger := zerolog.Ctx(ctx)
-	//TODO implement me
-	panic("implement me")
+func (p *PluginServer) PreStartContainer(_ context.Context, _ *devicePluginAPIv1Beta1.PreStartContainerRequest) (*devicePluginAPIv1Beta1.PreStartContainerResponse, error) {
+	// NOTE(@bg): we don't need reinitialization of device.
+	return &devicePluginAPIv1Beta1.PreStartContainerResponse{}, nil
 }
 
 func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, config *config.Config) PluginServer {
@@ -180,10 +223,11 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 	resNameWithoutPrefix := split[1]
 
 	return PluginServer{
-		socket:        fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
-		config:        config,
-		cancelCtxFunc: cancelFunc,
-		deviceManager: deviceManager,
-		server:        grpc.NewServer(grpc.UnaryInterceptor(NewGrpcMiddleWareLogger(ctx))),
+		socket:                fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
+		config:                config,
+		cancelCtxFunc:         cancelFunc,
+		deviceManager:         deviceManager,
+		server:                grpc.NewServer(grpc.UnaryInterceptor(NewGrpcMiddleWareLogger(ctx))),
+		deviceHealthCheckChan: nil,
 	}
 }

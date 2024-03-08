@@ -1,8 +1,11 @@
 package server
 
-import "github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
+import (
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
+	"strings"
+)
 
-type DeviceMap map[device.Arch][]device.Device
+type DeviceMap map[string][]device.Device
 
 func BuildDeviceMap() (DeviceMap, error) {
 	deviceLister := device.NewDeviceLister()
@@ -13,7 +16,8 @@ func BuildDeviceMap() (DeviceMap, error) {
 
 	archToDevicesMap := make(DeviceMap)
 	for _, d := range devices {
-		archToDevicesMap[d.Arch()] = append(archToDevicesMap[d.Arch()], d)
+		key := strings.ToLower(string(d.Arch()))
+		archToDevicesMap[key] = append(archToDevicesMap[key], d)
 	}
 
 	return archToDevicesMap, nil
