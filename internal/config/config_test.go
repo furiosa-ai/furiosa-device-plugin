@@ -229,7 +229,6 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 	}
 }
 
-/*
 func TestMergeConfig(t *testing.T) {
 	tests := []struct {
 		description    string
@@ -240,61 +239,73 @@ func TestMergeConfig(t *testing.T) {
 		{
 			description: "merge same configs",
 			globalConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 			localConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 			expectedConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 		},
 		{
 			description: "merge device ResourceUnitStrategy",
 			globalConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "legacy"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "legacy"},
+				DebugMode:           false,
 			},
 			localConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 			expectedConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 		},
 		{
 			description: "merge debug mode",
 			globalConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           false,
 			},
 			localConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  true,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           true,
 			},
 			expectedConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  true,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           true,
 			},
 		},
 		{
 			description: "merge ResourceUnitStrategy and debug mode",
 			globalConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "legacy"},
-				DebugMode:                  false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "legacy"},
+				DebugMode:           false,
 			},
 			localConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  true,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           true,
 			},
 			expectedConfig: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: "generic"},
-				DebugMode:                  true,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
+				DebugMode:           true,
+			},
+		},
+		{
+			description: "merge with zero value",
+			globalConfig: &Config{
+				DebugMode: true,
+			},
+			localConfig: &Config{
+				DebugMode: false,
+			},
+			expectedConfig: &Config{
+				DebugMode: false,
 			},
 		},
 	}
@@ -336,52 +347,52 @@ func TestIsDebugMode(t *testing.T) {
 	}
 }
 
-/*func TestResourceUnitStrategyConfig(t *testing.T) {
-	tests := []struct {
-		description            string
-		config                 *Config
-		expectedDeviceStrategy ResourceUnitStrategy
-	}{
-		{
-			description: "test legacy ResourceUnitStrategy",
-			config: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: legacyStrategyStr},
-			},
-			expectedDeviceStrategy: LegacyStrategy,
-		},
-		{
-			description: "test generic ResourceUnitStrategy",
-			config: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: genericStrategyStr},
-			},
-			expectedDeviceStrategy: GenericStrategy,
-		},
-		{
-			description: "test single core ResourceUnitStrategy",
-			config: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: singleCoreStr},
-			},
-			expectedDeviceStrategy: SingleCoreStrategy,
-		},
-		{
-			description: "test dual core ResourceUnitStrategy",
-			config: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: dualCoreStr},
-			},
-			expectedDeviceStrategy: DualCoreStrategy,
-		},
-		{
-			description: "test quad core ResourceUnitStrategy",
-			config: &Config{
-				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: quadCoreStr},
-			},
-			expectedDeviceStrategy: QuadCoreStrategy,
-		},
-	}
-
-	for _, tc := range tests {
-		if tc.config.GetResourceUnitStrategyConfig() != tc.expectedDeviceStrategy {
-			t.Errorf("expected %v but got %v", tc.expectedDeviceStrategy, tc.config.GetResourceUnitStrategyConfig())
-		}
-	}
-}*/
+// func TestResourceUnitStrategyConfig(t *testing.T) {
+// 	tests := []struct {
+// 		description            string
+// 		config                 *Config
+// 		expectedDeviceStrategy ResourceUnitStrategy
+// 	}{
+// 		{
+// 			description: "test legacy ResourceUnitStrategy",
+// 			config: &Config{
+// 				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: legacyStrategyStr},
+// 			},
+// 			expectedDeviceStrategy: LegacyStrategy,
+// 		},
+// 		{
+// 			description: "test generic ResourceUnitStrategy",
+// 			config: &Config{
+// 				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: genericStrategyStr},
+// 			},
+// 			expectedDeviceStrategy: GenericStrategy,
+// 		},
+// 		{
+// 			description: "test single core ResourceUnitStrategy",
+// 			config: &Config{
+// 				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: singleCoreStr},
+// 			},
+// 			expectedDeviceStrategy: SingleCoreStrategy,
+// 		},
+// 		{
+// 			description: "test dual core ResourceUnitStrategy",
+// 			config: &Config{
+// 				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: dualCoreStr},
+// 			},
+// 			expectedDeviceStrategy: DualCoreStrategy,
+// 		},
+// 		{
+// 			description: "test quad core ResourceUnitStrategy",
+// 			config: &Config{
+// 				ResourceUnitStrategyConfig: ResourceStrategy{ResourceUnitStrategy: quadCoreStr},
+// 			},
+// 			expectedDeviceStrategy: QuadCoreStrategy,
+// 		},
+// 	}
+//
+// 	for _, tc := range tests {
+// 		if tc.config.GetResourceUnitStrategyConfig() != tc.expectedDeviceStrategy {
+// 			t.Errorf("expected %v but got %v", tc.expectedDeviceStrategy, tc.config.GetResourceUnitStrategyConfig())
+// 		}
+// 	}
+// }
