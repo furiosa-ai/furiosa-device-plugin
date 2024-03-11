@@ -6,18 +6,25 @@ import (
 	"testing"
 )
 
-func TestGetConfigFromFile(t *testing.T) {
+func getConfigFromFile(configPath string) (*Config, error) {
+	configPath = absPath(configPath)
+	conf, err := readInConfigAsMap(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return convertToConfig(conf)
+}
+
+func TestGetConfigFromSingleFile(t *testing.T) {
 	tests := []struct {
 		description    string
 		configPath     string
-		configFilename string
 		expectedResult *Config
 		expectedError  bool
 	}{
 		{
-			description:    "parse legacy configuration",
-			configPath:     "./tests/",
-			configFilename: "legacy_strategy.yaml",
+			description: "parse legacy configuration",
+			configPath:  "./tests/legacy_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   LegacyStrategy,
@@ -28,9 +35,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "parse generic configuration",
-			configPath:     "./tests/",
-			configFilename: "generic_strategy.yaml",
+			description: "parse generic configuration",
+			configPath:  "./tests/generic_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   GenericStrategy,
@@ -41,9 +47,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "parse single-core configuration",
-			configPath:     "./tests/",
-			configFilename: "single_core_strategy.yaml",
+			description: "parse single-core configuration",
+			configPath:  "./tests/single_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   SingleCoreStrategy,
@@ -54,9 +59,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "parse dual-core configuration",
-			configPath:     "./tests/",
-			configFilename: "dual_core_strategy.yaml",
+			description: "parse dual-core configuration",
+			configPath:  "./tests/dual_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   DualCoreStrategy,
@@ -67,9 +71,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "parse quad-core configuration",
-			configPath:     "./tests/",
-			configFilename: "quad_core_strategy.yaml",
+			description: "parse quad-core configuration",
+			configPath:  "./tests/quad_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Renegade: QuadCoreStrategy,
@@ -79,9 +82,8 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "parse mixed strategy configuration",
-			configPath:     "./tests/",
-			configFilename: "mixed_strategy.yaml",
+			description: "parse mixed strategy configuration",
+			configPath:  "./tests/mixed_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   LegacyStrategy,
@@ -93,15 +95,14 @@ func TestGetConfigFromFile(t *testing.T) {
 		},
 		{
 			description:    "try wrong format",
-			configPath:     "./tests/",
-			configFilename: "wrong_format.yaml",
+			configPath:     "./tests/wrong_format.yaml",
 			expectedResult: nil,
 			expectedError:  true,
 		},
 	}
 
 	for _, tc := range tests {
-		_, actualConf, actualErr := getConfigFromFile(tc.configPath, tc.configFilename)
+		actualConf, actualErr := getConfigFromFile(tc.configPath)
 
 		if actualErr != nil != tc.expectedError {
 			t.Errorf("got unexpected error %t", actualErr)
@@ -114,12 +115,20 @@ func TestGetConfigFromFile(t *testing.T) {
 	}
 }
 
-func abs(path string) string {
-	ret, _ := filepath.Abs(path)
-	return ret
+func validateConfigFromFile(configFilePath string) (*Config, error) {
+	conf, err := getConfigFromFile(configFilePath)
+	// getConfigFromFile should be validated already
+	if err != nil {
+		panic(err)
+	}
+	err = validateConfig(conf)
+	if err != nil {
+		return nil, err
+	}
+	return conf, nil
 }
 
-func TestGetValidatedConfigAndWatch(t *testing.T) {
+func TestValidateConfig(t *testing.T) {
 	tests := []struct {
 		description    string
 		configFilePath string
@@ -128,7 +137,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 	}{
 		{
 			description:    "test legacy ResourceUnitStrategy",
-			configFilePath: abs("./tests/legacy_strategy.yaml"),
+			configFilePath: absPath("./tests/legacy_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   LegacyStrategy,
@@ -140,7 +149,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test generic ResourceUnitStrategy",
-			configFilePath: abs("./tests/generic_strategy.yaml"),
+			configFilePath: absPath("./tests/generic_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   GenericStrategy,
@@ -152,7 +161,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test single core ResourceUnitStrategy",
-			configFilePath: abs("./tests/single_core_strategy.yaml"),
+			configFilePath: absPath("./tests/single_core_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   SingleCoreStrategy,
@@ -164,7 +173,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test dual core ResourceUnitStrategy",
-			configFilePath: abs("./tests/dual_core_strategy.yaml"),
+			configFilePath: absPath("./tests/dual_core_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   DualCoreStrategy,
@@ -176,7 +185,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test quad core ResourceUnitStrategy",
-			configFilePath: abs("./tests/quad_core_strategy.yaml"),
+			configFilePath: absPath("./tests/quad_core_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Renegade: QuadCoreStrategy,
@@ -187,7 +196,7 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test mixed ResourceUnitStrategy",
-			configFilePath: abs("./tests/mixed_strategy.yaml"),
+			configFilePath: absPath("./tests/mixed_strategy.yaml"),
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
 					Warboy:   LegacyStrategy,
@@ -199,25 +208,25 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 		},
 		{
 			description:    "test validation error with wrong ResourceUnitStrategy",
-			configFilePath: abs("./tests/wrong_strategy.yaml"),
+			configFilePath: absPath("./tests/wrong_strategy.yaml"),
 			expectedResult: nil,
 			expectedError:  true,
 		},
 		{
 			description:    "test validation error with wrong resource kind",
-			configFilePath: abs("./tests/wrong_kind.yaml"),
+			configFilePath: absPath("./tests/wrong_kind.yaml"),
 			expectedResult: nil,
 			expectedError:  true,
 		},
 		{
 			description:    "test validation error with missing required field",
-			configFilePath: abs("./tests/missing_required.yaml"),
+			configFilePath: absPath("./tests/missing_required.yaml"),
 			expectedResult: nil,
 			expectedError:  true,
 		},
 	}
 	for _, tc := range tests {
-		actualConf, actualErr := getValidatedConfigAndWatch(nil, tc.configFilePath)
+		actualConf, actualErr := validateConfigFromFile(tc.configFilePath)
 		if actualErr != nil != tc.expectedError {
 			t.Errorf("got unexpected error %t", actualErr)
 			continue
@@ -231,89 +240,83 @@ func TestGetValidatedConfigAndWatch(t *testing.T) {
 
 func TestMergeConfig(t *testing.T) {
 	tests := []struct {
-		description    string
-		globalConfig   *Config
-		localConfig    *Config
-		expectedConfig *Config
+		description      string
+		globalConfigPath string
+		localConfigPath  string
+		expectedConfig   *Config
 	}{
 		{
-			description: "merge same configs",
-			globalConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
-			},
-			localConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
-			},
+			description:      "merge same configs",
+			globalConfigPath: absPath("./tests/generic_strategy.yaml"),
+			localConfigPath:  absPath("./tests/generic_strategy.yaml"),
 			expectedConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   "generic",
+					Renegade: "generic",
+				},
+				DeviceDenyList: nil,
+				DebugMode:      true,
 			},
 		},
 		{
-			description: "merge device ResourceUnitStrategy",
-			globalConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "legacy"},
-				DebugMode:           false,
-			},
-			localConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
-			},
+			description:      "merge device ResourceUnitStrategy",
+			globalConfigPath: absPath("./tests/legacy_strategy.yaml"),
+			localConfigPath:  absPath("./tests/generic_strategy.yaml"),
 			expectedConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   "generic",
+					Renegade: "generic",
+				},
+				DeviceDenyList: nil,
+				DebugMode:      true,
 			},
 		},
 		{
-			description: "merge debug mode",
-			globalConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           false,
-			},
-			localConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           true,
-			},
+			description:      "merge with nothing",
+			globalConfigPath: absPath("./tests/generic_strategy.yaml"),
+			localConfigPath:  absPath("./tests/empty.yaml"),
 			expectedConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           true,
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   "generic",
+					Renegade: "generic",
+				},
+				DeviceDenyList: nil,
+				DebugMode:      true,
 			},
 		},
 		{
-			description: "merge ResourceUnitStrategy and debug mode",
-			globalConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "legacy"},
+			description:      "merge with zero value",
+			globalConfigPath: absPath("./tests/generic_strategy.yaml"),
+			localConfigPath:  absPath("./tests/zero.yaml"),
+			expectedConfig: &Config{
+				ResourceStrategyMap: nil,
+				DeviceDenyList:      []string{},
 				DebugMode:           false,
-			},
-			localConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           true,
-			},
-			expectedConfig: &Config{
-				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{Warboy: "generic"},
-				DebugMode:           true,
-			},
-		},
-		{
-			description: "merge with zero value",
-			globalConfig: &Config{
-				DebugMode: true,
-			},
-			localConfig: &Config{
-				DebugMode: false,
-			},
-			expectedConfig: &Config{
-				DebugMode: false,
 			},
 		},
 	}
 
+	testMergeConfig := func(globalConfigPath string, localConfigPath string) *Config {
+		g, err := readInConfigAsMap(globalConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		l, err := readInConfigAsMap(localConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		mergeMaps(g, l)
+		conf, err := convertToConfig(g)
+		if err != nil {
+			panic(err)
+		}
+		return conf
+	}
+
 	for _, tc := range tests {
-		mergeConfig(tc.globalConfig, tc.localConfig)
-		if !reflect.DeepEqual(tc.globalConfig, tc.expectedConfig) {
-			t.Errorf("expected %v but got %v", tc.expectedConfig, tc.globalConfig)
+		actualConfig := testMergeConfig(tc.globalConfigPath, tc.localConfigPath)
+		if !reflect.DeepEqual(actualConfig, tc.expectedConfig) {
+			t.Errorf("%s: expected %v but got %v", tc.description, tc.expectedConfig, actualConfig)
 		}
 	}
 }
@@ -341,10 +344,15 @@ func TestIsDebugMode(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		if tc.config.IsDebugMode() != tc.expectedDebugMode {
-			t.Errorf("expected %v but got %v", tc.expectedDebugMode, tc.config.IsDebugMode())
+		if tc.config.DebugMode != tc.expectedDebugMode {
+			t.Errorf("expected %v but got %v", tc.expectedDebugMode, tc.config.DebugMode)
 		}
 	}
+}
+
+func absPath(path string) string {
+	ret, _ := filepath.Abs(path)
+	return ret
 }
 
 // func TestResourceUnitStrategyConfig(t *testing.T) {

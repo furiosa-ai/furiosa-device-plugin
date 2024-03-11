@@ -8,6 +8,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -41,78 +42,74 @@ const (
 
 type Config struct {
 	ResourceStrategyMap map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
+	DeviceDenyList      []string                              `yaml:"deviceDenyList"`
 	DebugMode           bool                                  `yaml:"debugMode"`
 }
 
-func (c *Config) IsDebugMode() bool {
-	return c.DebugMode
-}
-
-func (c *Config) GetResourceStrategyMap() map[ResourceKind]ResourceUnitStrategy {
-	return c.ResourceStrategyMap
-}
-
-func ensureLocalConfigExist(localConfigPath string) bool {
-	if localConfigPath == "" {
-		return false
-	}
-
-	if info, err := os.Stat(localConfigPath); err != nil || info.IsDir() {
-		return false
-	}
-
-	return true
-}
-
 func GetMergedConfigWithWatcher(confUpdateChan chan *fsnotify.Event, localConfigPath string) (*Config, error) {
-	globalConf, globalErr := getValidatedConfigAndWatch(confUpdateChan, globalConfigMountPath)
-	if globalErr != nil {
-		return nil, globalErr
-	}
+	var err error
+	var localConf map[string]interface{}
 
-	//check whether local config exist
-	if !ensureLocalConfigExist(localConfigPath) {
-		return globalConf, nil
-	}
-
-	localConf, localErr := getValidatedConfigAndWatch(confUpdateChan, localConfigPath)
-	if localErr != nil {
-		return nil, localErr
-	}
-
-	mergeConfig(globalConf, localConf)
-
-	return globalConf, nil
-}
-
-// mergeConfig merge global config and local config.
-// the fields of the global config will be updated with the fields of the local config.
-func mergeConfig(global interface{}, local interface{}) {
-	glbVal := reflect.ValueOf(global).Elem()
-	localVal := reflect.ValueOf(local).Elem()
-
-	for i := 0; i < glbVal.NumField(); i++ {
-		glbField := glbVal.Field(i)
-		localField := localVal.Field(i)
-
-		// recursively merge inner struct
-		if glbField.Kind() == reflect.Struct {
-			mergeConfig(glbField.Addr().Interface(), localField.Addr().Interface())
-			continue
-		}
-
-		if !localField.IsZero() {
-			glbField.Set(localField)
-		}
-	}
-}
-
-func getValidatedConfigAndWatch(confUpdateChan chan *fsnotify.Event, configFilePath string) (*Config, error) {
-	v, conf, err := getConfigFromFile(filepath.Dir(configFilePath), filepath.Base(configFilePath))
+	globalConf, err := readInConfigAsMap(globalConfigMountPath)
 	if err != nil {
 		return nil, err
 	}
 
+	//check whether local config exist
+	if !ensureLocalConfigExist(localConfigPath) {
+		localConf = make(map[string]interface{})
+	} else {
+		localConf, err = readInConfigAsMap(localConfigPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+	mergeMaps(globalConf, localConf)
+	config, err := convertToConfig(globalConf)
+	if err != nil {
+		return nil, err
+	}
+	err = validateConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	startFileWatch(confUpdateChan, globalConfigMountPath)
+	startFileWatch(confUpdateChan, localConfigPath)
+
+	return config, nil
+}
+
+func readInConfigAsMap(configFilePath string) (map[string]interface{}, error) {
+	contents, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	err = yaml.Unmarshal(contents, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func convertToConfig(confAsMap map[string]interface{}) (*Config, error) {
+	conf := getDefaultConfig()
+
+	v := viper.New()
+	for key, val := range confAsMap {
+		v.Set(key, val)
+	}
+	err := v.Unmarshal(&conf)
+	if err != nil {
+		return nil, err
+	}
+	return conf, nil
+}
+
+func validateConfig(conf *Config) error {
 	validate := validator.New()
 	validate.RegisterStructValidation(func(sl validator.StructLevel) {
 		conf := sl.Current().Interface().(Config)
@@ -147,17 +144,53 @@ func getValidatedConfigAndWatch(confUpdateChan chan *fsnotify.Event, configFileP
 		}
 	}, Config{})
 
-	err = validate.Struct(conf)
+	return validate.Struct(conf)
+}
+
+func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string) error {
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return nil, err
+		return err
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(filepath.Dir(filePath))
+	if err != nil {
+		return err
 	}
 
-	v.WatchConfig()
-	v.OnConfigChange(func(in fsnotify.Event) {
-		confUpdateChan <- &in
-	})
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write && event.Name == filePath {
+					confUpdateChan <- &event
+				}
+			}
+		}
+	}()
+	return nil
+}
 
-	return conf, nil
+func mergeMaps(dst, src map[string]interface{}) {
+	for k, v := range src {
+		if v == nil {
+			continue
+		}
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			// if dst[k] does not exist, or is not a map, override it with a new map
+			_, hasKey := dst[k]
+			if !hasKey || reflect.TypeOf(dst[k]).Kind() != reflect.Map || dst[k] == nil {
+				dst[k] = make(map[string]interface{})
+			}
+			mergeMaps(dst[k].(map[string]interface{}), v.(map[string]interface{}))
+		} else {
+			dst[k] = v
+		}
+	}
 }
 
 func getDefaultConfig() *Config {
@@ -167,23 +200,14 @@ func getDefaultConfig() *Config {
 	}
 }
 
-func getConfigFromFile(filepath string, filename string) (*viper.Viper, *Config, error) {
-	v := viper.New()
-	v.SetConfigType(configType)
-
-	v.AddConfigPath(filepath)
-	v.SetConfigName(filename)
-
-	err := v.ReadInConfig()
-	if err != nil {
-		return nil, nil, err
+func ensureLocalConfigExist(localConfigPath string) bool {
+	if localConfigPath == "" {
+		return false
 	}
 
-	conf := getDefaultConfig()
-	err = v.Unmarshal(conf)
-	if err != nil {
-		return nil, nil, err
+	if info, err := os.Stat(localConfigPath); err != nil || info.IsDir() {
+		return false
 	}
 
-	return v, conf, nil
+	return true
 }
