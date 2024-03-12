@@ -20,5 +20,4 @@ func main() {
 	}
 
 	fmt.Printf("%s", marshalDevices)
-	return
 }
