@@ -7,6 +7,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -74,8 +75,14 @@ func GetMergedConfigWithWatcher(confUpdateChan chan *fsnotify.Event, localConfig
 		return nil, err
 	}
 
-	startFileWatch(confUpdateChan, globalConfigMountPath)
-	startFileWatch(confUpdateChan, localConfigPath)
+	err = startFileWatch(confUpdateChan, globalConfigMountPath, true)
+	if err != nil {
+		return nil, err
+	}
+	err = startFileWatch(confUpdateChan, localConfigPath, false)
+	if err != nil {
+		return nil, err
+	}
 
 	return config, nil
 }
@@ -147,12 +154,11 @@ func validateConfig(conf *Config) error {
 	return validate.Struct(conf)
 }
 
-func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string) error {
+func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string, isGlobal bool) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
-	defer watcher.Close()
 
 	err = watcher.Add(filepath.Dir(filePath))
 	if err != nil {
@@ -164,11 +170,23 @@ func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string) error 
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
+					log.Error().Msg("watcher.Events channel is closed, exiting watcher loop for file: " + filePath)
 					return
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write && event.Name == filePath {
+				targetOp := fsnotify.Create | fsnotify.Write | fsnotify.Remove | fsnotify.Rename
+				// Since k8s configmap is mounted as a symlink, we need to detect the symlink update via Remove event
+				if event.Has(fsnotify.Remove) && isGlobal {
+					log.Info().Msg("detected symlink update in the global config path")
+					confUpdateChan <- &event
+				} else if event.Name == filePath && event.Op&targetOp != 0 {
 					confUpdateChan <- &event
 				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					log.Error().Msg("watcher.Error channel is closed, exiting watcher loop for file: " + filePath)
+					return
+				}
+				log.Error().Msg("watcher error: " + err.Error())
 			}
 		}
 	}()
