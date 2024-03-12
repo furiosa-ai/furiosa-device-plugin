@@ -6,19 +6,27 @@ ifeq ($(shell uname -s),Darwin)
     CGO_LDFLAGS := -L/opt/homebrew/opt/hwloc/lib
 endif
 
+# make assumption that golang is installed on the underlying machine.
 define install_deps_function
     @UNAME_S=$$(uname -s); \
     if [ "$$UNAME_S" = "Linux" ]; then \
         echo "Installing for Ubuntu/Debian familly"; \
-        sudo apt-get install hwloc libhwloc-dev; \
+        sudo apt-get install hwloc libhwloc-dev ginkgo; \
     elif [ "$$UNAME_S" = "Darwin" ]; then \
         echo "macOS detected. Installing using Homebrew..."; \
         brew install hwloc; \
+        go env -w GO111MODULE=on; \
+        go install github.com/onsi/ginkgo/v2/ginkgo@latest; \
+        export PATH=$$PATH:$$(go env GOPATH)/bin; \
+        echo $$PATH; \
     else \
         echo "Unsupported Operating System"; \
         exit 1; \
     fi
 endef
+
+# regexp to filter some directories from testing
+EXCLUDE_DIR_REGEXP := E2E
 
 .PHONY: all
 all: build fmt lint vet test tidy vendor
@@ -41,11 +49,11 @@ vet:
 
 .PHONY: test
 test:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
 
 .PHONY: cover
 cover:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -coverprofile=coverage.out ./...
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
 
@@ -73,3 +81,20 @@ image-no-cache:
 helm-lint:
 	helm lint ./deployments/helm
 
+.PHONY: e2e-inference-pod-image
+e2e-inference-pod-image:
+	docker build --build-arg FURIOSA_IAM_KEY=$(FURIOSA_IAM_KEY) --build-arg FURIOSA_IAM_PWD=$(FURIOSA_IAM_PWD) . -t ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/inferece:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/inference_pod/Dockerfile
+
+.PHONY: e2e-verification
+e2e-verification:
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go build e2e/verification_pod/verification.go
+
+.PHONY: e2e-verification-image
+e2e-verification-image:
+	docker build . -t ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/verification:latest --progress=plain --platform=linux/amd64 -f ./e2e/verification_pod/Dockerfile
+
+.PHONY:e2e
+e2e:
+	# build container image
+	# run e2e test framework
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) ginkgo ./e2e
