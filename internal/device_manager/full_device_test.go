@@ -9,18 +9,19 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func NewMockFullDevice(mockDevice device.Device) (FuriosaDevice, error) {
+func NewMockFullDevice(mockDevice device.Device, isBlocked bool) (FuriosaDevice, error) {
 	deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
 	if err != nil {
 		return nil, err
 	}
 
 	return &fullDevice{
-		origin:   mockDevice,
-		manifest: manifest.NewWarboyManifest(mockDevice),
-		deviceID: deviceID,
-		pciBusID: pciBusID,
-		numaNode: numaNode,
+		origin:    mockDevice,
+		manifest:  manifest.NewWarboyManifest(mockDevice),
+		deviceID:  deviceID,
+		pciBusID:  pciBusID,
+		numaNode:  numaNode,
+		isBlocked: isBlocked,
 	}, nil
 }
 
@@ -38,7 +39,7 @@ func TestDeviceID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -70,7 +71,7 @@ func TestPCIBusID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -112,7 +113,7 @@ func TestNUMANode(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -125,7 +126,6 @@ func TestNUMANode(t *testing.T) {
 	}
 }
 
-// TODO(@bg) add test for IsHealthy API later
 func TestDeviceSpecs(t *testing.T) {
 	tests := []struct {
 		description    string
@@ -187,7 +187,7 @@ func TestDeviceSpecs(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -196,6 +196,47 @@ func TestDeviceSpecs(t *testing.T) {
 		actualResult := fullDev.DeviceSpecs()
 		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
 			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
+		}
+	}
+}
+
+// This function tests the IsHealthy API only in terms of the deny list.
+func TestIsHealthy(t *testing.T) {
+	tests := []struct {
+		description    string
+		mockDevice     device.Device
+		isBlocked      bool
+		expectedResult bool
+	}{
+		{
+			description:    "test healthy device",
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			isBlocked:      false,
+			expectedResult: true,
+		},
+		{
+			description:    "test unhealthy device",
+			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			isBlocked:      true,
+			expectedResult: false,
+		},
+	}
+
+	for _, tc := range tests {
+		fullDev, err := NewMockFullDevice(tc.mockDevice, tc.isBlocked)
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
+		actualResult, err := fullDev.IsHealthy()
+		if err != nil {
+			t.Errorf("unexpected error %t", err)
+			continue
+		}
+
+		if actualResult != tc.expectedResult {
+			t.Errorf("expectedResult %t but got %t", tc.expectedResult, actualResult)
 		}
 	}
 }
@@ -265,7 +306,7 @@ func TestMounts(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -292,7 +333,7 @@ func TestID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -319,7 +360,7 @@ func TestTopologyHintKey(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -354,13 +395,13 @@ func TestEqual(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		source, err := NewMockFullDevice(tc.mockSourceDevice)
+		source, err := NewMockFullDevice(tc.mockSourceDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
-		target, err := NewMockFullDevice(tc.mockTargetDevice)
+		target, err := NewMockFullDevice(tc.mockTargetDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue

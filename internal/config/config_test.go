@@ -254,8 +254,8 @@ func TestMergeConfig(t *testing.T) {
 					Warboy:   "generic",
 					Renegade: "generic",
 				},
-				DeviceDenyList: nil,
-				DebugMode:      true,
+				BlockedDeviceUUIDs: nil,
+				DebugMode:          true,
 			},
 		},
 		{
@@ -267,8 +267,8 @@ func TestMergeConfig(t *testing.T) {
 					Warboy:   "generic",
 					Renegade: "generic",
 				},
-				DeviceDenyList: nil,
-				DebugMode:      true,
+				BlockedDeviceUUIDs: nil,
+				DebugMode:          true,
 			},
 		},
 		{
@@ -280,8 +280,8 @@ func TestMergeConfig(t *testing.T) {
 					Warboy:   "generic",
 					Renegade: "generic",
 				},
-				DeviceDenyList: nil,
-				DebugMode:      true,
+				BlockedDeviceUUIDs: nil,
+				DebugMode:          true,
 			},
 		},
 		{
@@ -290,7 +290,7 @@ func TestMergeConfig(t *testing.T) {
 			localConfigPath:  absPath("./tests/zero.yaml"),
 			expectedConfig: &Config{
 				ResourceStrategyMap: nil,
-				DeviceDenyList:      []string{},
+				BlockedDeviceUUIDs:  []string{},
 				DebugMode:           false,
 			},
 		},

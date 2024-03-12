@@ -183,12 +183,23 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceFunc) {
+func newDeviceFuncResolver(strategy config.ResourceUnitStrategy, blockedList []string) (ret newDeviceFunc) {
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
 		ret = func(originDevice device.Device) ([]FuriosaDevice, error) {
-			newFullDevice, err := NewFullDevice(originDevice)
+			devID, err := originDevice.DeviceUUID()
+			if err != nil {
+				return nil, err
+			}
+			isBlocked := false
+			for _, blockedDeviceID := range blockedList {
+				if devID == blockedDeviceID {
+					isBlocked = true
+					break
+				}
+			}
+			newFullDevice, err := NewFullDevice(originDevice, isBlocked)
 			if err != nil {
 				return nil, err
 			}
@@ -217,13 +228,13 @@ func buildFuriosaDevices(devices []device.Device, newDevFunc newDeviceFunc) (map
 	return furiosaDevices, nil
 }
 
-func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, debugMode bool) (DeviceManager, error) {
+func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
 	resName, err := buildAndValidateFullResourceEndpointName(devices[0].Arch(), strategy)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(strategy))
+	furiosaDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(strategy, blockedList))
 	if err != nil {
 		return nil, err
 	}

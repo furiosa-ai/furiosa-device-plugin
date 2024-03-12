@@ -42,7 +42,7 @@ const (
 
 type Config struct {
 	ResourceStrategyMap map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
-	DeviceDenyList      []string                              `yaml:"deviceDenyList"`
+	BlockedDeviceUUIDs  []string                              `yaml:"blockedDeviceUUIDs"`
 	DebugMode           bool                                  `yaml:"debugMode"`
 }
 

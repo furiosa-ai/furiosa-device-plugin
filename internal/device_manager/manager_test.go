@@ -61,7 +61,7 @@ func MockFuriosaDevices(mockDevices []device.Device) (ret map[string]FuriosaDevi
 	ret = make(map[string]FuriosaDevice, len(mockDevices))
 	for _, mockDevice := range mockDevices {
 		key, _ := mockDevice.DeviceUUID()
-		mockFuriosaDevice, _ := NewMockFullDevice(mockDevice)
+		mockFuriosaDevice, _ := NewMockFullDevice(mockDevice, false)
 		ret[key] = mockFuriosaDevice
 	}
 
@@ -103,7 +103,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 
 	for _, tc := range tests {
 		devices := MockDeviceSlices(8, nil, nil)
-		actualDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(tc.strategy))
+		actualDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(tc.strategy, nil))
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
