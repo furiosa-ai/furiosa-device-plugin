@@ -178,7 +178,7 @@ func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string, isGlob
 				if event.Has(fsnotify.Remove) && isGlobal {
 					log.Info().Msg("detected symlink update in the global config path")
 					confUpdateChan <- &event
-				} else if event.Name == filePath && event.Op&targetOp != 0 {
+				} else if event.Name == filePath && event.Has(targetOp) {
 					confUpdateChan <- &event
 				}
 			case err, ok := <-watcher.Errors:
@@ -187,6 +187,8 @@ func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string, isGlob
 					return
 				}
 				log.Error().Msg("watcher error: " + err.Error())
+				// Send empty event to trigger restart
+				confUpdateChan <- &fsnotify.Event{}
 			}
 		}
 	}()

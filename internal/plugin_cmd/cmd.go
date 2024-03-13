@@ -134,7 +134,7 @@ Loop:
 		case fsEvent := <-fsWatcher.Events:
 			// Note(@bg): the device-plugin should be re-registered to kubelet if the kubelet is restarted.
 			// https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/#handling-kubelet-restarts
-			if fsEvent.Name == devicePluginAPIv1Beta1.KubeletSocket && fsEvent.Op&fsnotify.Create == fsnotify.Create {
+			if fsEvent.Name == devicePluginAPIv1Beta1.KubeletSocket && fsEvent.Has(fsnotify.Create) {
 				logger.Err(err).Msg("kubelet socket is newly created, the device plugin should be restarted.")
 				break Loop
 			}
