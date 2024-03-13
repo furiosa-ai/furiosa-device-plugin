@@ -12,12 +12,12 @@ import (
 var _ FuriosaDevice = (*fullDevice)(nil)
 
 type fullDevice struct {
-	origin    device.Device
-	manifest  manifest.Manifest
-	deviceID  string
-	pciBusID  string
-	numaNode  int
-	isBlocked bool
+	origin     device.Device
+	manifest   manifest.Manifest
+	deviceID   string
+	pciBusID   string
+	numaNode   int
+	isDisabled bool
 }
 
 func parseDeviceInfo(originDevice device.Device) (deviceID, pciBusID string, numaNode int, err error) {
@@ -50,7 +50,7 @@ func parseDeviceInfo(originDevice device.Device) (deviceID, pciBusID string, num
 	return deviceID, pciBusID, numaNode, err
 }
 
-func NewFullDevice(originDevice device.Device, isBlocked bool) (FuriosaDevice, error) {
+func NewFullDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
 	deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
@@ -65,12 +65,12 @@ func NewFullDevice(originDevice device.Device, isBlocked bool) (FuriosaDevice, e
 	}
 
 	return &fullDevice{
-		origin:    originDevice,
-		manifest:  newFullDeviceManifest,
-		deviceID:  deviceID,
-		pciBusID:  pciBusID,
-		numaNode:  int(numaNode),
-		isBlocked: isBlocked,
+		origin:     originDevice,
+		manifest:   newFullDeviceManifest,
+		deviceID:   deviceID,
+		pciBusID:   pciBusID,
+		numaNode:   int(numaNode),
+		isDisabled: isDisabled,
 	}, nil
 }
 
@@ -88,7 +88,7 @@ func (f *fullDevice) NUMANode() int {
 
 func (f *fullDevice) IsHealthy() (bool, error) {
 	//TODO(@bg): use more sophisticated way
-	if f.isBlocked {
+	if f.isDisabled {
 		return false, nil
 	}
 	liveness, err := f.origin.Alive()

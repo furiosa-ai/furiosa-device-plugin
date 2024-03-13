@@ -9,19 +9,19 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func NewMockFullDevice(mockDevice device.Device, isBlocked bool) (FuriosaDevice, error) {
+func NewMockFullDevice(mockDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
 	deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
 	if err != nil {
 		return nil, err
 	}
 
 	return &fullDevice{
-		origin:    mockDevice,
-		manifest:  manifest.NewWarboyManifest(mockDevice),
-		deviceID:  deviceID,
-		pciBusID:  pciBusID,
-		numaNode:  numaNode,
-		isBlocked: isBlocked,
+		origin:     mockDevice,
+		manifest:   manifest.NewWarboyManifest(mockDevice),
+		deviceID:   deviceID,
+		pciBusID:   pciBusID,
+		numaNode:   numaNode,
+		isDisabled: isDisabled,
 	}, nil
 }
 
@@ -205,25 +205,25 @@ func TestIsHealthy(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     device.Device
-		isBlocked      bool
+		isDisabled     bool
 		expectedResult bool
 	}{
 		{
 			description:    "test healthy device",
 			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
-			isBlocked:      false,
+			isDisabled:     false,
 			expectedResult: true,
 		},
 		{
 			description:    "test unhealthy device",
 			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
-			isBlocked:      true,
+			isDisabled:     true,
 			expectedResult: false,
 		},
 	}
 
 	for _, tc := range tests {
-		fullDev, err := NewMockFullDevice(tc.mockDevice, tc.isBlocked)
+		fullDev, err := NewMockFullDevice(tc.mockDevice, tc.isDisabled)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
