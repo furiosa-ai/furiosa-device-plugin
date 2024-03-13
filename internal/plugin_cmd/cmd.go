@@ -73,7 +73,7 @@ func start(ctx context.Context) error {
 	//grpc server panic listener
 	grpcErrChan := make(chan error, 1)
 
-	confUpdateChan := make(chan *fsnotify.Event, 1)
+	confUpdateChan := make(chan *config.ConfigChangeEvent, 1)
 	conf, err := config.GetMergedConfigWithWatcher(confUpdateChan, localConfigPath)
 	if err != nil {
 		logger.Err(err).Msg("couldn't parse configuration")
@@ -145,7 +145,11 @@ Loop:
 			logger.Err(grpcErr).Msg("error received from grpc server error channel")
 			break Loop
 		case confChangedEvent := <-confUpdateChan:
-			logger.Info().Msg(fmt.Sprintf("configuration file %s has been changed: %s, restarting device-plugin", confChangedEvent.Name, confChangedEvent.String()))
+			if confChangedEvent.IsError {
+				logger.Err(err).Msg(fmt.Sprintf("configuration file %s has been changed: %s, restarting device-plugin", confChangedEvent.Filename, confChangedEvent.Detail))
+			} else {
+				logger.Info().Msg(fmt.Sprintf("failed to watch file %s: %s, restarting device-plugin", confChangedEvent.Filename, confChangedEvent.Detail))
+			}
 			break Loop
 		}
 	}

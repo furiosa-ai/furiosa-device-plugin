@@ -47,7 +47,13 @@ type Config struct {
 	DebugMode           bool                                  `yaml:"debugMode"`
 }
 
-func GetMergedConfigWithWatcher(confUpdateChan chan *fsnotify.Event, localConfigPath string) (*Config, error) {
+type ConfigChangeEvent struct {
+	IsError  bool
+	Filename string
+	Detail   string
+}
+
+func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, localConfigPath string) (*Config, error) {
 	var err error
 	var localConf map[string]interface{}
 
@@ -154,7 +160,7 @@ func validateConfig(conf *Config) error {
 	return validate.Struct(conf)
 }
 
-func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string, isGlobal bool) error {
+func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, isGlobal bool) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -177,18 +183,17 @@ func startFileWatch(confUpdateChan chan *fsnotify.Event, filePath string, isGlob
 				// Since k8s configmap is mounted as a symlink, we need to detect the symlink update via Remove event
 				if event.Has(fsnotify.Remove) && isGlobal {
 					log.Info().Msg("detected symlink update in the global config path")
-					confUpdateChan <- &event
+					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: "symlink updated"}
 				} else if event.Name == filePath && event.Has(targetOp) {
-					confUpdateChan <- &event
+					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: event.String()}
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					log.Error().Msg("watcher.Error channel is closed, exiting watcher loop for file: " + filePath)
+					log.Error().Msgf("watcher.Error channel is closed, exiting watcher loop for file: %s", filePath)
 					return
 				}
-				log.Error().Msg("watcher error: " + err.Error())
-				// Send empty event to trigger restart
-				confUpdateChan <- &fsnotify.Event{}
+				log.Err(err).Msgf("failed to watch config file: %s", filePath)
+				confUpdateChan <- &ConfigChangeEvent{IsError: true, Filename: filePath, Detail: err.Error()}
 			}
 		}
 	}()
