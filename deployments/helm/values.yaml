@@ -23,7 +23,7 @@ daemonSet:
    # - name: imagepullsecret
 
 localConfig:
-  localConfigDir: /etc/config
+  localConfigDir: /usr/local
   localConfigFile: local_config.yaml
 
 globalConfig:
