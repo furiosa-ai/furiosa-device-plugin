@@ -68,3 +68,8 @@ image:
 .PHONY: image-no-cache
 image-no-cache:
 	docker build . --no-cache -t ghcr.io/furiosa-ai/furiosa-device-plugin:devel --progress=plain --platform=linux/amd64
+
+.PHONY: helm-lint
+helm-lint:
+	helm lint ./deployments/helm
+
