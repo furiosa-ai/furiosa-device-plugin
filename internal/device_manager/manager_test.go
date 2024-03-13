@@ -103,7 +103,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 
 	for _, tc := range tests {
 		devices := MockDeviceSlices(8, nil, nil)
-		actualDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(tc.strategy, nil))
+		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue

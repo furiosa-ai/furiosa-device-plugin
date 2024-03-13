@@ -11,7 +11,7 @@ var _ FuriosaDevice = (*partialDevice)(nil)
 type partialDevice struct {
 }
 
-func NewPartialDevices(_ device.Device) ([]FuriosaDevice, error) {
+func NewPartialDevices(_ device.Device, _ bool) ([]FuriosaDevice, error) {
 	return nil, nil
 }
 
