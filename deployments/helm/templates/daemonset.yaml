@@ -46,8 +46,7 @@ spec:
                - ALL
           volumeMounts:
             - name: global-config
-              mountPath: /etc/config/global_config.yaml
-              subPath: global
+              mountPath: /etc/config
             {{- if .Values.localConfig }}
             - name: local-config
               mountPath: {{ .Values.localConfig.localConfigDir }}

@@ -4,7 +4,7 @@ metadata:
   name: {{ include "furiosa-device-plugin.name" . }}-global-config-cm
   namespace: {{ .Values.namespace | default "kube-system" }}
 data:
-  global: |
+  global_config.yaml: |
     resourceStrategyMap:
       - warboy: {{ .Values.globalConfig.resourceStrategyMap.warboy | default "generic" }}
       - renegade: {{ .Values.globalConfig.resourceStrategyMap.renegade | default "generic" }}
