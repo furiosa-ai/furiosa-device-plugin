@@ -18,16 +18,10 @@ import (
 )
 
 const (
-	cmdUse                       = "furiosa-device-plugin"
-	cmdShort                     = "Furiosa Device Plugin for Kubernetes"
-	cmdExample                   = "furiosa-device-plugin -localConfigPath = {path}"
-	flagLocalConfigPathName      = "localConfigPath"
-	flagLocalConfigPathShorthand = "l"
-	flagLocalConfigPathValue     = "" //default value
-	flagLocalConfigPathUsage     = "[optional] local configuration file path"
+	cmdUse     = "furiosa-device-plugin"
+	cmdShort   = "Furiosa Device Plugin for Kubernetes"
+	cmdExample = "furiosa-device-plugin"
 )
-
-var localConfigPath string
 
 func NewDevicePluginCommand() *cobra.Command {
 	devicePluginCmd := &cobra.Command{
@@ -39,13 +33,7 @@ func NewDevicePluginCommand() *cobra.Command {
 			return start(cmd.Context())
 		},
 	}
-
-	// configure flags
-	flagSet := devicePluginCmd.Flags()
-	flagSet.StringVarP(&localConfigPath, flagLocalConfigPathName, flagLocalConfigPathShorthand, flagLocalConfigPathValue, flagLocalConfigPathUsage)
-
 	return devicePluginCmd
-
 }
 
 func start(ctx context.Context) error {
