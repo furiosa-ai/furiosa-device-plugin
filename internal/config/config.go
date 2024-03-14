@@ -42,9 +42,20 @@ const (
 )
 
 type Config struct {
-	ResourceStrategyMap map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
-	DisabledDevices     []string                              `yaml:"disabledDevices"`
-	DebugMode           bool                                  `yaml:"debugMode"`
+	ResourceStrategyMap    map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
+	DisabledDeviceUUIDList []string                              `yaml:"disabledDevices"`
+	DebugMode              bool                                  `yaml:"debugMode"`
+}
+
+// Currently of no use, but if we want to validate the yaml file's schema first, we can use this struct
+type ConfigYaml struct {
+	Global    Config            `yaml:"global"`
+	Overrides map[string]Config `yaml:"overrides"`
+}
+
+type ConfigYamlMap struct {
+	Global    map[string]interface{}            `yaml:"global"`
+	Overrides map[string]map[string]interface{} `yaml:"overrides"`
 }
 
 type ConfigChangeEvent struct {
@@ -53,25 +64,18 @@ type ConfigChangeEvent struct {
 	Detail   string
 }
 
-func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, localConfigPath string) (*Config, error) {
-	var err error
-	var localConf map[string]interface{}
-
-	globalConf, err := readInConfigAsMap(globalConfigMountPath)
+func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, _ string) (*Config, error) {
+	confYamlMap, err := readInConfigAsMap(globalConfigMountPath)
 	if err != nil {
 		return nil, err
 	}
 
-	//check whether local config exist
-	if !ensureLocalConfigExist(localConfigPath) {
-		localConf = make(map[string]interface{})
-	} else {
-		localConf, err = readInConfigAsMap(localConfigPath)
-		if err != nil {
-			return nil, err
-		}
-	}
+	globalConf := confYamlMap.Global
+	// TODO: get node name from interface and make various implementations, e.g. from env var, from k8s, mock, etc.
+	nodeName := os.Getenv("NODE_NAME")
+	localConf := confYamlMap.Overrides[nodeName]
 	mergeMaps(globalConf, localConf)
+
 	config, err := convertToConfig(globalConf)
 	if err != nil {
 		return nil, err
@@ -85,21 +89,17 @@ func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, localCon
 	if err != nil {
 		return nil, err
 	}
-	err = startFileWatch(confUpdateChan, localConfigPath, false)
-	if err != nil {
-		return nil, err
-	}
 
 	return config, nil
 }
 
-func readInConfigAsMap(configFilePath string) (map[string]interface{}, error) {
+func readInConfigAsMap(configFilePath string) (*ConfigYamlMap, error) {
 	contents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	var result map[string]interface{}
+	result := &ConfigYamlMap{}
 	err = yaml.Unmarshal(contents, &result)
 	if err != nil {
 		return nil, err
