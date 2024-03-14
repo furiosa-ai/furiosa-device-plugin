@@ -5,9 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,6 +15,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	clientset "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
@@ -105,17 +106,18 @@ var _ = BeforeSuite(func() {
 })
 
 // Note(@bg): assumption is that this test will be run on the two socket workstation with two NPUs per each socket.
+// TODO: enhance test to parse resource name from node object
 var _ = Describe("end-to-end test", func() {
 	Context("test legacy strategy", func() {
 		It("deploy device-plugin helm chart for legacy strategy", deployHelmChart("legacy"))
 
 		It("verify node", verifyNode("alpha.furiosa.ai/npu"))
 
-		It("request NPUs", deployVerificationPod())
+		It("request NPUs", deployVerificationPod("alpha.furiosa.ai/npu"))
 
 		It("clean up verification pod", cleanUpVerificationPod())
 
-		It("verify pod environment", verifyInferenceEnv())
+		It("verify pod environment", verifyInferenceEnv("alpha.furiosa.ai/npu"))
 
 		It("clean up verification pod", cleanUpInferencePod())
 
@@ -125,13 +127,13 @@ var _ = Describe("end-to-end test", func() {
 	Context("test generic strategy ", func() {
 		It("deploy device-plugin helm chart for legacy strategy", deployHelmChart("generic"))
 
-		It("verify node", verifyNode("furiosa.ai/warboy", "furiosa.ai/renegade"))
+		It("verify node", verifyNode("furiosa.ai/warboy"))
 
-		It("request NPUs", deployVerificationPod())
+		It("request NPUs", deployVerificationPod("furiosa.ai/warboy"))
 
 		It("clean up verification pod", cleanUpVerificationPod())
 
-		It("verify pod environment", verifyInferenceEnv())
+		It("verify pod environment", verifyInferenceEnv("furiosa.ai/warboy"))
 
 		It("clean up verification pod", cleanUpInferencePod())
 
@@ -141,7 +143,7 @@ var _ = Describe("end-to-end test", func() {
 	//TODO: add more tests
 })
 
-func genVerificationPodManifest(npuNum string) *v1.Pod {
+func genVerificationPodManifest(npuNum string, resourceName string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "verification-pod",
@@ -156,7 +158,7 @@ func genVerificationPodManifest(npuNum string) *v1.Pod {
 					ImagePullPolicy: v1.PullAlways,
 					Resources: v1.ResourceRequirements{
 						Limits: v1.ResourceList{
-							"alpha.furiosa.ai/npu": resource.MustParse(npuNum),
+							v1.ResourceName(resourceName): resource.MustParse(npuNum),
 						},
 					},
 				},
@@ -171,7 +173,7 @@ func genVerificationPodManifest(npuNum string) *v1.Pod {
 	}
 }
 
-func genInferencePodManifest() *v1.Pod {
+func genInferencePodManifest(resourceName string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "inference-pod",
@@ -186,7 +188,7 @@ func genInferencePodManifest() *v1.Pod {
 					ImagePullPolicy: v1.PullAlways,
 					Resources: v1.ResourceRequirements{
 						Limits: v1.ResourceList{
-							"alpha.furiosa.ai/npu": resource.MustParse("1"),
+							v1.ResourceName(resourceName): resource.MustParse("1"),
 						},
 					},
 				},
@@ -235,10 +237,14 @@ globalConfig:
 	return fmt.Sprintf(template, strategy, strategy)
 }
 
+func strRand() string {
+	return fmt.Sprintf("%d", rand.Int())
+}
+
 func deployHelmChart(strategy string) func() {
 	return func() {
 		helmChartSpec := &helmclient.ChartSpec{
-			ReleaseName:     "e2e-test333",
+			ReleaseName:     "e2e-test" + strRand(),
 			ChartName:       abs("../deployments/helm"), //path to helm chart
 			Namespace:       frk.namespace,
 			CreateNamespace: false,
@@ -273,49 +279,51 @@ func verifyNode(resUniqueKeys ...string) func() {
 		podName := podList.Items[0].Name
 		Eventually(func() v1.PodPhase {
 			pod, err := frk.clientSet.CoreV1().Pods(frk.namespace).Get(context.TODO(), podName, metav1.GetOptions{})
-			Expect(err).To(BeNil())
+			if err != nil {
+				return v1.PodUnknown
+			}
 			return pod.Status.Phase
-		}, 15*time.Second, 1*time.Second).Should(Equal(v1.PodRunning))
+		}).WithPolling(1 * time.Second).WithTimeout(15 * time.Second).Should(Equal(v1.PodRunning))
 
 		// polling the same node for resource name and quantity verification
 		Eventually(func() int {
 			node, err := frk.clientSet.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
-			Expect(err).To(BeNil())
+			if err != nil {
+				return 0
+			}
 
 			var foundKeys []string
 			for _, resUniqueKey := range resUniqueKeys {
 				capacity := node.Status.Capacity[v1.ResourceName(resUniqueKey)]
 				allocatable := node.Status.Allocatable[v1.ResourceName(resUniqueKey)]
 
-				decimalCapacity, success1 := capacity.AsInt64()
-				Expect(success1).Should(BeTrue())
-				Expect(decimalCapacity).Should(BeNumerically(">=", 1))
-				decimalAllocatable, success2 := allocatable.AsInt64()
-				Expect(success2).Should(BeTrue())
-				Expect(decimalAllocatable).Should(BeNumerically(">=", 1))
+				decimalCapacity, _ := capacity.AsInt64()
+				decimalAllocatable, _ := allocatable.AsInt64()
 
-				if decimalCapacity == decimalAllocatable {
+				if decimalCapacity > 0 && decimalCapacity == decimalAllocatable {
 					foundKeys = append(foundKeys, resUniqueKey)
 				}
 			}
 
 			return len(foundKeys)
-		}, 15*time.Second, 1*time.Second).Should(BeNumerically(">=", 1))
+		}).WithPolling(1 * time.Second).WithTimeout(15 * time.Second).Should(BeNumerically(">=", 1))
 	}
 }
 
-func deployVerificationPod() func() {
+func deployVerificationPod(resourceName string) func() {
 	return func() {
 		// deploy verification pod
-		_, err := frk.clientSet.CoreV1().Pods(frk.namespace).Create(context.TODO(), genVerificationPodManifest("1"), metav1.CreateOptions{})
+		_, err := frk.clientSet.CoreV1().Pods(frk.namespace).Create(context.TODO(), genVerificationPodManifest("1", resourceName), metav1.CreateOptions{})
 		Expect(err).To(BeNil())
 
 		// polling until pod.status.phase became succeeded with timeout 30 sec
 		Eventually(func() v1.PodPhase {
 			pod, err := frk.clientSet.CoreV1().Pods(frk.namespace).Get(context.TODO(), "verification-pod", metav1.GetOptions{})
-			Expect(err).To(BeNil())
+			if err != nil {
+				return v1.PodUnknown
+			}
 			return pod.Status.Phase
-		}, 30*time.Second, 1*time.Second).Should(Equal(v1.PodSucceeded))
+		}).WithPolling(1 * time.Second).WithTimeout(30 * time.Second).Should(Equal(v1.PodSucceeded))
 
 		// parse allocated npu list through CoreV1().Pods().GetLogs() api
 		request := frk.clientSet.CoreV1().Pods(frk.namespace).GetLogs("verification-pod", &v1.PodLogOptions{})
@@ -341,18 +349,20 @@ func cleanUpVerificationPod() func() {
 	}
 }
 
-func verifyInferenceEnv() func() {
+func verifyInferenceEnv(resourceName string) func() {
 	return func() {
 		// deploy inference pod
-		_, err := frk.clientSet.CoreV1().Pods(frk.namespace).Create(context.TODO(), genInferencePodManifest(), metav1.CreateOptions{})
+		_, err := frk.clientSet.CoreV1().Pods(frk.namespace).Create(context.TODO(), genInferencePodManifest(resourceName), metav1.CreateOptions{})
 		Expect(err).To(BeNil())
 
 		// polling until pod.status.phase became succeeded with timeout up to 5 min since image size is bigger than 5GB
 		Eventually(func() v1.PodPhase {
 			pod, err := frk.clientSet.CoreV1().Pods(frk.namespace).Get(context.TODO(), "inference-pod", metav1.GetOptions{})
-			Expect(err).To(BeNil())
+			if err != nil {
+				return v1.PodUnknown
+			}
 			return pod.Status.Phase
-		}, 300*time.Second, 1*time.Second).Should(Equal(v1.PodSucceeded))
+		}).WithPolling(1 * time.Second).WithTimeout(300 * time.Second).Should(Equal(v1.PodSucceeded))
 	}
 }
 
