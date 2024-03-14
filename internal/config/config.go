@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -13,15 +14,18 @@ import (
 )
 
 const (
-	configType            = "yaml"
-	globalConfigMountPath = "/etc/config/global_config.yaml"
-	legacyStrategyStr     = "legacy"
-	genericStrategyStr    = "generic"
-	singleCoreStr         = "single-core"
-	dualCoreStr           = "dual-core"
-	quadCoreStr           = "quad-core"
-	warboyStr             = "warboy"
-	renegadeStr           = "renegade"
+	GlobalConfigMountPath = "/etc/config/global_config.yaml"
+)
+
+const (
+	configType         = "yaml"
+	legacyStrategyStr  = "legacy"
+	genericStrategyStr = "generic"
+	singleCoreStr      = "single-core"
+	dualCoreStr        = "dual-core"
+	quadCoreStr        = "quad-core"
+	warboyStr          = "warboy"
+	renegadeStr        = "renegade"
 )
 
 type ResourceUnitStrategy string
@@ -41,18 +45,22 @@ const (
 	Renegade ResourceKind = renegadeStr
 )
 
+// Config holds the configuration for running this device plugin.
 type Config struct {
 	ResourceStrategyMap    map[ResourceKind]ResourceUnitStrategy `yaml:"resourceStrategyMap" validate:"required"`
-	DisabledDeviceUUIDList []string                              `yaml:"disabledDevices"`
+	DisabledDeviceUUIDList []string                              `yaml:"disabledDeviceUUIDList"`
 	DebugMode              bool                                  `yaml:"debugMode"`
 }
 
-// Currently of no use, but if we want to validate the yaml file's schema first, we can use this struct
+// ConfigYaml is the schema of the config file. This struct is used only for validation purpose.
 type ConfigYaml struct {
-	Global    Config            `yaml:"global"`
+	Global Config `yaml:"global" validate:"required"`
+	// Overrides is a map of nodename to config.
 	Overrides map[string]Config `yaml:"overrides"`
 }
 
+// ConfigYamlMap is used to read in the config file as a map.
+// The map is used to merge the global and overrided config.
 type ConfigYamlMap struct {
 	Global    map[string]interface{}            `yaml:"global"`
 	Overrides map[string]map[string]interface{} `yaml:"overrides"`
@@ -64,17 +72,25 @@ type ConfigChangeEvent struct {
 	Detail   string
 }
 
-func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, _ string) (*Config, error) {
-	confYamlMap, err := readInConfigAsMap(globalConfigMountPath)
+func GetMergedConfigWithWatcher(configPath string, nodeNameGetter NodeNameGetter, confUpdateChan chan *ConfigChangeEvent) (*Config, error) {
+	err := validateConfigYaml(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate config file: %w", err)
+	}
+
+	confYamlMap, err := readInConfigAsMap(configPath)
 	if err != nil {
 		return nil, err
 	}
 
 	globalConf := confYamlMap.Global
-	// TODO: get node name from interface and make various implementations, e.g. from env var, from k8s, mock, etc.
-	nodeName := os.Getenv("NODE_NAME")
-	localConf := confYamlMap.Overrides[nodeName]
-	mergeMaps(globalConf, localConf)
+	nodeName := nodeNameGetter.GetNodename()
+	if nodeName == "" {
+		log.Warn().Msg("NODE_NAME env is not set, using global config only")
+	} else {
+		localConf := confYamlMap.Overrides[nodeName]
+		mergeMaps(globalConf, localConf)
+	}
 
 	config, err := convertToConfig(globalConf)
 	if err != nil {
@@ -85,12 +101,27 @@ func GetMergedConfigWithWatcher(confUpdateChan chan *ConfigChangeEvent, _ string
 		return nil, err
 	}
 
-	err = startFileWatch(confUpdateChan, globalConfigMountPath, true)
+	err = startFileWatch(confUpdateChan, configPath, true)
 	if err != nil {
 		return nil, err
 	}
 
 	return config, nil
+}
+
+func validateConfigYaml(configFilePath string) error {
+	file, err := os.Open(configFilePath)
+	if err != nil {
+		return err
+	}
+	configYaml := ConfigYaml{}
+	decoder := yaml.NewDecoder(file)
+	decoder.KnownFields(true)
+	err = decoder.Decode(&configYaml)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func readInConfigAsMap(configFilePath string) (*ConfigYamlMap, error) {
@@ -160,7 +191,7 @@ func validateConfig(conf *Config) error {
 	return validate.Struct(conf)
 }
 
-func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, isGlobal bool) error {
+func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, detectSymlinkRemove bool) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -181,7 +212,7 @@ func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, isG
 				}
 				targetOp := fsnotify.Create | fsnotify.Write | fsnotify.Remove | fsnotify.Rename
 				// Since k8s configmap is mounted as a symlink, we need to detect the symlink update via Remove event
-				if event.Has(fsnotify.Remove) && isGlobal {
+				if event.Has(fsnotify.Remove) && detectSymlinkRemove {
 					log.Info().Msg("detected symlink update in the global config path")
 					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: "symlink updated"}
 				} else if event.Name == filePath && event.Has(targetOp) {
@@ -220,19 +251,8 @@ func mergeMaps(dst, src map[string]interface{}) {
 
 func getDefaultConfig() *Config {
 	return &Config{
-		ResourceStrategyMap: nil,
-		DebugMode:           false,
+		ResourceStrategyMap:    nil,
+		DisabledDeviceUUIDList: nil,
+		DebugMode:              false,
 	}
-}
-
-func ensureLocalConfigExist(localConfigPath string) bool {
-	if localConfigPath == "" {
-		return false
-	}
-
-	if info, err := os.Stat(localConfigPath); err != nil || info.IsDir() {
-		return false
-	}
-
-	return true
 }

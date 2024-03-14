@@ -1,0 +1,22 @@
+global:
+  resourceStrategyMap:
+    warboy: generic
+    renegade: generic
+  disabledDeviceUUIDList:
+    - a0
+  debugMode: false
+overrides:
+  this:
+    resourceStrategyMap:
+      warboy: single-core
+      renegade: single-core
+    disabledDeviceUUIDList:
+      - b0
+    debugMode: true
+  other:
+    resourceStrategyMap:
+      warboy: legacy
+      renegade: quad-core
+    disabledDeviceUUIDList:
+      - c0
+    debugMode: false
