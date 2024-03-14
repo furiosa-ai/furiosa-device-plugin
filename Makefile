@@ -83,7 +83,7 @@ helm-lint:
 
 .PHONY: e2e-inference-pod-image
 e2e-inference-pod-image:
-	docker build --build-arg FURIOSA_IAM_KEY=$(FURIOSA_IAM_KEY) --build-arg FURIOSA_IAM_PWD=$(FURIOSA_IAM_PWD) . -t ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/inferece:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/inference_pod/Dockerfile
+	docker build --build-arg FURIOSA_IAM_KEY=$(FURIOSA_IAM_KEY) --build-arg FURIOSA_IAM_PWD=$(FURIOSA_IAM_PWD) . -t ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/inference:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/inference_pod/Dockerfile
 
 .PHONY: e2e-verification
 e2e-verification:
