@@ -123,7 +123,7 @@ var _ = Describe("end-to-end test", func() {
 	})
 
 	Context("test generic strategy ", func() {
-		It("deploy device-plugin helm chart for legacy strategy", deployHelmChart("legacy"))
+		It("deploy device-plugin helm chart for legacy strategy", deployHelmChart("generic"))
 
 		It("verify node", verifyNode("furiosa.ai/warboy", "furiosa.ai/renegade"))
 
@@ -223,7 +223,7 @@ daemonSet:
     memory: 64Mi
 
 localConfig:
-  localConfigDir: /etc/config
+  localConfigDir: /usr/local
   localConfigFile: local_config.yaml
 
 globalConfig:
@@ -238,7 +238,7 @@ globalConfig:
 func deployHelmChart(strategy string) func() {
 	return func() {
 		helmChartSpec := &helmclient.ChartSpec{
-			ReleaseName:     "e2e-test",
+			ReleaseName:     "e2e-test333",
 			ChartName:       abs("../deployments/helm"), //path to helm chart
 			Namespace:       frk.namespace,
 			CreateNamespace: false,
