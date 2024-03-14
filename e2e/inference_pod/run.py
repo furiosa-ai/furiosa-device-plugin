@@ -3,7 +3,7 @@ from furiosa.models.vision import SSDMobileNet
 from furiosa.runtime.sync import create_runner
 
 # make sure that test images exist in right place
-image = ["cat.jpg"]
+image = ["license_free_cat.jpg"]
 
 mobilenet = SSDMobileNet()
 with create_runner(mobilenet.model_source()) as runner:
