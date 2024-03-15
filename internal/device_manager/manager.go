@@ -22,7 +22,7 @@ type DeviceManager interface {
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
-type newDeviceFunc func(originDevice device.Device) ([]FuriosaDevice, error)
+type newDeviceFunc func(originDevice device.Device, isDisabled bool) ([]FuriosaDevice, error)
 
 var _ DeviceManager = (*deviceManager)(nil)
 
@@ -187,8 +187,8 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
-		ret = func(originDevice device.Device) ([]FuriosaDevice, error) {
-			newFullDevice, err := NewFullDevice(originDevice)
+		ret = func(originDevice device.Device, isDisabled bool) ([]FuriosaDevice, error) {
+			newFullDevice, err := NewFullDevice(originDevice, isDisabled)
 			if err != nil {
 				return nil, err
 			}
@@ -202,10 +202,15 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	return ret
 }
 
-func buildFuriosaDevices(devices []device.Device, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
+func buildFuriosaDevices(devices []device.Device, blockedList []string, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
 	furiosaDevices := map[string]FuriosaDevice{}
 	for _, origin := range devices {
-		devices, err := newDevFunc(origin)
+		devUUID, err := origin.DeviceUUID()
+		if err != nil {
+			return nil, err
+		}
+		isDisabled := contains(blockedList, devUUID)
+		devices, err := newDevFunc(origin, isDisabled)
 		if err != nil {
 			return nil, err
 		}
@@ -217,13 +222,13 @@ func buildFuriosaDevices(devices []device.Device, newDevFunc newDeviceFunc) (map
 	return furiosaDevices, nil
 }
 
-func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, debugMode bool) (DeviceManager, error) {
+func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
 	resName, err := buildAndValidateFullResourceEndpointName(devices[0].Arch(), strategy)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := buildFuriosaDevices(devices, newDeviceFuncResolver(strategy))
+	furiosaDevices, err := buildFuriosaDevices(devices, blockedList, newDeviceFuncResolver(strategy))
 	if err != nil {
 		return nil, err
 	}

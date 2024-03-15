@@ -1,0 +1,17 @@
+global:
+  resourceStrategyMap:
+    warboy: generic
+    renegade: generic
+  disabledDeviceUUIDList:
+    - a0
+  debugMode: false
+overrides:
+  this: {}
+  other:
+    resourceStrategyMap:
+      warboy: legacy
+      renegade: quad-core
+    disabledDeviceUUIDList:
+      - c0
+      - c1
+    debugMode: false

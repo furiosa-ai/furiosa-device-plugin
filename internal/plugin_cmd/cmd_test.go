@@ -2,7 +2,6 @@ package plugin_cmd
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -14,24 +13,11 @@ Usage:
   furiosa-device-plugin [flags]
 
 Examples:
-furiosa-device-plugin -localConfigPath = {path}
+furiosa-device-plugin
 
 Flags:
-  -h, --help                     help for furiosa-device-plugin
-  -l, --localConfigPath string   [optional] local configuration file path
+  -h, --help   help for furiosa-device-plugin
 `
-	expectedLocalConfigPathOutput = `Error: flag needs an argument: 'l' in -l
-Usage:
-  furiosa-device-plugin [flags]
-
-Examples:
-furiosa-device-plugin -localConfigPath = {path}
-
-Flags:
-  -h, --help                     help for furiosa-device-plugin
-  -l, --localConfigPath string   [optional] local configuration file path
-`
-	expectedLocalConfigPathErrorOutput = "flag needs an argument: 'l' in -l"
 )
 
 func safeError(err error) string {
@@ -55,12 +41,6 @@ func TestDevicePluginCommand(t *testing.T) {
 			expectedResult: expectedHelpOutput,
 			expectedError:  nil,
 		},
-		{
-			description:    "test cmd -l",
-			args:           []string{"-l"},
-			expectedResult: expectedLocalConfigPathOutput,
-			expectedError:  fmt.Errorf(expectedLocalConfigPathErrorOutput),
-		},
 	}
 
 	for _, tc := range tests {
@@ -82,6 +62,7 @@ func TestDevicePluginCommand(t *testing.T) {
 
 		if strings.TrimSpace(output) != strings.TrimSpace(tc.expectedResult) {
 			t.Errorf("actual result does not match to expected result")
+			println("actual: ", output)
 		}
 	}
 }
