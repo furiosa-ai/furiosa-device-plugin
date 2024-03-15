@@ -96,6 +96,9 @@ func getMergedConfigFromFile(configPath string, nodeNameGetter NodeNameGetter) (
 	}
 
 	globalConf := confYamlMap.Global
+	// prohibit disabledDeviceUUIDList from being set on the global level
+	globalConf["disabledDeviceUUIDList"] = nil
+
 	nodeName := nodeNameGetter.GetNodename()
 	if nodeName == "" {
 		log.Warn().Msg("NODE_NAME env is not set, using global config only")
