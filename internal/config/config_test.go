@@ -179,7 +179,7 @@ func TestValidateConfig(t *testing.T) {
 	}
 }
 
-func TestGetMergedConfigWithWatcher(t *testing.T) {
+func TestGetMergedConfigFromFile(t *testing.T) {
 	tests := []struct {
 		description    string
 		configPath     string
@@ -319,13 +319,82 @@ func TestGetMergedConfigWithWatcher(t *testing.T) {
 
 	mockNodeNameGetter := newMockNodenameGetter("this")
 	for _, tc := range tests {
-		actualConf, actualErr := GetMergedConfigWithWatcher(absPath(tc.configPath), mockNodeNameGetter, nil)
+		actualConf, actualErr := getMergedConfigFromFile(absPath(tc.configPath), mockNodeNameGetter)
 		if tc.expectedError {
 			assert.NotNilf(t, actualErr, tc.description)
 		} else {
 			assert.Nilf(t, actualErr, tc.description)
 			assert.Equalf(t, tc.expectedResult, actualConf, tc.description)
 		}
+	}
+}
+
+func TestIsEqualConfig(t *testing.T) {
+	tests := []struct {
+		description string
+		a           *Config
+		b           *Config
+		expected    bool
+	}{
+		{
+			description: "equal configs",
+			a: &Config{
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   GenericStrategy,
+					Renegade: GenericStrategy,
+				},
+				DisabledDeviceUUIDList: []string{"a0", "a1"},
+				DebugMode:              true,
+			},
+			b: &Config{
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   GenericStrategy,
+					Renegade: GenericStrategy,
+				},
+				DisabledDeviceUUIDList: []string{"a0", "a1"},
+				DebugMode:              true,
+			},
+			expected: true,
+		},
+		{
+			description: "different resource strategy map",
+			a: &Config{
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   GenericStrategy,
+					Renegade: GenericStrategy,
+				},
+				DisabledDeviceUUIDList: []string{"a0", "a1"},
+				DebugMode:              true,
+			},
+			b: &Config{
+				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
+					Warboy:   SingleCoreStrategy,
+					Renegade: SingleCoreStrategy,
+				},
+				DisabledDeviceUUIDList: []string{"a0", "a1"},
+				DebugMode:              true,
+			},
+			expected: false,
+		},
+		{
+			description: "different disabled device uuid list",
+			a: &Config{
+				ResourceStrategyMap:    map[ResourceKind]ResourceUnitStrategy{},
+				DisabledDeviceUUIDList: []string{"a0", "a1"},
+				DebugMode:              true,
+			},
+			b: &Config{
+				ResourceStrategyMap:    map[ResourceKind]ResourceUnitStrategy{},
+				DisabledDeviceUUIDList: []string{"a0", "a2"},
+				DebugMode:              true,
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		actual := isEqualConfig(tc.a, tc.b)
+		assert.Equalf(t, tc.expected, actual, tc.description)
 	}
 }
 

@@ -73,6 +73,18 @@ type ConfigChangeEvent struct {
 }
 
 func GetMergedConfigWithWatcher(configPath string, nodeNameGetter NodeNameGetter, confUpdateChan chan *ConfigChangeEvent) (*Config, error) {
+	conf, err := getMergedConfigFromFile(configPath, nodeNameGetter)
+	if err != nil {
+		return nil, err
+	}
+	err = startWatchingConfigChange(confUpdateChan, configPath, nodeNameGetter, conf)
+	if err != nil {
+		return nil, err
+	}
+	return conf, nil
+}
+
+func getMergedConfigFromFile(configPath string, nodeNameGetter NodeNameGetter) (*Config, error) {
 	err := validateConfigYaml(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate config file: %w", err)
@@ -97,11 +109,6 @@ func GetMergedConfigWithWatcher(configPath string, nodeNameGetter NodeNameGetter
 		return nil, err
 	}
 	err = validateConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	err = startFileWatch(confUpdateChan, configPath, true)
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +144,24 @@ func readInConfigAsMap(configFilePath string) (*ConfigYamlMap, error) {
 	}
 
 	return result, nil
+}
+
+func mergeMaps(dst, src map[string]interface{}) {
+	for k, v := range src {
+		if v == nil {
+			continue
+		}
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			// if dst[k] does not exist, or is not a map, override it with a new map
+			_, hasKey := dst[k]
+			if !hasKey || reflect.TypeOf(dst[k]).Kind() != reflect.Map || dst[k] == nil {
+				dst[k] = make(map[string]interface{})
+			}
+			mergeMaps(dst[k].(map[string]interface{}), v.(map[string]interface{}))
+		} else {
+			dst[k] = v
+		}
+	}
 }
 
 func convertToConfig(confAsMap map[string]interface{}) (*Config, error) {
@@ -191,7 +216,7 @@ func validateConfig(conf *Config) error {
 	return validate.Struct(conf)
 }
 
-func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, detectSymlinkRemove bool) error {
+func startWatchingConfigChange(confUpdateChan chan *ConfigChangeEvent, filePath string, nodeNameGetter NodeNameGetter, prevConf *Config) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -211,12 +236,21 @@ func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, det
 					return
 				}
 				targetOp := fsnotify.Create | fsnotify.Write | fsnotify.Remove | fsnotify.Rename
-				// Since k8s configmap is mounted as a symlink, we need to detect the symlink update via Remove event
-				if event.Has(fsnotify.Remove) && detectSymlinkRemove {
-					log.Info().Msg("detected symlink update in the global config path")
-					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: "symlink updated"}
-				} else if event.Name == filePath && event.Has(targetOp) {
-					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: event.String()}
+				// Since k8s configmap is mounted as a symlink, we need to detect the symlink update via `any remove event` in the same directory.
+				maybeUpdated := event.Has(fsnotify.Remove) || (event.Has(targetOp) && event.Name == filePath)
+				if !maybeUpdated {
+					continue
+				}
+				newConf, err := getMergedConfigFromFile(filePath, nodeNameGetter)
+				if err != nil {
+					log.Err(err).Msgf("failed to read updated config file: %s", filePath)
+					confUpdateChan <- &ConfigChangeEvent{IsError: true, Filename: filePath, Detail: err.Error()}
+					continue
+				}
+				if !isEqualConfig(newConf, prevConf) {
+					confUpdateChan <- &ConfigChangeEvent{IsError: false, Filename: filePath, Detail: "config is updated"}
+				} else {
+					log.Info().Msg("config file has been updated but no config change is detected")
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -231,22 +265,8 @@ func startFileWatch(confUpdateChan chan *ConfigChangeEvent, filePath string, det
 	return nil
 }
 
-func mergeMaps(dst, src map[string]interface{}) {
-	for k, v := range src {
-		if v == nil {
-			continue
-		}
-		if reflect.TypeOf(v).Kind() == reflect.Map {
-			// if dst[k] does not exist, or is not a map, override it with a new map
-			_, hasKey := dst[k]
-			if !hasKey || reflect.TypeOf(dst[k]).Kind() != reflect.Map || dst[k] == nil {
-				dst[k] = make(map[string]interface{})
-			}
-			mergeMaps(dst[k].(map[string]interface{}), v.(map[string]interface{}))
-		} else {
-			dst[k] = v
-		}
-	}
+func isEqualConfig(c1, c2 *Config) bool {
+	return reflect.DeepEqual(c1, c2)
 }
 
 func getDefaultConfig() *Config {
