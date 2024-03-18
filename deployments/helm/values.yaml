@@ -22,10 +22,6 @@ daemonSet:
   imagePullSecrets:
    # - name: imagepullsecret
 
-localConfig:
-  localConfigDir: /usr/local
-  localConfigFile: local_config.yaml
-
 globalConfig:
   resourceStrategyMap:
     warboy: generic

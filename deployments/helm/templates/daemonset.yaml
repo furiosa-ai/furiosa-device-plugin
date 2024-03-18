@@ -23,9 +23,6 @@ spec:
         - name: {{ include "furiosa-device-plugin.name" . }}
           image: {{ .Values.daemonSet.image.repository | default "ghcr.io/furiosa-ai/furiosa-device-plugin" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
           command: ["./main"]
-          {{- if .Values.localConfig }}
-          args: ["--localConfigPath={{ .Values.localConfig.localConfigDir }}/{{ .Values.localConfig.localConfigFile }}"]
-          {{- end }}
           env:
           - name: NODE_NAME
             valueFrom:
@@ -47,10 +44,6 @@ spec:
           volumeMounts:
             - name: global-config
               mountPath: /etc/config
-            {{- if .Values.localConfig }}
-            - name: local-config
-              mountPath: {{ .Values.localConfig.localConfigDir }}
-            {{- end }}
             - name: kubelet-socket
               mountPath: /var/lib/kubelet/device-plugins
             - name: dev-fs
@@ -65,11 +58,6 @@ spec:
         - name: global-config
           configMap:
             name: {{ include "furiosa-device-plugin.name" . }}-global-config-cm
-        {{- if .Values.localConfig }}
-        - name: local-config
-          hostPath:
-            path: {{ .Values.localConfig.localConfigDir }}
-        {{- end }}
         - name: kubelet-socket
           hostPath:
             path: /var/lib/kubelet/device-plugins

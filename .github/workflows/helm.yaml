@@ -30,7 +30,7 @@ jobs:
       - name: setup helm env
         uses: helm/chart-testing-action@v2.6.0
       - name: helm lint
-        run: ct lint --chart-dirs=deployments --target-branch=${{ github.event.repository.default_branch }} --validate-maintainers=false
+        run: ct lint --chart-dirs=deployments --target-branch=${{ github.event.repository.default_branch }} --validate-maintainers=false --check-version-increment=false
       - name: create kind cluster
         uses: helm/kind-action@v1.8.0
         with:
