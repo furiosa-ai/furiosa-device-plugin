@@ -219,14 +219,9 @@ daemonSet:
     repository: ghcr.io/furiosa-ai/furiosa-device-plugin
     tag: latest
     pullPolicy: Always
-    #pullPolicy: IfNotPresent
   resources:
     cpu: 100m
     memory: 64Mi
-
-localConfig:
-  localConfigDir: /usr/local
-  localConfigFile: local_config.yaml
 
 globalConfig:
   resourceStrategyMap:
