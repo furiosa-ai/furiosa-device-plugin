@@ -5,7 +5,8 @@ metadata:
   namespace: {{ .Values.namespace | default "kube-system" }}
 data:
   global_config.yaml: |
-    resourceStrategyMap:
-      - warboy: {{ .Values.globalConfig.resourceStrategyMap.warboy | default "generic" }}
-      - renegade: {{ .Values.globalConfig.resourceStrategyMap.renegade | default "generic" }}
-    debugMode: {{ .Values.globalConfig.debugMode | default "false" }}
+    global:
+      resourceStrategyMap:
+        warboy: {{ .Values.globalConfig.resourceStrategyMap.warboy | default "generic" }}
+        renegade: {{ .Values.globalConfig.resourceStrategyMap.renegade | default "generic" }}
+      debugMode: {{ .Values.globalConfig.debugMode | default "false" }}
