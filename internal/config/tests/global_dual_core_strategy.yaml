@@ -1,5 +1,5 @@
 global:
   resourceStrategyMap:
     warboy: dual-core
-    renegade: dual-core
+    rngd: dual-core
   debugMode: true

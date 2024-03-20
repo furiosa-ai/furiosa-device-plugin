@@ -183,7 +183,7 @@ func TestDeviceSpecs(t *testing.T) {
 				},
 			},
 		},
-		//TODO(@bg): add testcases for renegade and other npu family later
+		//TODO(@bg): add testcases for rngd and other npu family later
 	}
 
 	for _, tc := range tests {

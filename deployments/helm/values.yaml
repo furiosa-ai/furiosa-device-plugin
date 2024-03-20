@@ -25,5 +25,5 @@ daemonSet:
 globalConfig:
   resourceStrategyMap:
     warboy: generic
-    renegade: generic
+    rngd: generic
   debugMode: false

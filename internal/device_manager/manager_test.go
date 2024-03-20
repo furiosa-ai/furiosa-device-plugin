@@ -421,7 +421,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 }
 
 // TODO(@bg): add test cases for CDI
-// TODO(@bg): add test cases for renegade
+// TODO(@bg): add test cases for rngd
 func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	tests := []struct {
 		description    string

@@ -226,7 +226,7 @@ daemonSet:
 globalConfig:
   resourceStrategyMap:
     warboy: %s
-    renegade: %s
+    rngd: %s
   debugMode: false
 `
 	return fmt.Sprintf(template, strategy, strategy)

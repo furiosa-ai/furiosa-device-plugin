@@ -25,7 +25,7 @@ const (
 	dualCoreStr        = "dual-core"
 	quadCoreStr        = "quad-core"
 	warboyStr          = "warboy"
-	renegadeStr        = "renegade"
+	rngdStr            = "rngd"
 )
 
 type ResourceUnitStrategy string
@@ -41,8 +41,8 @@ const (
 type ResourceKind string
 
 const (
-	Warboy   ResourceKind = warboyStr
-	Renegade ResourceKind = renegadeStr
+	Warboy ResourceKind = warboyStr
+	rngd   ResourceKind = rngdStr
 )
 
 // Config holds the configuration for running this device plugin.
@@ -198,7 +198,7 @@ func validateConfig(conf *Config) error {
 					// Unknown or unsupported strategy(quad core)
 					sl.ReportError(conf.ResourceStrategyMap, "ResourceStrategyMap", "resourceStrategyMap", "required", "")
 				}
-			case Renegade:
+			case rngd:
 				switch strategy {
 				case LegacyStrategy:
 				case GenericStrategy:

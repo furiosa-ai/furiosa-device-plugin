@@ -1,5 +1,5 @@
 global:
   resourceStrategyMap:
     warboy: legacy
-    renegade: legacy
+    rngd: legacy
   debugMode: true

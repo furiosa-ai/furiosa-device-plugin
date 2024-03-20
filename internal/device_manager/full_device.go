@@ -60,8 +60,8 @@ func NewFullDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, 
 	switch originDevice.Arch() {
 	case device.ArchWarboy:
 		newFullDeviceManifest = manifest.NewWarboyManifest(originDevice)
-	case device.ArchRenegade:
-		//FIXME(@bg): create right manifest using device arch once manifest is ready for the renegade
+	case device.ArchRngd:
+		//FIXME(@bg): create right manifest using device arch once manifest is ready for the rngd
 	}
 
 	return &fullDevice{

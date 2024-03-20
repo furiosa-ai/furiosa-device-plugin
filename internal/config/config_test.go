@@ -50,7 +50,7 @@ func TestReadInConfigAsMap(t *testing.T) {
 	assert.Nil(t, err)
 
 	globalMap := confMap.Global
-	assert.Equal(t, map[string]interface{}{"warboy": "generic", "renegade": "generic"}, globalMap["resourceStrategyMap"])
+	assert.Equal(t, map[string]interface{}{"warboy": "generic", "rngd": "generic"}, globalMap["resourceStrategyMap"])
 	assert.Equal(t, false, globalMap["debugMode"])
 
 	localMap := confMap.Overrides
@@ -58,7 +58,7 @@ func TestReadInConfigAsMap(t *testing.T) {
 	assert.Contains(t, localMap, "other")
 
 	thisMap := localMap["this"]
-	assert.Equal(t, map[string]interface{}{"warboy": "single-core", "renegade": "single-core"}, thisMap["resourceStrategyMap"])
+	assert.Equal(t, map[string]interface{}{"warboy": "single-core", "rngd": "single-core"}, thisMap["resourceStrategyMap"])
 	assert.Equal(t, []interface{}{"b0"}, thisMap["disabledDeviceUUIDList"])
 	assert.Equal(t, true, thisMap["debugMode"])
 }
@@ -73,14 +73,14 @@ func TestConvertToConfig(t *testing.T) {
 		{
 			description: "convert full map",
 			input: map[string]interface{}{
-				"resourceStrategyMap":    map[string]string{"warboy": "generic", "renegade": "generic"},
+				"resourceStrategyMap":    map[string]string{"warboy": "generic", "rngd": "generic"},
 				"disabledDeviceUUIDList": []string{"a0", "a1"},
 				"debugMode":              true,
 			},
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"a0", "a1"},
 				DebugMode:              true,
@@ -90,12 +90,12 @@ func TestConvertToConfig(t *testing.T) {
 		{
 			description: "convert partial map",
 			input: map[string]interface{}{
-				"resourceStrategyMap": map[string]string{"warboy": "generic", "renegade": "generic"},
+				"resourceStrategyMap": map[string]string{"warboy": "generic", "rngd": "generic"},
 			},
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: nil,
 				DebugMode:              false,
@@ -125,8 +125,8 @@ func TestValidateConfig(t *testing.T) {
 			description: "valid config",
 			config: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 			},
 			expectedError: false,
@@ -135,8 +135,8 @@ func TestValidateConfig(t *testing.T) {
 			description: "invalid config (warboy with quad core strategy)",
 			config: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   QuadCoreStrategy,
-					Renegade: GenericStrategy,
+					Warboy: QuadCoreStrategy,
+					rngd:   GenericStrategy,
 				},
 			},
 			expectedError: true,
@@ -145,8 +145,8 @@ func TestValidateConfig(t *testing.T) {
 			description: "invalid config (invalid strategy)",
 			config: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   "foo",
-					Renegade: "bar",
+					Warboy: "foo",
+					rngd:   "bar",
 				},
 			},
 			expectedError: true,
@@ -155,9 +155,9 @@ func TestValidateConfig(t *testing.T) {
 			description: "invalid config (unknown resource kind)",
 			config: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
-					"Foo":    GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
+					"Foo":  GenericStrategy,
 				},
 			},
 			expectedError: true,
@@ -191,8 +191,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_legacy_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   LegacyStrategy,
-					Renegade: LegacyStrategy,
+					Warboy: LegacyStrategy,
+					rngd:   LegacyStrategy,
 				},
 				DebugMode: true,
 			},
@@ -203,8 +203,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_generic_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DebugMode: true,
 			},
@@ -215,8 +215,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_single_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   SingleCoreStrategy,
-					Renegade: SingleCoreStrategy,
+					Warboy: SingleCoreStrategy,
+					rngd:   SingleCoreStrategy,
 				},
 				DebugMode: true,
 			},
@@ -227,8 +227,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_dual_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   DualCoreStrategy,
-					Renegade: DualCoreStrategy,
+					Warboy: DualCoreStrategy,
+					rngd:   DualCoreStrategy,
 				},
 				DebugMode: true,
 			},
@@ -239,7 +239,7 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_quad_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Renegade: QuadCoreStrategy,
+					rngd: QuadCoreStrategy,
 				},
 				DebugMode: true,
 			},
@@ -250,8 +250,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/global_mixed_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   LegacyStrategy,
-					Renegade: QuadCoreStrategy,
+					Warboy: LegacyStrategy,
+					rngd:   QuadCoreStrategy,
 				},
 				DebugMode: true,
 			},
@@ -262,8 +262,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/override_full.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   SingleCoreStrategy,
-					Renegade: SingleCoreStrategy,
+					Warboy: SingleCoreStrategy,
+					rngd:   SingleCoreStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"b0"},
 				DebugMode:              true,
@@ -275,8 +275,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/override_partial.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: SingleCoreStrategy,
+					Warboy: GenericStrategy,
+					rngd:   SingleCoreStrategy,
 				},
 				DisabledDeviceUUIDList: nil,
 				DebugMode:              true,
@@ -288,8 +288,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/override_empty.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: nil,
 				DebugMode:              false,
@@ -301,8 +301,8 @@ func TestGetMergedConfigFromFile(t *testing.T) {
 			configPath:  "./tests/override_zero.yaml",
 			expectedResult: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: []string{},
 				DebugMode:              false,
@@ -340,16 +340,16 @@ func TestIsEqualConfig(t *testing.T) {
 			description: "equal configs",
 			a: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"a0", "a1"},
 				DebugMode:              true,
 			},
 			b: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"a0", "a1"},
 				DebugMode:              true,
@@ -360,16 +360,16 @@ func TestIsEqualConfig(t *testing.T) {
 			description: "different resource strategy map",
 			a: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   GenericStrategy,
-					Renegade: GenericStrategy,
+					Warboy: GenericStrategy,
+					rngd:   GenericStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"a0", "a1"},
 				DebugMode:              true,
 			},
 			b: &Config{
 				ResourceStrategyMap: map[ResourceKind]ResourceUnitStrategy{
-					Warboy:   SingleCoreStrategy,
-					Renegade: SingleCoreStrategy,
+					Warboy: SingleCoreStrategy,
+					rngd:   SingleCoreStrategy,
 				},
 				DisabledDeviceUUIDList: []string{"a0", "a1"},
 				DebugMode:              true,
