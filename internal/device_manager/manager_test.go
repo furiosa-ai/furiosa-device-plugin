@@ -61,7 +61,7 @@ func MockFuriosaDevices(mockDevices []device.Device) (ret map[string]FuriosaDevi
 	ret = make(map[string]FuriosaDevice, len(mockDevices))
 	for _, mockDevice := range mockDevices {
 		key, _ := mockDevice.DeviceUUID()
-		mockFuriosaDevice, _ := NewMockFullDevice(mockDevice, false)
+		mockFuriosaDevice, _ := NewMockExclusiveDevice(mockDevice, false)
 		ret[key] = mockFuriosaDevice
 	}
 
@@ -70,34 +70,34 @@ func MockFuriosaDevices(mockDevices []device.Device) (ret map[string]FuriosaDevi
 
 func TestBuildFuriosaDevices(t *testing.T) {
 	tests := []struct {
-		description      string
-		strategy         config.ResourceUnitStrategy
-		expectFullDevice bool
+		description           string
+		strategy              config.ResourceUnitStrategy
+		expectExclusiveDevice bool
 	}{
 		{
-			description:      "test legacy strategy",
-			strategy:         config.LegacyStrategy,
-			expectFullDevice: true,
+			description:           "test legacy strategy",
+			strategy:              config.LegacyStrategy,
+			expectExclusiveDevice: true,
 		},
 		{
-			description:      "test generic strategy",
-			strategy:         config.GenericStrategy,
-			expectFullDevice: true,
+			description:           "test generic strategy",
+			strategy:              config.GenericStrategy,
+			expectExclusiveDevice: true,
 		},
 		{
-			description:      "test single core strategy",
-			strategy:         config.SingleCoreStrategy,
-			expectFullDevice: false,
+			description:           "test single core strategy",
+			strategy:              config.SingleCoreStrategy,
+			expectExclusiveDevice: false,
 		},
 		{
-			description:      "test dual core strategy",
-			strategy:         config.DualCoreStrategy,
-			expectFullDevice: false,
+			description:           "test dual core strategy",
+			strategy:              config.DualCoreStrategy,
+			expectExclusiveDevice: false,
 		},
 		{
-			description:      "test quad core strategy",
-			strategy:         config.QuadCoreStrategy,
-			expectFullDevice: false,
+			description:           "test quad core strategy",
+			strategy:              config.QuadCoreStrategy,
+			expectExclusiveDevice: false,
 		},
 	}
 
@@ -109,13 +109,13 @@ func TestBuildFuriosaDevices(t *testing.T) {
 			continue
 		}
 		for _, actualDevice := range actualDevices {
-			if tc.expectFullDevice {
-				if _, ok := actualDevice.(*fullDevice); !ok {
-					t.Errorf("expect full device but type assertion failed")
+			if tc.expectExclusiveDevice {
+				if _, ok := actualDevice.(*exclusiveDevice); !ok {
+					t.Errorf("expect exclusive device but type assertion failed")
 				}
 			} else {
-				if _, ok := actualDevice.(*partialDevice); !ok {
-					t.Errorf("expect partial device but type assertion failed")
+				if _, ok := actualDevice.(*partitionedDevice); !ok {
+					t.Errorf("expect partitioned device but type assertion failed")
 				}
 			}
 		}
@@ -421,7 +421,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 }
 
 // TODO(@bg): add test cases for CDI
-// TODO(@bg): add test cases for renegade
+// TODO(@bg): add test cases for rngd
 func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	tests := []struct {
 		description    string

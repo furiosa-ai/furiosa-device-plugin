@@ -7,11 +7,11 @@ global:
 overrides:
   this:
     resourceStrategyMap:
-      renegade: single-core
+      rngd: single-core
   other:
     resourceStrategyMap:
       warboy: legacy
-      renegade: quad-core
+      rngd: quad-core
     disabledDeviceUUIDList:
       - c0
     debugMode: false

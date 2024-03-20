@@ -188,15 +188,15 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
 		ret = func(originDevice device.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			newFullDevice, err := NewFullDevice(originDevice, isDisabled)
+			newExclusiveDevice, err := NewExclusiveDevice(originDevice, isDisabled)
 			if err != nil {
 				return nil, err
 			}
 
-			return []FuriosaDevice{newFullDevice}, nil
+			return []FuriosaDevice{newExclusiveDevice}, nil
 		}
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
-		ret = NewPartialDevices
+		ret = NewPartitionedDevices
 	}
 
 	return ret

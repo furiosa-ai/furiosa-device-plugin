@@ -9,9 +9,9 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-var _ FuriosaDevice = (*fullDevice)(nil)
+var _ FuriosaDevice = (*exclusiveDevice)(nil)
 
-type fullDevice struct {
+type exclusiveDevice struct {
 	origin     device.Device
 	manifest   manifest.Manifest
 	deviceID   string
@@ -50,23 +50,23 @@ func parseDeviceInfo(originDevice device.Device) (deviceID, pciBusID string, num
 	return deviceID, pciBusID, numaNode, err
 }
 
-func NewFullDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
+func NewExclusiveDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
 	deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
 
-	var newFullDeviceManifest manifest.Manifest
+	var newExclusiveDeviceManifest manifest.Manifest
 	switch originDevice.Arch() {
 	case device.ArchWarboy:
-		newFullDeviceManifest = manifest.NewWarboyManifest(originDevice)
-	case device.ArchRenegade:
-		//FIXME(@bg): create right manifest using device arch once manifest is ready for the renegade
+		newExclusiveDeviceManifest = manifest.NewWarboyManifest(originDevice)
+	case device.ArchRngd:
+		//FIXME(@bg): create right manifest using device arch once manifest is ready for the rngd
 	}
 
-	return &fullDevice{
+	return &exclusiveDevice{
 		origin:     originDevice,
-		manifest:   newFullDeviceManifest,
+		manifest:   newExclusiveDeviceManifest,
 		deviceID:   deviceID,
 		pciBusID:   pciBusID,
 		numaNode:   int(numaNode),
@@ -74,19 +74,19 @@ func NewFullDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, 
 	}, nil
 }
 
-func (f *fullDevice) DeviceID() string {
+func (f *exclusiveDevice) DeviceID() string {
 	return f.deviceID
 }
 
-func (f *fullDevice) PCIBusID() string {
+func (f *exclusiveDevice) PCIBusID() string {
 	return f.pciBusID
 }
 
-func (f *fullDevice) NUMANode() int {
+func (f *exclusiveDevice) NUMANode() int {
 	return f.numaNode
 }
 
-func (f *fullDevice) IsHealthy() (bool, error) {
+func (f *exclusiveDevice) IsHealthy() (bool, error) {
 	//TODO(@bg): use more sophisticated way
 	if f.isDisabled {
 		return false, nil
@@ -98,15 +98,15 @@ func (f *fullDevice) IsHealthy() (bool, error) {
 	return liveness, nil
 }
 
-func (f *fullDevice) IsFullDevice() bool {
+func (f *exclusiveDevice) IsExclusiveDevice() bool {
 	return true
 }
 
-func (f *fullDevice) EnvVars() map[string]string {
+func (f *exclusiveDevice) EnvVars() map[string]string {
 	return f.manifest.EnvVars()
 }
 
-func (f *fullDevice) Annotations() map[string]string {
+func (f *exclusiveDevice) Annotations() map[string]string {
 	return f.manifest.Annotations()
 }
 
@@ -118,7 +118,7 @@ func buildDeviceSpec(node *manifest.DeviceNode) *devicePluginAPIv1Beta1.DeviceSp
 	}
 }
 
-func (f *fullDevice) DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec {
+func (f *exclusiveDevice) DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec {
 	var deviceSpecs []*devicePluginAPIv1Beta1.DeviceSpec
 
 	for _, deviceNode := range f.manifest.DeviceNodes() {
@@ -128,7 +128,7 @@ func (f *fullDevice) DeviceSpecs() []*devicePluginAPIv1Beta1.DeviceSpec {
 	return deviceSpecs
 }
 
-func (f *fullDevice) Mounts() []*devicePluginAPIv1Beta1.Mount {
+func (f *exclusiveDevice) Mounts() []*devicePluginAPIv1Beta1.Mount {
 	var mounts []*devicePluginAPIv1Beta1.Mount
 
 	for _, mount := range f.manifest.MountPaths() {
@@ -152,22 +152,22 @@ func (f *fullDevice) Mounts() []*devicePluginAPIv1Beta1.Mount {
 	return mounts
 }
 
-func (f *fullDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
+func (f *exclusiveDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	//TODO(@bg): CDI will be supported once libfuriosa-kubernetes is ready for CDI and DRA.
 	return nil
 }
 
-func (f *fullDevice) ID() string {
+func (f *exclusiveDevice) ID() string {
 	return f.DeviceID()
 }
 
-func (f *fullDevice) TopologyHintKey() string {
+func (f *exclusiveDevice) TopologyHintKey() string {
 	return f.PCIBusID()
 }
 
-func (f *fullDevice) Equal(target npu_allocator.Device) bool {
-	converted, isFullDevice := target.(*fullDevice)
-	if !isFullDevice {
+func (f *exclusiveDevice) Equal(target npu_allocator.Device) bool {
+	converted, isExclusiveDevice := target.(*exclusiveDevice)
+	if !isExclusiveDevice {
 		return false
 	}
 

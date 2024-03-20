@@ -1,4 +1,4 @@
 global:
   resourceStrategyMap:
-    renegade: quad-core
+    rngd: quad-core
   debugMode: true

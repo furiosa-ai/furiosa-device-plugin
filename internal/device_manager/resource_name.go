@@ -20,10 +20,10 @@ const (
 	fullResourceExp    = "%s/%s"
 	legacyResourceName = "npu"
 
-	warboyMaxMemory   = 16
-	warboyMaxCores    = 2
-	renegadeMaxMemory = 48
-	renegadeMaxCores  = 8
+	warboyMaxMemory = 16
+	warboyMaxCores  = 2
+	rngdMaxMemory   = 48
+	rngdMaxCores    = 8
 
 	singleCore = 1
 	dualCore   = 2
@@ -56,7 +56,7 @@ func validateCoreUnit(arch device.Arch, coreUnit int) error {
 		if err := coreUnitValidator(1, 2, coreUnit); err != nil {
 			return err
 		}
-	case device.ArchRenegade:
+	case device.ArchRngd:
 		if err := coreUnitValidator(1, 4, coreUnit); err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func buildResourceEndpointMemoryUnitTag(arch device.Arch, coreUnit int) string {
 		return fmt.Sprintf(memoryUnitTagExp, coreUnit*(warboyMaxMemory/warboyMaxCores))
 	}
 
-	return fmt.Sprintf(memoryUnitTagExp, coreUnit*(renegadeMaxMemory/renegadeMaxCores))
+	return fmt.Sprintf(memoryUnitTagExp, coreUnit*(rngdMaxMemory/rngdMaxCores))
 }
 
 func buildResourceEndpointName(arch device.Arch, strategy config.ResourceUnitStrategy) string {
