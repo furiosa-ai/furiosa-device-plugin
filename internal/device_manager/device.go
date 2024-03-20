@@ -14,7 +14,7 @@ type DeviceInfo interface {
 	PCIBusID() string
 	NUMANode() int
 	IsHealthy() (bool, error)
-	IsFullDevice() bool
+	IsExclusiveDevice() bool
 }
 
 type Manifest interface {
