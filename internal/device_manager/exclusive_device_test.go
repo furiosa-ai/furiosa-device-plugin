@@ -1,26 +1,31 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	"reflect"
 	"testing"
 
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func NewMockExclusiveDevice(mockDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
-	deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
+func NewMockExclusiveDevice(mockDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
+	_, deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
+	if err != nil {
+		return nil, err
+	}
+
+	mockManifest, err := manifest.NewWarboyManifest(mockDevice)
 	if err != nil {
 		return nil, err
 	}
 
 	return &exclusiveDevice{
 		origin:     mockDevice,
-		manifest:   manifest.NewWarboyManifest(mockDevice),
+		manifest:   mockManifest,
 		deviceID:   deviceID,
 		pciBusID:   pciBusID,
-		numaNode:   numaNode,
+		numaNode:   int(numaNode),
 		isDisabled: isDisabled,
 	}, nil
 }
@@ -28,13 +33,13 @@ func NewMockExclusiveDevice(mockDevice device.Device, isDisabled bool) (FuriosaD
 func TestDeviceID(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult string
 	}{
 		{
 			description:    "test device id",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "A76AAD68-6855-40B1-9E86-D080852D1C84"),
-			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C84",
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C80",
 		},
 	}
 
@@ -55,18 +60,18 @@ func TestDeviceID(t *testing.T) {
 func TestPCIBusID(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult string
 	}{
 		{
 			description:    "test pci bus id1",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", ""),
-			expectedResult: "51",
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			expectedResult: "27",
 		},
 		{
 			description:    "test pci bus id2",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0011:9e:00.0", "", "", "", "", ""),
-			expectedResult: "9e",
+			mockDevice:     smi.GetStaticMockWarboyDevice(1),
+			expectedResult: "2a",
 		},
 	}
 
@@ -88,27 +93,21 @@ func TestPCIBusID(t *testing.T) {
 func TestNUMANode(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult int
 		expectError    bool
 	}{
 		{
 			description:    "test numa node 1",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "0"),
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
 			expectedResult: 0,
 			expectError:    false,
 		},
 		{
 			description:    "test numa node 2",
-			mockDevice:     device.NewMockWarboyDevice(0, 1, "0000:6b:00.0", "", "", "", "", "1"),
+			mockDevice:     smi.GetStaticMockWarboyDevice(4),
 			expectedResult: 1,
 			expectError:    false,
-		},
-		{
-			description:    "test numa node 3",
-			mockDevice:     device.NewMockWarboyDevice(0, -1, "0000:6c:00.0", "", "", "", "", "2"),
-			expectedResult: -1,
-			expectError:    true,
 		},
 	}
 
@@ -129,12 +128,12 @@ func TestNUMANode(t *testing.T) {
 func TestDeviceSpecs(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult []*devicePluginAPIv1Beta1.DeviceSpec
 	}{
 		{
 			description: "test warboy exclusive device",
-			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			mockDevice:  smi.GetStaticMockWarboyDevice(0),
 			expectedResult: []*devicePluginAPIv1Beta1.DeviceSpec{
 				{
 					ContainerPath: "/dev/npu0_mgmt",
@@ -204,19 +203,19 @@ func TestDeviceSpecs(t *testing.T) {
 func TestIsHealthy(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		isDisabled     bool
 		expectedResult bool
 	}{
 		{
 			description:    "test healthy device",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
 			isDisabled:     false,
 			expectedResult: true,
 		},
 		{
 			description:    "test unhealthy device",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
 			isDisabled:     true,
 			expectedResult: false,
 		},
@@ -244,12 +243,12 @@ func TestIsHealthy(t *testing.T) {
 func TestMounts(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult []*devicePluginAPIv1Beta1.Mount
 	}{
 		{
 			description: "test warboy mount",
-			mockDevice:  device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", ""),
+			mockDevice:  smi.GetStaticMockWarboyDevice(0),
 			expectedResult: []*devicePluginAPIv1Beta1.Mount{
 				{
 					ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
@@ -322,13 +321,13 @@ func TestMounts(t *testing.T) {
 func TestID(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult string
 	}{
 		{
 			description:    "test id",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:6a:00.0", "", "", "", "", "A76AAD68-6855-40B1-9E86-D080852D1C84"),
-			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C84",
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C80",
 		},
 	}
 
@@ -349,13 +348,13 @@ func TestID(t *testing.T) {
 func TestTopologyHintKey(t *testing.T) {
 	tests := []struct {
 		description    string
-		mockDevice     device.Device
+		mockDevice     smi.Device
 		expectedResult string
 	}{
 		{
 			description:    "test topology hint",
-			mockDevice:     device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", ""),
-			expectedResult: "51",
+			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			expectedResult: "27",
 		},
 	}
 
@@ -377,20 +376,20 @@ func TestTopologyHintKey(t *testing.T) {
 func TestEqual(t *testing.T) {
 	tests := []struct {
 		description      string
-		mockSourceDevice device.Device
-		mockTargetDevice device.Device
+		mockSourceDevice smi.Device
+		mockTargetDevice smi.Device
 		expected         bool
 	}{
 		{
 			description:      "expect source and target are identical",
-			mockSourceDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
-			mockTargetDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
+			mockSourceDevice: smi.GetStaticMockWarboyDevice(0),
+			mockTargetDevice: smi.GetStaticMockWarboyDevice(0),
 			expected:         true,
 		},
 		{
 			description:      "expect source and target are not identical",
-			mockSourceDevice: device.NewMockWarboyDevice(0, 0, "0000:51:00.0", "", "", "", "", "0"),
-			mockTargetDevice: device.NewMockWarboyDevice(0, 0, "0000:1a:00.0", "", "", "", "", "5"),
+			mockSourceDevice: smi.GetStaticMockWarboyDevice(0),
+			mockTargetDevice: smi.GetStaticMockWarboyDevice(1),
 			expected:         false,
 		},
 	}

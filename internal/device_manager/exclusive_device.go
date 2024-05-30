@@ -1,18 +1,16 @@
 package device_manager
 
 import (
-	"errors"
-
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 var _ FuriosaDevice = (*exclusiveDevice)(nil)
 
 type exclusiveDevice struct {
-	origin     device.Device
+	origin     smi.Device
 	manifest   manifest.Manifest
 	deviceID   string
 	pciBusID   string
@@ -20,48 +18,39 @@ type exclusiveDevice struct {
 	isDisabled bool
 }
 
-func parseDeviceInfo(originDevice device.Device) (deviceID, pciBusID string, numaNode int, err error) {
-	deviceID, err = originDevice.DeviceUUID()
+func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
+	info, err := originDevice.DeviceInfo()
 	if err != nil {
-		return "", "", 0, err
+		return 0, "", "", 0, err
 	}
 
-	busname, err := originDevice.Busname()
-	if err != nil {
-		return "", "", 0, err
-	}
+	arch = info.Arch()
+	deviceID = info.UUID()
+	pciBusID, err = parseBusIDfromBDF(info.BDF())
+	numaNode = uint(info.NumaNode())
 
-	pciBusID, err = parseBusIDfromBDF(busname)
-	if err != nil {
-		return "", "", 0, err
-	}
-
-	unsignedNumaNode, err := originDevice.NumaNode()
-	if err != nil {
-		if errors.Is(err, device.UnexpectedValue) {
-			return deviceID, pciBusID, -1, nil
-		} else {
-			return "", "", 0, err
-		}
-	} else {
-		numaNode = int(unsignedNumaNode)
-	}
-
-	return deviceID, pciBusID, numaNode, err
+	return arch, deviceID, pciBusID, numaNode, err
 }
 
-func NewExclusiveDevice(originDevice device.Device, isDisabled bool) (FuriosaDevice, error) {
-	deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
+	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
 
 	var newExclusiveDeviceManifest manifest.Manifest
-	switch originDevice.Arch() {
-	case device.ArchWarboy:
-		newExclusiveDeviceManifest = manifest.NewWarboyManifest(originDevice)
-	case device.ArchRngd:
+	var manifestErr error
+
+	switch arch {
+	case smi.ArchWarboy:
+		newExclusiveDeviceManifest, err = manifest.NewWarboyManifest(originDevice)
+	case smi.ArchRngd:
 		//FIXME(@bg): create right manifest using device arch once manifest is ready for the rngd
+	}
+
+	if manifestErr != nil {
+		return nil, manifestErr
+
 	}
 
 	return &exclusiveDevice{
@@ -91,7 +80,7 @@ func (f *exclusiveDevice) IsHealthy() (bool, error) {
 	if f.isDisabled {
 		return false, nil
 	}
-	liveness, err := f.origin.Alive()
+	liveness, err := f.origin.Liveness()
 	if err != nil {
 		return liveness, err
 	}
