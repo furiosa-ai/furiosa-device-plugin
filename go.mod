@@ -3,11 +3,9 @@ module github.com/furiosa-ai/furiosa-device-plugin
 go 1.21.3
 
 require (
-	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.11
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.12
 	github.com/go-playground/validator/v10 v10.16.0
-	github.com/google/uuid v1.6.0
 	github.com/mittwald/go-helm-client v0.12.9
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0
@@ -36,6 +34,7 @@ require (
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/containerd/containerd v1.7.11 // indirect
@@ -75,6 +74,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
