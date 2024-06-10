@@ -8,8 +8,8 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 )
 
 type DeviceManager interface {
@@ -22,12 +22,12 @@ type DeviceManager interface {
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
-type newDeviceFunc func(originDevice device.Device, isDisabled bool) ([]FuriosaDevice, error)
+type newDeviceFunc func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error)
 
 var _ DeviceManager = (*deviceManager)(nil)
 
 type deviceManager struct {
-	origin         []device.Device
+	origin         []smi.Device
 	furiosaDevices map[string]FuriosaDevice
 	resourceName   string
 	debugMode      bool
@@ -187,7 +187,7 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
-		ret = func(originDevice device.Device, isDisabled bool) ([]FuriosaDevice, error) {
+		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
 			newExclusiveDevice, err := NewExclusiveDevice(originDevice, isDisabled)
 			if err != nil {
 				return nil, err
@@ -202,28 +202,29 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	return ret
 }
 
-func buildFuriosaDevices(devices []device.Device, blockedList []string, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
-	furiosaDevices := map[string]FuriosaDevice{}
+func buildFuriosaDevices(devices []smi.Device, blockedList []string, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
+	furiosaDevicesMap := map[string]FuriosaDevice{}
 	for _, origin := range devices {
-		devUUID, err := origin.DeviceUUID()
-		if err != nil {
-			return nil, err
-		}
-		isDisabled := contains(blockedList, devUUID)
-		devices, err := newDevFunc(origin, isDisabled)
+		info, err := origin.DeviceInfo()
 		if err != nil {
 			return nil, err
 		}
 
-		for _, d := range devices {
-			furiosaDevices[d.DeviceID()] = d
+		isDisabled := contains(blockedList, info.UUID())
+		furiosaDevices, err := newDevFunc(origin, isDisabled)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range furiosaDevices {
+			furiosaDevicesMap[d.DeviceID()] = d
 		}
 	}
-	return furiosaDevices, nil
+	return furiosaDevicesMap, nil
 }
 
-func NewDeviceManager(devices []device.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
-	resName, err := buildAndValidateFullResourceEndpointName(devices[0].Arch(), strategy)
+func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
+	resName, err := buildAndValidateFullResourceEndpointName(arch, strategy)
 	if err != nil {
 		return nil, err
 	}

@@ -2,28 +2,19 @@ package e2e
 
 import (
 	"encoding/json"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 )
 
-type CoreRange struct {
-	Type  string `json:"type"`
-	Start int    `json:"start"`
-	End   int    `json:"end"`
-}
-
 type DeviceFile struct {
-	Path        string    `json:"path"`
-	Filename    string    `json:"filename"`
-	DeviceIndex int       `json:"device_index"`
-	CoreRange   CoreRange `json:"core_range"`
-	Mode        string    `json:"mode"`
+	Path  string   `json:"path"`
+	Cores []uint32 `json:"cores"`
 }
 
 type Device struct {
 	Arch     string       `json:"arch"`
 	Dev      string       `json:"dev"`
 	UUID     string       `json:"uuid"`
-	Cores    []int        `json:"cores"`
+	CoreNum  uint32       `json:"core_num"`
 	DevFiles []DeviceFile `json:"device_files"`
 }
 
@@ -31,42 +22,35 @@ type Devices struct {
 	Devices []Device `json:"devices"`
 }
 
-func MarshalDevices(devices []device.Device) ([]byte, error) {
+func MarshalDevices(devices []smi.Device) ([]byte, error) {
 	payload := Devices{}
 
 	for _, dev := range devices {
-		uuid, err := dev.DeviceUUID()
+		var convertedDevFiles []DeviceFile
+		files, err := dev.DeviceFiles()
 		if err != nil {
 			return nil, err
 		}
 
-		var convertedDevFiles []DeviceFile
-		for _, file := range dev.DevFiles() {
+		for _, file := range files {
 			converted := DeviceFile{
-				Path:        file.Path(),
-				Filename:    file.Filename(),
-				DeviceIndex: int(file.DeviceIndex()),
-				CoreRange: CoreRange{
-					Type:  string(file.CoreRange().Type()),
-					Start: int(file.CoreRange().Start()),
-					End:   int(file.CoreRange().End()),
-				},
-				Mode: string(file.Mode()),
+				Path:  file.Path(),
+				Cores: file.Cores(),
 			}
 
 			convertedDevFiles = append(convertedDevFiles, converted)
 		}
 
-		var convertedCores []int
-		for _, core := range dev.Cores() {
-			convertedCores = append(convertedCores, int(core))
+		info, err := dev.DeviceInfo()
+		if err != nil {
+			return nil, err
 		}
 
 		deviceMarshal := Device{
-			Arch:     string(dev.Arch()),
-			Dev:      dev.Name(),
-			UUID:     uuid,
-			Cores:    convertedCores,
+			Arch:     info.Arch().ToString(),
+			Dev:      info.Name(),
+			UUID:     info.UUID(),
+			CoreNum:  info.CoreNum(),
 			DevFiles: convertedDevFiles,
 		}
 

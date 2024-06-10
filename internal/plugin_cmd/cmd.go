@@ -93,10 +93,11 @@ func start(ctx context.Context) error {
 
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
-		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch)]
-		deviceManager, err := device_manager.NewDeviceManager(devices, resourceUnitStrategy, conf.DisabledDeviceUUIDList, conf.DebugMode)
+		//FIXME(@bg): handle unknown arch case
+		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch.ToString())]
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, resourceUnitStrategy, conf.DisabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {
-			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch))
+			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err
 		}
 		logger.Info().Msg(fmt.Sprintf("starting new plugin server for %s", deviceManager.ResourceName()))

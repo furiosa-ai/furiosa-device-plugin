@@ -1,8 +1,8 @@
 package device_manager
 
 import (
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -11,7 +11,7 @@ var _ FuriosaDevice = (*partitionedDevice)(nil)
 type partitionedDevice struct {
 }
 
-func NewPartitionedDevices(_ device.Device, _ bool) ([]FuriosaDevice, error) {
+func NewPartitionedDevices(_ smi.Device, _ bool) ([]FuriosaDevice, error) {
 	return nil, nil
 }
 
