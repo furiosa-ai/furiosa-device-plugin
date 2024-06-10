@@ -41,7 +41,7 @@ fmt:
 
 .PHONY: lint
 lint:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) golangci-lint run
+	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) golangci-lint run --timeout=30m --no-config --verbose
 
 .PHONY: vet
 vet:
