@@ -33,11 +33,11 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Display Go version
         run: go version
-      - name: install golangci
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - name: lint
-        run: make lint
       - name: build
         run: make build
       - name: test
         run: make test
+      - name: install golangci
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - name: lint
+        run: make lint
