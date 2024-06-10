@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	devices, err := smi.GetDevices()
+	devices, err := smi.ListDevices()
 	if err != nil {
 		os.Exit(1)
 	}

@@ -13,7 +13,7 @@ import (
 
 func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]FuriosaDevice) {
 	if len(mockDevices) == 0 {
-		mockDevices = smi.GetStaticMockWarboyDevices()
+		mockDevices = smi.GetStaticMockDevices(smi.ArchWarboy)
 	}
 
 	ret = make(map[string]FuriosaDevice, len(mockDevices))
@@ -61,7 +61,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		devices := smi.GetStaticMockWarboyDevices()
+		devices := smi.GetStaticMockDevices(smi.ArchWarboy)
 		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
@@ -82,7 +82,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockWarboyDevices()
+	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
 	var seedUUID []string
 
 	for i, mockDevice := range mockDevices {
@@ -112,7 +112,7 @@ func TestFetchByID(t *testing.T) {
 }
 
 func TestFetchDevicesByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockWarboyDevices()
+	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
 	var seedUUID []string
 
 	for _, mockDevice := range mockDevices {
@@ -368,7 +368,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 	}
 
 	for _, tc := range tests {
-		mockDevices := smi.GetStaticMockWarboyDevices()
+		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
 		mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 		allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
 		mockDeviceManager := &deviceManager{
@@ -719,7 +719,7 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		mockDevices := smi.GetStaticMockWarboyDevices()
+		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
 		mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 		mockDeviceManager := &deviceManager{
 			origin:         mockDevices,

@@ -38,7 +38,7 @@ func TestDeviceID(t *testing.T) {
 	}{
 		{
 			description:    "test device id",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C80",
 		},
 	}
@@ -65,12 +65,12 @@ func TestPCIBusID(t *testing.T) {
 	}{
 		{
 			description:    "test pci bus id1",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: "27",
 		},
 		{
 			description:    "test pci bus id2",
-			mockDevice:     smi.GetStaticMockWarboyDevice(1),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: "2a",
 		},
 	}
@@ -99,13 +99,13 @@ func TestNUMANode(t *testing.T) {
 	}{
 		{
 			description:    "test numa node 1",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: 0,
 			expectError:    false,
 		},
 		{
 			description:    "test numa node 2",
-			mockDevice:     smi.GetStaticMockWarboyDevice(4),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[4],
 			expectedResult: 1,
 			expectError:    false,
 		},
@@ -133,7 +133,7 @@ func TestDeviceSpecs(t *testing.T) {
 	}{
 		{
 			description: "test warboy exclusive device",
-			mockDevice:  smi.GetStaticMockWarboyDevice(0),
+			mockDevice:  smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: []*devicePluginAPIv1Beta1.DeviceSpec{
 				{
 					ContainerPath: "/dev/npu0_mgmt",
@@ -209,13 +209,13 @@ func TestIsHealthy(t *testing.T) {
 	}{
 		{
 			description:    "test healthy device",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			isDisabled:     false,
 			expectedResult: true,
 		},
 		{
 			description:    "test unhealthy device",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			isDisabled:     true,
 			expectedResult: false,
 		},
@@ -248,7 +248,7 @@ func TestMounts(t *testing.T) {
 	}{
 		{
 			description: "test warboy mount",
-			mockDevice:  smi.GetStaticMockWarboyDevice(0),
+			mockDevice:  smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: []*devicePluginAPIv1Beta1.Mount{
 				{
 					ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
@@ -326,7 +326,7 @@ func TestID(t *testing.T) {
 	}{
 		{
 			description:    "test id",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: "A76AAD68-6855-40B1-9E86-D080852D1C80",
 		},
 	}
@@ -353,7 +353,7 @@ func TestTopologyHintKey(t *testing.T) {
 	}{
 		{
 			description:    "test topology hint",
-			mockDevice:     smi.GetStaticMockWarboyDevice(0),
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expectedResult: "27",
 		},
 	}
@@ -382,14 +382,14 @@ func TestEqual(t *testing.T) {
 	}{
 		{
 			description:      "expect source and target are identical",
-			mockSourceDevice: smi.GetStaticMockWarboyDevice(0),
-			mockTargetDevice: smi.GetStaticMockWarboyDevice(0),
+			mockSourceDevice: smi.GetStaticMockDevices(smi.ArchWarboy)[0],
+			mockTargetDevice: smi.GetStaticMockDevices(smi.ArchWarboy)[0],
 			expected:         true,
 		},
 		{
 			description:      "expect source and target are not identical",
-			mockSourceDevice: smi.GetStaticMockWarboyDevice(0),
-			mockTargetDevice: smi.GetStaticMockWarboyDevice(1),
+			mockSourceDevice: smi.GetStaticMockDevices(smi.ArchWarboy)[0],
+			mockTargetDevice: smi.GetStaticMockDevices(smi.ArchWarboy)[1],
 			expected:         false,
 		},
 	}
