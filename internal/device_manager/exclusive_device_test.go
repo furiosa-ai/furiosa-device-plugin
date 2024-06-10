@@ -70,7 +70,7 @@ func TestPCIBusID(t *testing.T) {
 		},
 		{
 			description:    "test pci bus id2",
-			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[0],
+			mockDevice:     smi.GetStaticMockDevices(smi.ArchWarboy)[1],
 			expectedResult: "2a",
 		},
 	}
