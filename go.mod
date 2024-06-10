@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.12
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.13
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/mittwald/go-helm-client v0.12.9
 	github.com/onsi/ginkgo/v2 v2.13.0
