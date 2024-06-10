@@ -7,7 +7,7 @@ import (
 type DeviceMap map[smi.Arch][]smi.Device
 
 func BuildDeviceMap() (DeviceMap, error) {
-	devices, err := smi.GetDevices()
+	devices, err := smi.ListDevices()
 	if err != nil {
 		return nil, err
 	}
