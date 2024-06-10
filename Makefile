@@ -8,10 +8,9 @@ define install_deps_function
     @UNAME_S=$$(uname -s); \
     if [ "$$UNAME_S" = "Linux" ]; then \
         echo "Installing for Ubuntu/Debian familly"; \
-        sudo apt-get install hwloc libhwloc-dev ginkgo; \
+        sudo apt-get install ginkgo; \
     elif [ "$$UNAME_S" = "Darwin" ]; then \
-        echo "macOS detected. Installing using Homebrew..."; \
-        brew install hwloc; \
+        echo "macOS detected."; \
         go env -w GO111MODULE=on; \
         go install github.com/onsi/ginkgo/v2/ginkgo@latest; \
         export PATH=$$PATH:$$(go env GOPATH)/bin; \
@@ -21,6 +20,15 @@ define install_deps_function
         exit 1; \
     fi
 endef
+
+# Detect the OS and set the appropriate library path variable
+ifeq ($(shell uname), Linux)
+    LIBRARY_PATH_VAR := LD_LIBRARY_PATH
+else ifeq ($(shell uname), Darwin)
+    LIBRARY_PATH_VAR := DYLD_LIBRARY_PATH
+else
+    $(error Unsupported OS)
+endif
 
 # regexp to filter some directories from testing
 EXCLUDE_DIR_REGEXP := E2E
@@ -46,11 +54,11 @@ vet:
 
 .PHONY: test
 test:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
+	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
 
 .PHONY: cover
 cover:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) -coverprofile=coverage.out ./...
+	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
 
