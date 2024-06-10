@@ -1,10 +1,7 @@
 SHELL := /bin/bash
 
-# make assumption that hwloc is installed with brew command "brew install hwloc"
-ifeq ($(shell uname -s),Darwin)
-    CGO_CFLAGS := -I/opt/homebrew/opt/hwloc/include
-    CGO_LDFLAGS := -L/opt/homebrew/opt/hwloc/lib
-endif
+CGO_CFLAGS := -I/usr/local/include
+CGO_LDFLAGS := -L/usr/local/lib
 
 # make assumption that golang is installed on the underlying machine.
 define install_deps_function
