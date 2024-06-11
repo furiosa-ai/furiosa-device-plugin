@@ -1,4 +1,4 @@
-FROM ghcr.io/furiosa-ai/libfuriosa-kubernetes:buildbase as build
+FROM ghcr.io/furiosa-ai/libfuriosa-kubernetes:base as build
 
 # Build device-plugin binary
 WORKDIR /
