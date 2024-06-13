@@ -1,4 +1,0 @@
-global:
-  resourceStrategyMap:
-    rngd: quad-core
-  debugMode: true
