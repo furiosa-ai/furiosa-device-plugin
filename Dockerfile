@@ -8,6 +8,6 @@ RUN make build
 FROM ghcr.io/furiosa-ai/libfuriosa-kubernetes:latest
 
 # Copy device plugin binary
-COPY --from=build /main /
-
+WORKDIR /
+COPY --from=build /main /main
 CMD ["./main"]
