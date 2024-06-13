@@ -62,7 +62,7 @@ func start(ctx context.Context) error {
 	grpcErrChan := make(chan error, 1)
 
 	confUpdateChan := make(chan *config.ConfigChangeEvent, 1)
-	conf, err := config.GetMergedConfigWithWatcher(config.GlobalConfigMountPath, config.NewNodeNameGetter(), confUpdateChan)
+	conf, err := config.GetConfigWithWatcher(config.GlobalConfigMountPath, confUpdateChan)
 	if err != nil {
 		logger.Err(err).Msg("couldn't parse configuration")
 		return err
@@ -89,13 +89,15 @@ func start(ctx context.Context) error {
 		return noDeviceError
 	}
 
-	kindToUnitStrategy := conf.ResourceStrategyMap
-
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
-		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch.ToString())]
-		deviceManager, err := device_manager.NewDeviceManager(arch, devices, resourceUnitStrategy, conf.DisabledDeviceUUIDList, conf.DebugMode)
+
+		//get disabled Device for the current node
+		nodeName := config.NewNodeNameGetter().GetNodename()
+		disabledDeviceUUIDList := conf.DisabledDeviceUUIDListMap[nodeName]
+
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, disabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err
