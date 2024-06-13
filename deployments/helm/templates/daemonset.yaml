@@ -42,7 +42,7 @@ spec:
               drop:
                - ALL
           volumeMounts:
-            - name: global-config
+            - name: config
               mountPath: /etc/config
             - name: kubelet-socket
               mountPath: /var/lib/kubelet/device-plugins
