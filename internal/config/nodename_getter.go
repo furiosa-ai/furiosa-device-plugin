@@ -24,15 +24,3 @@ func (n *nodeNameGetterImpl) GetNodename() string {
 	n.cache = nodeNameFromEnv
 	return nodeNameFromEnv
 }
-
-type mockNodeNameGetter struct {
-	nodeName string
-}
-
-func newMockNodenameGetter(nodeName string) NodeNameGetter {
-	return &mockNodeNameGetter{nodeName: nodeName}
-}
-
-func (m *mockNodeNameGetter) GetNodename() string {
-	return m.nodeName
-}
