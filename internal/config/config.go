@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	GlobalConfigMountPath = "/etc/config/global_config.yaml"
+	GlobalConfigMountPath = "/etc/config/config.yaml"
 )
 
 const (
