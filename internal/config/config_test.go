@@ -59,8 +59,25 @@ func TestGetConfigFromFile(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			description:    "try wrong format",
-			configPath:     "./tests/wrong_format.yaml",
+			description: "parse uuid list",
+			configPath:  "./tests/with_disabled_devices.yaml",
+			expectedResult: &Config{
+				DisabledDeviceUUIDListMap: map[string][]string{
+					"node_a": {"uuid1", "uuid2"},
+					"node_b": {"uuid1", "uuid2"},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			description:    "try wrong format1",
+			configPath:     "./tests/wrong_resource_strategy.yaml",
+			expectedResult: nil,
+			expectedError:  true,
+		},
+		{
+			description:    "try wrong format2",
+			configPath:     "./tests/wrong_disabled_devices.yaml",
 			expectedResult: nil,
 			expectedError:  true,
 		},

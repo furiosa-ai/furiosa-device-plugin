@@ -1,0 +1,3 @@
+resourceStrategy:
+  -  generic
+debugMode: true
