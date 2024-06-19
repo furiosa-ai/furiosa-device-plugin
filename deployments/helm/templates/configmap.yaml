@@ -7,3 +7,5 @@ data:
   config.yaml: |
     resourceStrategy: {{ .Values.config.resourceStrategy | default "generic" }}
     debugMode: {{ .Values.config.debugMode | default "false" }}
+    disabledDeviceUUIDListMap:
+{{ toYaml (default dict .Values.config.disabledDeviceUUIDListMap) | indent 6 }}
