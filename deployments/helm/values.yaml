@@ -12,7 +12,7 @@ daemonSet:
     - key: npu
       operator: Exists
   image:
-    repository: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin
+    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
     tag: latest
     pullPolicy: IfNotPresent
   resources:
@@ -25,3 +25,6 @@ daemonSet:
 config:
   resourceStrategy: generic
   debugMode: false
+  disabledDeviceUUIDListMap:
+   # node:
+   #   - "uuid"

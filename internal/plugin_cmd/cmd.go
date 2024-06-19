@@ -103,6 +103,7 @@ func start(ctx context.Context) error {
 		//get disabled Device for the current node
 		nodeName := config.NewNodeNameGetter().GetNodename()
 		disabledDeviceUUIDList := conf.DisabledDeviceUUIDListMap[nodeName]
+		logger.Info().Msg(fmt.Sprintf("disabled device list for %s: %v", nodeName, disabledDeviceUUIDList))
 
 		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, disabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {

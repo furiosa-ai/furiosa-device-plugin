@@ -45,7 +45,7 @@ func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice
 	case smi.ArchWarboy:
 		newExclusiveDeviceManifest, manifestErr = manifest.NewWarboyManifest(originDevice)
 	case smi.ArchRngd:
-		//FIXME(@bg): create right manifest using device arch once manifest is ready for the rngd
+		newExclusiveDeviceManifest, manifestErr = manifest.NewRngdManifest(originDevice)
 	}
 
 	if manifestErr != nil {
