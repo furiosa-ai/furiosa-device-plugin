@@ -22,8 +22,6 @@ daemonSet:
   imagePullSecrets:
    # - name: imagepullsecret
 
-globalConfig:
-  resourceStrategyMap:
-    warboy: generic
-    rngd: generic
+config:
+  resourceStrategy: generic
   debugMode: false

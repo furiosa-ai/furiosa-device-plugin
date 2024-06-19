@@ -1,0 +1,7 @@
+disabledDeviceUUIDListMap:
+  node_a:
+    - "uuid1"
+    - "uuid2"
+  node_b:
+    - "uuid1"
+    - "uuid2"

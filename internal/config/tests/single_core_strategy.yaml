@@ -1,0 +1,2 @@
+resourceStrategy: single-core
+debugMode: true

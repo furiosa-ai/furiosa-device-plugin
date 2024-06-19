@@ -11,6 +11,7 @@ import (
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/server"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -62,7 +63,7 @@ func start(ctx context.Context) error {
 	grpcErrChan := make(chan error, 1)
 
 	confUpdateChan := make(chan *config.ConfigChangeEvent, 1)
-	conf, err := config.GetMergedConfigWithWatcher(config.GlobalConfigMountPath, config.NewNodeNameGetter(), confUpdateChan)
+	conf, err := config.GetConfigWithWatcher(config.GlobalConfigMountPath, confUpdateChan)
 	if err != nil {
 		logger.Err(err).Msg("couldn't parse configuration")
 		return err
@@ -77,6 +78,12 @@ func start(ctx context.Context) error {
 		close(confUpdateChan)
 	}()
 
+	err = smi.Init()
+	if err != nil {
+		logger.Err(err).Msg("couldn't initialize smi library")
+		return err
+	}
+
 	deviceMap, err := server.BuildDeviceMap()
 	if err != nil {
 		logger.Err(err).Msg("couldn't build device-map with device-api")
@@ -89,13 +96,15 @@ func start(ctx context.Context) error {
 		return noDeviceError
 	}
 
-	kindToUnitStrategy := conf.ResourceStrategyMap
-
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
-		resourceUnitStrategy := kindToUnitStrategy[config.ResourceKind(arch.ToString())]
-		deviceManager, err := device_manager.NewDeviceManager(arch, devices, resourceUnitStrategy, conf.DisabledDeviceUUIDList, conf.DebugMode)
+
+		//get disabled Device for the current node
+		nodeName := config.NewNodeNameGetter().GetNodename()
+		disabledDeviceUUIDList := conf.DisabledDeviceUUIDListMap[nodeName]
+
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, disabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err
@@ -148,6 +157,11 @@ Loop:
 		if err := stopServer(pluginServer); err != nil {
 			return err
 		}
+	}
+
+	err = smi.Shutdown()
+	if err != nil {
+		return err
 	}
 
 	return nil

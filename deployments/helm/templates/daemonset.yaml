@@ -42,7 +42,7 @@ spec:
               drop:
                - ALL
           volumeMounts:
-            - name: global-config
+            - name: config
               mountPath: /etc/config
             - name: kubelet-socket
               mountPath: /var/lib/kubelet/device-plugins
@@ -55,9 +55,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: global-config
+        - name: config
           configMap:
-            name: {{ include "furiosa-device-plugin.name" . }}-global-config-cm
+            name: {{ include "furiosa-device-plugin.name" . }}-config-cm
         - name: kubelet-socket
           hostPath:
             path: /var/lib/kubelet/device-plugins
