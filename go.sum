@@ -106,8 +106,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
-github.com/furiosa-ai/libfuriosa-kubernetes v0.1.17 h1:IJUl/ULQa8zJbI4igcAn1XOd4I+UodZGunB9EBvr9Aw=
-github.com/furiosa-ai/libfuriosa-kubernetes v0.1.17/go.mod h1:6mB4wZjFVBMif4nK2xuyGm0xxmjb+jeTiFs0/H+Dxfg=
+github.com/furiosa-ai/libfuriosa-kubernetes v0.1.18 h1:rKTDREEOcbxNrYA9Y78ijWDePrL7AVdxLOBbQjplZkw=
+github.com/furiosa-ai/libfuriosa-kubernetes v0.1.18/go.mod h1:yjNaVLJwvfF1FayGHV3mhnWKh1DIuvVEEgqfWjHeYQA=
 github.com/go-errors/errors v1.5.1 h1:ZwEMSLRCapFLflTpT7NKaAc7ukJ8ZPEjzlxt8rPN8bk=
 github.com/go-errors/errors v1.5.1/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-gorp/gorp/v3 v3.1.0 h1:ItKF/Vbuj31dmV4jxA1qblpSwkl9g1typ24xoe70IGs=
