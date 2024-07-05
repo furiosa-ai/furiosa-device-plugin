@@ -11,7 +11,6 @@ import (
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/server"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -77,12 +76,6 @@ func start(ctx context.Context) error {
 		close(grpcErrChan)
 		close(confUpdateChan)
 	}()
-
-	err = smi.Init()
-	if err != nil {
-		logger.Err(err).Msg("couldn't initialize smi library")
-		return err
-	}
 
 	deviceMap, err := server.BuildDeviceMap()
 	if err != nil {
@@ -158,11 +151,6 @@ Loop:
 		if err := stopServer(pluginServer); err != nil {
 			return err
 		}
-	}
-
-	err = smi.Shutdown()
-	if err != nil {
-		return err
 	}
 
 	return nil
