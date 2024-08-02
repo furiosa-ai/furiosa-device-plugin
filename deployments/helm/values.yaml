@@ -7,10 +7,10 @@ daemonSet:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  tolerations:
-      # this should be changed to "furiosa.ai/npu" later
-    - key: npu
-      operator: Exists
+  # tolerations:
+    # add toleration as needed
+    # - key: furiosa.ai/npu
+    #   operator: Exists
   image:
     repository: ghcr.io/furiosa-ai/furiosa-device-plugin
     tag: latest
