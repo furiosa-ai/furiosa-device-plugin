@@ -27,8 +27,9 @@ We do support the following versions of Kubernetes and CRI runtime:
 
 ## Configuration
 The configuration should be written in following format as yaml and located at `/etc/config/config.yaml`.
-If resourceStrategy is not specified, the default value is "generic". If debugMode is not specified, the default value is false.
-If disabledDeviceUUIDListMap is not specified, the default value is empty list.
+ - If resourceStrategy is not specified, the default value is `"generic"`.
+ - If debugMode is not specified, the default value is `false`.
+- If disabledDeviceUUIDListMap is not specified, the default value is empty list `[]`.
 ```yaml
 resourceStrategy: "generic"
 debugMode: false
@@ -37,7 +38,7 @@ disabledDeviceUUIDListMap:
   - "uuid2"
 ```
 
-The Furiosa NPU can be integrated into the Kubernetes cluster in various configurations. A single NPU card can either be exposed as a single resource or partitioned into multiple resources. Partitioning into multiple resources allows for more granular control
+The Furiosa NPU can be integrated into the Kubernetes cluster in various configurations. A single NPU card can either be exposed as a single resource or partitioned into multiple resources. Partitioning into multiple resources allows for more granular control.
 
 The following table shows the available configurations:
 
@@ -62,7 +63,7 @@ kubectl apply -f deployments/raw/furiosa-device-plugin-ds.yaml
 
 ### Deploy with Helm
 The helm chart is available at [deployment/helm](deployments/helm) directory.
-To configure deployment as you need , you can modify [deployments/helm/values.yaml](deployments/helm/values.yaml).
+To configure deployment as you need, you can modify [deployments/helm/values.yaml](deployments/helm/values.yaml).
 
 You can deploy the device plugin by running the following command:
 ```bash
