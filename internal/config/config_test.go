@@ -62,12 +62,19 @@ func TestGetConfigFromFile(t *testing.T) {
 			description: "parse uuid list",
 			configPath:  "./tests/with_disabled_devices.yaml",
 			expectedResult: &Config{
+				ResourceStrategy: GenericStrategy,
 				DisabledDeviceUUIDListMap: map[string][]string{
 					"node_a": {"uuid1", "uuid2"},
 					"node_b": {"uuid1", "uuid2"},
 				},
 			},
 			expectedError: false,
+		},
+		{
+			description:    "try empty config",
+			configPath:     "./tests/empty.yaml",
+			expectedResult: nil,
+			expectedError:  true,
 		},
 		{
 			description:    "try wrong format1",

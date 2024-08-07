@@ -40,6 +40,14 @@ type Config struct {
 	DebugMode                 bool                 `yaml:"debugMode"`
 }
 
+func getDefaultConfig() *Config {
+	return &Config{
+		ResourceStrategy:          GenericStrategy,
+		DisabledDeviceUUIDListMap: nil,
+		DebugMode:                 false,
+	}
+}
+
 type ConfigChangeEvent struct {
 	IsError  bool
 	Filename string
@@ -68,7 +76,7 @@ func getConfigFromFile(configPath string) (*Config, error) {
 }
 
 func validateConfigYaml(configFilePath string) (error, *Config) {
-	configYaml := Config{}
+	configYaml := getDefaultConfig()
 	file, err := os.Open(configFilePath)
 	if err != nil {
 		return err, nil
@@ -76,11 +84,11 @@ func validateConfigYaml(configFilePath string) (error, *Config) {
 
 	decoder := yaml.NewDecoder(file)
 	decoder.KnownFields(true)
-	err = decoder.Decode(&configYaml)
+	err = decoder.Decode(configYaml)
 	if err != nil {
 		return err, nil
 	}
-	return nil, &configYaml
+	return nil, configYaml
 }
 
 func startWatchingConfigChange(confUpdateChan chan *ConfigChangeEvent, filePath string, prevConf *Config) error {

@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: furiosa-device-plugin-config-cm
+  namespace: kube-system
+data:
+  config.yaml: |
+    resourceStrategy: generic
+    debugMode: false
+    disabledDeviceUUIDListMap:
+      {}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: furiosa-device-plugin
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: furiosa-device-plugin
+    app.kubernetes.io/instance: furioa-device-plugin-ds
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: furiosa-device-plugin
+      app.kubernetes.io/instance: furioa-device-plugin-ds
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: furiosa-device-plugin
+        app.kubernetes.io/instance: furioa-device-plugin-ds
+    spec:
+      priorityClassName:  system-node-critical
+      containers:
+        - name: furiosa-device-plugin
+          image: ghcr.io/furiosa-ai/furiosa-device-plugin:latest
+          command: ["./main"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: "spec.nodeName"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+            - name: kubelet-socket
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: dev-fs
+              mountPath: /dev
+            - name: sys-fs
+              mountPath: /sys
+      volumes:
+        - name: config
+          configMap:
+            name: furiosa-device-plugin-config-cm
+        - name: kubelet-socket
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: sys-fs
+          hostPath:
+            path: /sys
+      tolerations:
+        - key: npu
+          operator: Exists
