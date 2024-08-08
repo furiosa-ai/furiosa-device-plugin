@@ -12,7 +12,7 @@ daemonSet:
     # - key: furiosa.ai/npu
     #   operator: Exists
   image:
-    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
+    repository: registry.furiosa.ai/furiosa/furiosa-device-plugin
     tag: latest
     pullPolicy: IfNotPresent
   resources:
