@@ -154,7 +154,7 @@ func genVerificationPodManifest(npuNum string, resourceName string) *v1.Pod {
 			Containers: []v1.Container{
 				{
 					Name:            "verification-pod",
-					Image:           "ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/verification:latest",
+					Image:           "registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/verification:latest",
 					ImagePullPolicy: v1.PullAlways,
 					Resources: v1.ResourceRequirements{
 						Limits: v1.ResourceList{
@@ -184,7 +184,7 @@ func genInferencePodManifest(resourceName string) *v1.Pod {
 			Containers: []v1.Container{
 				{
 					Name:            "inference-pod",
-					Image:           "ghcr.io/furiosa-ai/furiosa-device-plugin/e2e/inference:latest",
+					Image:           "registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/inference:latest",
 					ImagePullPolicy: v1.PullAlways,
 					Resources: v1.ResourceRequirements{
 						Limits: v1.ResourceList{
@@ -216,7 +216,7 @@ daemonSet:
     - key: npu
       operator: Exists
   image:
-    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
+    repository: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin
     tag: latest
     pullPolicy: Always
   resources:
