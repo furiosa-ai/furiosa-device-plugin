@@ -6,7 +6,7 @@ spec:
   restartPolicy: Never
   containers:
     - name: npu-container
-      image: registry.furiosa.ai/furiosa/furiosa-device-plugin:sample
+      image: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin:sample
       imagePullPolicy: Always
       resources:
         limits:

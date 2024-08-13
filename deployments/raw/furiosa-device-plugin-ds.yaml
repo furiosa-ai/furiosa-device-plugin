@@ -36,7 +36,7 @@ spec:
       priorityClassName:  system-node-critical
       containers:
         - name: furiosa-device-plugin
-          image: registry.furiosa.ai/furiosa/furiosa-device-plugin:latest
+          image: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin:latest
           command: ["./main"]
           env:
             - name: NODE_NAME
