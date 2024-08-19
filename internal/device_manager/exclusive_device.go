@@ -1,9 +1,9 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 

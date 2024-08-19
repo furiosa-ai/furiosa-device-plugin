@@ -1,7 +1,7 @@
 package npu_allocator
 
 import (
-	furiosaSmi "github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 
 	"gonum.org/v1/gonum/stat/combin"
 )
@@ -14,9 +14,9 @@ type scoreBasedOptimalNpuAllocator struct {
 	hintProvider TopologyHintProvider
 }
 
-func populateTopologyMatrix(devices []furiosaSmi.Device) (topologyMatrix, error) {
+func populateTopologyMatrix(devices []smi.Device) (topologyMatrix, error) {
 	topologyMatrix := make(topologyMatrix)
-	deviceToDeviceInfo := make(map[furiosaSmi.Device]furiosaSmi.DeviceInfo)
+	deviceToDeviceInfo := make(map[smi.Device]smi.DeviceInfo)
 
 	for _, device := range devices {
 		deviceInfo, err := device.DeviceInfo()
@@ -50,7 +50,7 @@ func populateTopologyMatrix(devices []furiosaSmi.Device) (topologyMatrix, error)
 	return topologyMatrix, nil
 }
 
-func NewScoreBasedOptimalNpuAllocator(devices []furiosaSmi.Device) (NpuAllocator, error) {
+func NewScoreBasedOptimalNpuAllocator(devices []smi.Device) (NpuAllocator, error) {
 	topologyMatrix, err := populateTopologyMatrix(devices)
 	if err != nil {
 		return nil, err

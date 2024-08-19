@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
@@ -414,11 +414,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0",
-						HostPath:      "/sys/class/npu_mgmt/npu0",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
 						ReadOnly:      true,
@@ -436,11 +431,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0",
 						ReadOnly:      true,
 					},
 					{
@@ -463,11 +453,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu0",
-						HostPath:      "/dev/npu0",
 						Permissions:   "rw",
 					},
 					{
@@ -523,11 +508,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0",
-						HostPath:      "/sys/class/npu_mgmt/npu0",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
 						ReadOnly:      true,
@@ -545,11 +525,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0",
 						ReadOnly:      true,
 					},
 					{
@@ -573,11 +548,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1",
-						HostPath:      "/sys/class/npu_mgmt/npu1",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu1pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu1pe0",
 						ReadOnly:      true,
@@ -595,11 +565,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1",
 						ReadOnly:      true,
 					},
 					{
@@ -622,11 +587,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu0",
-						HostPath:      "/dev/npu0",
 						Permissions:   "rw",
 					},
 					{
@@ -667,11 +627,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu1_mgmt",
 						HostPath:      "/dev/npu1_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu1",
-						HostPath:      "/dev/npu1",
 						Permissions:   "rw",
 					},
 					{
@@ -728,12 +683,12 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 			debugMode:      false,
 			allocator:      nil,
 		}
-
+		
 		actualResult, actualError := mockDeviceManager.GetContainerAllocateResponse(prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.deviceIDs))
 		if actualError != nil != tc.expectError {
 			t.Errorf("unexpected error %t", actualError)
 		}
-
+		
 		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
 			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
 		}

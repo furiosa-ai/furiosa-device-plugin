@@ -1,10 +1,13 @@
 module github.com/furiosa-ai/furiosa-device-plugin
 
-go 1.21.3
+go 1.22
+
+toolchain go1.22.6
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.21
+	github.com/furiosa-ai/furiosa-smi-go v0.0.0-20240816080258-7e52d8227611
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.22-0.20240819024148-81f282db3444
 	github.com/mittwald/go-helm-client v0.12.9
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0
