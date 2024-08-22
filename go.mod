@@ -1,8 +1,6 @@
 module github.com/furiosa-ai/furiosa-device-plugin
 
-go 1.22
-
-toolchain go1.22.6
+go 1.21.3
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
