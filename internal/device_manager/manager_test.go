@@ -683,12 +683,12 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 			debugMode:      false,
 			allocator:      nil,
 		}
-		
+
 		actualResult, actualError := mockDeviceManager.GetContainerAllocateResponse(prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.deviceIDs))
 		if actualError != nil != tc.expectError {
 			t.Errorf("unexpected error %t", actualError)
 		}
-		
+
 		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
 			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
 		}
