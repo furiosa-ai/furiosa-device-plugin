@@ -5,7 +5,12 @@ FROM $BASE_IMAGE as build
 # Build device-plugin binary
 WORKDIR /
 COPY . /
+
 RUN make build
+
+# libcap2-bin is required to use `setcap` command.
+RUN apt-get update && apt-get install -y libcap2-bin
+RUN setcap 'cap_net_bind_service,cap_dac_override=+ep' /main
 
 FROM gcr.io/distroless/base-debian12:nonroot
 
