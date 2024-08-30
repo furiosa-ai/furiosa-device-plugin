@@ -7,7 +7,7 @@ WORKDIR /
 COPY . /
 RUN make build
 
-FROM gcr.io/distroless/base-debian12:nonroot
+FROM gcr.io/distroless/base-debian12:latest
 
 # Copy device plugin binary
 WORKDIR /
