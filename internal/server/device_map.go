@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 )
 
 type DeviceMap map[smi.Arch][]smi.Device

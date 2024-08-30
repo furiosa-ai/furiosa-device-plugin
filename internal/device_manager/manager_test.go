@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
@@ -145,7 +145,7 @@ func TestFetchDevicesByID(t *testing.T) {
 // staticMockTopologyHintProvider build hint matrix for optimized 2socket server
 // which has two pcie switches per socket and two devices per switch.
 func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
-	hints := map[string]map[string]uint{
+	hints := map[npu_allocator.TopologyHintKey]map[npu_allocator.TopologyHintKey]uint{
 		"27": {"27": 70, "2a": 30, "51": 20, "57": 20, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
 		"2a": {"2a": 70, "51": 20, "57": 20, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
 		"51": {"51": 70, "57": 30, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
@@ -156,8 +156,8 @@ func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
 		"ca": {"ca": 70},
 	}
 	return func(device1, device2 npu_allocator.Device) uint {
-		topologyHintKey1 := device1.TopologyHintKey()
-		topologyHintKey2 := device2.TopologyHintKey()
+		topologyHintKey1 := device1.GetTopologyHintKey()
+		topologyHintKey2 := device2.GetTopologyHintKey()
 
 		if topologyHintKey1 > topologyHintKey2 {
 			topologyHintKey1, topologyHintKey2 = topologyHintKey2, topologyHintKey1
@@ -414,11 +414,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0",
-						HostPath:      "/sys/class/npu_mgmt/npu0",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
 						ReadOnly:      true,
@@ -436,11 +431,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0",
 						ReadOnly:      true,
 					},
 					{
@@ -463,11 +453,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu0",
-						HostPath:      "/dev/npu0",
 						Permissions:   "rw",
 					},
 					{
@@ -523,11 +508,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0",
-						HostPath:      "/sys/class/npu_mgmt/npu0",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
 						ReadOnly:      true,
@@ -545,11 +525,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0",
 						ReadOnly:      true,
 					},
 					{
@@ -573,11 +548,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 						ReadOnly:      true,
 					},
 					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1",
-						HostPath:      "/sys/class/npu_mgmt/npu1",
-						ReadOnly:      true,
-					},
-					{
 						ContainerPath: "/sys/class/npu_mgmt/npu1pe0",
 						HostPath:      "/sys/class/npu_mgmt/npu1pe0",
 						ReadOnly:      true,
@@ -595,11 +565,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
 						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1",
 						ReadOnly:      true,
 					},
 					{
@@ -622,11 +587,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu0_mgmt",
 						HostPath:      "/dev/npu0_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu0",
-						HostPath:      "/dev/npu0",
 						Permissions:   "rw",
 					},
 					{
@@ -667,11 +627,6 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 					{
 						ContainerPath: "/dev/npu1_mgmt",
 						HostPath:      "/dev/npu1_mgmt",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/npu1",
-						HostPath:      "/dev/npu1",
 						Permissions:   "rw",
 					},
 					{

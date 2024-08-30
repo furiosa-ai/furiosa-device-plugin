@@ -1,11 +1,13 @@
 package device_manager
 
 import (
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	"reflect"
 	"testing"
 
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -141,11 +143,6 @@ func TestDeviceSpecs(t *testing.T) {
 					Permissions:   "rw",
 				},
 				{
-					ContainerPath: "/dev/npu0",
-					HostPath:      "/dev/npu0",
-					Permissions:   "rw",
-				},
-				{
 					ContainerPath: "/dev/npu0pe0",
 					HostPath:      "/dev/npu0pe0",
 					Permissions:   "rw",
@@ -256,11 +253,6 @@ func TestMounts(t *testing.T) {
 					ReadOnly:      true,
 				},
 				{
-					ContainerPath: "/sys/class/npu_mgmt/npu0",
-					HostPath:      "/sys/class/npu_mgmt/npu0",
-					ReadOnly:      true,
-				},
-				{
 					ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
 					HostPath:      "/sys/class/npu_mgmt/npu0pe0",
 					ReadOnly:      true,
@@ -278,11 +270,6 @@ func TestMounts(t *testing.T) {
 				{
 					ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
 					HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-					ReadOnly:      true,
-				},
-				{
-					ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0",
-					HostPath:      "/sys/devices/virtual/npu_mgmt/npu0",
 					ReadOnly:      true,
 				},
 				{
@@ -337,7 +324,7 @@ func TestID(t *testing.T) {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
-		actualResult := exclusiveDev.ID()
+		actualResult := exclusiveDev.GetID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -349,7 +336,7 @@ func TestTopologyHintKey(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
-		expectedResult string
+		expectedResult npu_allocator.TopologyHintKey
 	}{
 		{
 			description:    "test topology hint",
@@ -365,7 +352,7 @@ func TestTopologyHintKey(t *testing.T) {
 			continue
 		}
 
-		actualResult := exclusiveDev.TopologyHintKey()
+		actualResult := exclusiveDev.GetTopologyHintKey()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue

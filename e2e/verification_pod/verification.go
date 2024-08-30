@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/e2e"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 )
 
 func main() {

@@ -2,7 +2,8 @@ package e2e
 
 import (
 	"encoding/json"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
+
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 )
 
 type DeviceFile struct {

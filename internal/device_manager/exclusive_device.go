@@ -1,9 +1,9 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -146,12 +146,12 @@ func (f *exclusiveDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (f *exclusiveDevice) ID() string {
+func (f *exclusiveDevice) GetID() string {
 	return f.DeviceID()
 }
 
-func (f *exclusiveDevice) TopologyHintKey() string {
-	return f.PCIBusID()
+func (f *exclusiveDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+	return npu_allocator.TopologyHintKey(f.PCIBusID())
 }
 
 func (f *exclusiveDevice) Equal(target npu_allocator.Device) bool {

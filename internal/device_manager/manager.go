@@ -8,8 +8,8 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
 )
 
 type DeviceManager interface {
@@ -123,7 +123,7 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 	var allocated []string
 	allocatedDeviceSet := d.allocator.Allocate(availableDevices, requiredDevices, request)
 	for _, allocatedDevice := range allocatedDeviceSet {
-		allocated = append(allocated, allocatedDevice.ID())
+		allocated = append(allocated, allocatedDevice.GetID())
 	}
 
 	return &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{

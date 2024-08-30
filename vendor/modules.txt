@@ -150,12 +150,14 @@ github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.7.0
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.21
+# github.com/furiosa-ai/furiosa-smi-go v0.0.1
+## explicit; go 1.21.3
+github.com/furiosa-ai/furiosa-smi-go/pkg/smi
+github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.26
 ## explicit; go 1.21.3
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
-github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi
-github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi/binding
 # github.com/go-errors/errors v1.5.1
 ## explicit; go 1.14
 github.com/go-errors/errors

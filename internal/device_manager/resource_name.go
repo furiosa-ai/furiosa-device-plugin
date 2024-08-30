@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/smi"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"k8s.io/apimachinery/pkg/api/validation"
 )
 
