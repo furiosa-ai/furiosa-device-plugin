@@ -7,6 +7,7 @@ import (
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -323,7 +324,7 @@ func TestID(t *testing.T) {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
-		actualResult := exclusiveDev.ID()
+		actualResult := exclusiveDev.GetID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -335,7 +336,7 @@ func TestTopologyHintKey(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
-		expectedResult string
+		expectedResult npu_allocator.TopologyHintKey
 	}{
 		{
 			description:    "test topology hint",
@@ -351,7 +352,7 @@ func TestTopologyHintKey(t *testing.T) {
 			continue
 		}
 
-		actualResult := exclusiveDev.TopologyHintKey()
+		actualResult := exclusiveDev.GetTopologyHintKey()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue

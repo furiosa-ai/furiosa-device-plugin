@@ -2,7 +2,6 @@ package manifest
 
 import (
 	"fmt"
-
 	"path/filepath"
 
 	"github.com/bradfitz/iter"

@@ -146,12 +146,12 @@ func (f *exclusiveDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (f *exclusiveDevice) ID() string {
+func (f *exclusiveDevice) GetID() string {
 	return f.DeviceID()
 }
 
-func (f *exclusiveDevice) TopologyHintKey() string {
-	return f.PCIBusID()
+func (f *exclusiveDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+	return npu_allocator.TopologyHintKey(f.PCIBusID())
 }
 
 func (f *exclusiveDevice) Equal(target npu_allocator.Device) bool {

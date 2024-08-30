@@ -145,7 +145,7 @@ func TestFetchDevicesByID(t *testing.T) {
 // staticMockTopologyHintProvider build hint matrix for optimized 2socket server
 // which has two pcie switches per socket and two devices per switch.
 func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
-	hints := map[string]map[string]uint{
+	hints := map[npu_allocator.TopologyHintKey]map[npu_allocator.TopologyHintKey]uint{
 		"27": {"27": 70, "2a": 30, "51": 20, "57": 20, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
 		"2a": {"2a": 70, "51": 20, "57": 20, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
 		"51": {"51": 70, "57": 30, "9e": 10, "a4": 10, "c7": 10, "ca": 10},
@@ -156,8 +156,8 @@ func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
 		"ca": {"ca": 70},
 	}
 	return func(device1, device2 npu_allocator.Device) uint {
-		topologyHintKey1 := device1.TopologyHintKey()
-		topologyHintKey2 := device2.TopologyHintKey()
+		topologyHintKey1 := device1.GetTopologyHintKey()
+		topologyHintKey2 := device2.GetTopologyHintKey()
 
 		if topologyHintKey1 > topologyHintKey2 {
 			topologyHintKey1, topologyHintKey2 = topologyHintKey2, topologyHintKey1

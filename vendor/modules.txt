@@ -154,7 +154,7 @@ github.com/fsnotify/fsnotify
 ## explicit; go 1.21.3
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.22-0.20240819024148-81f282db3444
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.26
 ## explicit; go 1.21.3
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
