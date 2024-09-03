@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -56,14 +57,21 @@ var _ = Describe("test legacy strategy", Ordered, func() {
 
 var _ = Describe("test generic strategy", Ordered, func() {
 	// deploy device-plugin helm chart for generic strategy
+
+	arch := os.Getenv("FURIOSA_ARCH")
+	if arch == "" {
+		Fail("FURIOSA_ARCH env var is not set")
+		return
+	}
+
 	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues("generic")))
 
-	It("verify node", verifyNode("furiosa.ai/warboy"))
+	It("verify node", verifyNode(fmt.Sprintf("furiosa.ai/%s", arch)))
 
-	It("request NPUs", deployVerificationPodAndVerifyEnv("furiosa.ai/warboy"))
+	It("request NPUs", deployVerificationPodAndVerifyEnv(fmt.Sprintf("furiosa.ai/%s", arch)))
 
 	// FIXME(@bg): run inference pod once image is ready
-	/*It("verify pod environment", verifyInferenceEnv("furiosa.ai/warboy"))
+	/*It("verify pod environment", verifyInferenceEnv(fmt.Sprintf("furiosa.ai/%s", arch)))
 
 	It("clean up verification pod", cleanUpInferencePod())*/
 
