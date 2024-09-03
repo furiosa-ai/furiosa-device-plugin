@@ -264,7 +264,7 @@ func deployVerificationPodAndVerifyEnv(resourceName string) func() {
 func cleanUpVerificationPodIfExist() func() {
 	return func() {
 		// delete verification pod if exist
-		e2e.BackgroundContext().ClientSet.CoreV1().Pods(e2e.BackgroundContext().Namespace).Delete(context.TODO(), "verification-pod", metav1.DeleteOptions{})
+		_ = e2e.BackgroundContext().ClientSet.CoreV1().Pods(e2e.BackgroundContext().Namespace).Delete(context.TODO(), "verification-pod", metav1.DeleteOptions{})
 	}
 }
 
