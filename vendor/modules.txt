@@ -140,6 +140,7 @@ github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
 # github.com/furiosa-ai/libfuriosa-kubernetes v0.1.27
 ## explicit; go 1.22.6
+github.com/furiosa-ai/libfuriosa-kubernetes/pkg/e2e
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
 # github.com/fxamacker/cbor/v2 v2.7.0

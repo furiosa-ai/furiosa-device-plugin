@@ -54,7 +54,7 @@ vet:
 
 .PHONY: test
 test:
-	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
+	SKIP_E2E_FRAMEWORK_INIT=1 $(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
 
 .PHONY: cover
 cover:
@@ -104,10 +104,8 @@ e2e-verification:
 
 .PHONY: e2e-verification-image
 e2e-verification-image:
-	docker build . -t registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/verification:latest --progress=plain --platform=linux/amd64 -f ./e2e/verification_pod/Dockerfile
+	docker build . -t registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/verification:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/verification_pod/Dockerfile
 
 .PHONY:e2e
 e2e:
-	# build container image
-	# run e2e test framework
 	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) ginkgo ./e2e
