@@ -30,10 +30,6 @@ else
     $(error Unsupported OS)
 endif
 
-ifndef FURIOSA_ARCH
-$(error FURIOSA_ARCH env var is not set)
-endif
-
 # regexp to filter some directories from testing
 EXCLUDE_DIR_REGEXP := E2E
 
@@ -112,4 +108,7 @@ e2e-verification-image:
 
 .PHONY:e2e
 e2e:
+ifndef FURIOSA_ARCH
+	$(error FURIOSA_ARCH env var is not set)
+endif
 	FURIOSA_ARCH=$(FURIOSA_ARCH) CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) ginkgo ./e2e
