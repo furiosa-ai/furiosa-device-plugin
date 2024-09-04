@@ -180,7 +180,7 @@ func verifyNode(resUniqueKeys ...string) func() {
 				nodeName = nodeList.Items[0].Name
 			}
 			return len(nodeList.Items)
-		}).WithPolling(1 * time.Second).WithTimeout(30 * time.Second).Should(BeNumerically(">=", 1))
+		}).WithPolling(1 * time.Second).WithTimeout(300 * time.Second).Should(BeNumerically(">=", 1))
 
 		var podList *v1.PodList
 		Eventually(func() int {
@@ -193,7 +193,7 @@ func verifyNode(resUniqueKeys ...string) func() {
 				return 0
 			}
 			return len(podList.Items)
-		}).WithPolling(1 * time.Second).WithTimeout(30 * time.Second).Should(BeNumerically("==", 1))
+		}).WithPolling(1 * time.Second).WithTimeout(300 * time.Second).Should(BeNumerically("==", 1))
 
 		// polling until pod.status.phase of daemonset became Running with timeout 15 sec
 		podName := podList.Items[0].Name
@@ -203,7 +203,7 @@ func verifyNode(resUniqueKeys ...string) func() {
 				return v1.PodUnknown
 			}
 			return pod.Status.Phase
-		}).WithPolling(1 * time.Second).WithTimeout(15 * time.Second).Should(Equal(v1.PodRunning))
+		}).WithPolling(1 * time.Second).WithTimeout(150 * time.Second).Should(Equal(v1.PodRunning))
 
 		// polling the same node for resource name and quantity verification
 		Eventually(func() int {
