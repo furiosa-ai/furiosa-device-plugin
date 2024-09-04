@@ -33,6 +33,10 @@ endif
 # regexp to filter some directories from testing
 EXCLUDE_DIR_REGEXP := E2E
 
+export E2E_TEST_IMAGE_REGISTRY := registry.corp.furiosa.ai/furiosa
+export E2E_TEST_IMAGE_NAME := furiosa-feature-discovery
+export E2E_TEST_IMAGE_TAG := latest
+
 .PHONY: all
 all: build fmt lint vet test tidy vendor
 
