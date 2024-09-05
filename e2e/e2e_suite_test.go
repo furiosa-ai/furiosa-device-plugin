@@ -139,7 +139,19 @@ func genVerificationPodManifest(npuNum string, resourceName string) *v1.Pod {
 	}
 }*/
 
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
 func composeValues(strategy string) string {
+	imageRegistry := getEnv("E2E_TEST_IMAGE_REGISTRY", "registry.corp.furiosa.ai/furiosa")
+	imageName := getEnv("E2E_TEST_IMAGE_NAME", "furiosa-device-plugin")
+	imageTag := getEnv("E2E_TEST_IMAGE_TAG", "latest")
+
 	template := `namespace: kube-system
 daemonSet:
   priorityClassName: system-node-critical
@@ -152,8 +164,8 @@ daemonSet:
     - key: npu
       operator: Exists
   image:
-    repository: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin
-    tag: latest
+    repository: %s/%s
+    tag: %s
     pullPolicy: Always
   resources:
     cpu: 100m
@@ -163,7 +175,7 @@ config:
   resourceStrategy: %s
   debugMode: false
 `
-	return fmt.Sprintf(template, strategy)
+	return fmt.Sprintf(template, imageRegistry, imageName, imageTag, strategy)
 }
 
 func verifyNode(resUniqueKeys ...string) func() {
