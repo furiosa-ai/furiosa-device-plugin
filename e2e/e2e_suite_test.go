@@ -20,29 +20,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-var (
-	e2eTestImageRegistry string
-	e2eTestImageName     string
-	e2eTestImageTag      string
-)
-
-func init() {
-	e2eTestImageRegistry = os.Getenv("E2E_TEST_IMAGE_REGISTRY")
-	if e2eTestImageRegistry == "" {
-		e2eTestImageRegistry = "registry.corp.furiosa.ai/furiosa"
-	}
-
-	e2eTestImageName = os.Getenv("E2E_TEST_IMAGE_NAME")
-	if e2eTestImageName == "" {
-		e2eTestImageName = "furiosa-feature-discovery"
-	}
-
-	e2eTestImageTag = os.Getenv("E2E_TEST_IMAGE_TAG")
-	if e2eTestImageTag == "" {
-		e2eTestImageTag = "latest"
-	}
-}
-
 func TestE2E(t *testing.T) {
 	e2e.GenericRunTestSuiteFunc(t, "device-plugin e2e test")
 }
@@ -63,7 +40,7 @@ func abs(path string) string {
 // Note(@bg): assumption is that this test will be run on the two socket workstation with two NPUs per each socket.
 var _ = Describe("test legacy strategy", Ordered, func() {
 	// deploy device-plugin helm chart for legacy strategy
-	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues(e2eTestImageRegistry, e2eTestImageName, e2eTestImageTag, "legacy")))
+	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues("legacy")))
 
 	It("verify node", verifyNode("alpha.furiosa.ai/npu"))
 
@@ -87,7 +64,7 @@ var _ = Describe("test generic strategy", Ordered, func() {
 		return
 	}
 
-	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues(e2eTestImageRegistry, e2eTestImageName, e2eTestImageTag, "generic")))
+	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues("generic")))
 
 	It("verify node", verifyNode(fmt.Sprintf("furiosa.ai/%s", arch)))
 
@@ -162,7 +139,19 @@ func genVerificationPodManifest(npuNum string, resourceName string) *v1.Pod {
 	}
 }*/
 
-func composeValues(e2eTestImageRegistry, e2eTestImageName, e2eTestImageTag, strategy string) string {
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func composeValues(strategy string) string {
+	imageRegistry := getEnv("E2E_TEST_IMAGE_REGISTRY", "registry.corp.furiosa.ai/furiosa")
+	imageName := getEnv("E2E_TEST_IMAGE_NAME", "furiosa-device-plugin")
+	imageTag := getEnv("E2E_TEST_IMAGE_TAG", "latest")
+
 	template := `namespace: kube-system
 daemonSet:
   priorityClassName: system-node-critical
@@ -186,7 +175,7 @@ config:
   resourceStrategy: %s
   debugMode: false
 `
-	return fmt.Sprintf(template, e2eTestImageRegistry, e2eTestImageName, e2eTestImageTag, strategy)
+	return fmt.Sprintf(template, imageRegistry, imageName, imageTag, strategy)
 }
 
 func verifyNode(resUniqueKeys ...string) func() {
