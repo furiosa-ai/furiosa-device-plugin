@@ -50,6 +50,10 @@ spec:
               mountPath: /dev
             - name: sys-fs
               mountPath: /sys
+      {{- with .Values.daemonSet.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.daemonSet.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
