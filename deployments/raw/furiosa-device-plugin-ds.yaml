@@ -16,13 +16,16 @@ metadata:
   name: furiosa-device-plugin
   namespace: kube-system
   labels:
+    helm.sh/chart: furiosa-device-plugin-0.1.0
     app.kubernetes.io/name: furiosa-device-plugin
-    app.kubernetes.io/instance: furioa-device-plugin-ds
+    app.kubernetes.io/instance: furiosa-device-plugin
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: furiosa-device-plugin
-      app.kubernetes.io/instance: furioa-device-plugin-ds
+      app.kubernetes.io/instance: furiosa-device-plugin
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -31,7 +34,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: furiosa-device-plugin
-        app.kubernetes.io/instance: furioa-device-plugin-ds
+        app.kubernetes.io/instance: furiosa-device-plugin
     spec:
       priorityClassName:  system-node-critical
       containers:
@@ -65,6 +68,15 @@ spec:
               mountPath: /dev
             - name: sys-fs
               mountPath: /sys
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: feature.node.kubernetes.io/pci-1ed2.present
+                    operator: In
+                    values:
+                      - "true"
       volumes:
         - name: config
           configMap:
@@ -78,6 +90,3 @@ spec:
         - name: sys-fs
           hostPath:
             path: /sys
-      tolerations:
-        - key: npu
-          operator: Exists
