@@ -16,7 +16,7 @@ daemonSet:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: feature.node.kubernetes.io/pci-1ed2.present
+          - key: feature.node.kubernetes.io/pci-1200_1ed2.present
             operator: In
             values:
               - "true"
