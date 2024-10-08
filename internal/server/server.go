@@ -22,7 +22,10 @@ import (
 	pluginRegistrationV1 "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 )
 
-const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
+const (
+	socketPathExp        = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
+	socketSymlinkPathExp = "/var/lib/kubelet/plugins_registry/%s.sock"
+)
 
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
@@ -31,6 +34,7 @@ type PluginServer struct {
 	cancelCtxFunc         context.CancelFunc
 	deviceManager         device_manager.DeviceManager
 	socket                string
+	socketSymLink         string
 	server                *grpc.Server
 	deviceHealthCheckChan chan error
 }
@@ -68,10 +72,22 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 		return err
 	}
 
+	err = os.Remove(p.socketSymLink)
+	if err != nil && !os.IsNotExist(err) {
+		logger.Err(err).Msg(fmt.Sprintf("couldn't remove existing socket symbolic link %s", p.socketSymLink))
+		return err
+	}
+
 	// listen unix socket
 	sock, err := net.Listen("unix", p.socket)
 	if err != nil {
 		logger.Err(err).Msg(fmt.Sprintf("couldn't listen socket %s", p.socket))
+		return err
+	}
+
+	// create symbolic link from unix socket
+	if err := os.Symlink(p.socket, p.socketSymLink); err != nil {
+		logger.Err(err).Msg(fmt.Sprintf("couldn't create symbolic link %s", p.socketSymLink))
 		return err
 	}
 
@@ -247,6 +263,7 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 
 	return PluginServer{
 		socket:                fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
+		socketSymLink:         fmt.Sprintf(socketSymlinkPathExp, resNameWithoutPrefix),
 		config:                config,
 		cancelCtxFunc:         cancelFunc,
 		deviceManager:         deviceManager,
