@@ -44,8 +44,10 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/config
-            - name: kubelet-socket
+            - name: device-plugins
               mountPath: /var/lib/kubelet/device-plugins
+            - name: plugins-registry
+              mountPath: /var/lib/kubelet/plugins_registry
             - name: dev-fs
               mountPath: /dev
             - name: sys-fs
@@ -62,9 +64,12 @@ spec:
         - name: config
           configMap:
             name: {{ include "furiosa-device-plugin.name" . }}-config-cm
-        - name: kubelet-socket
+        - name: device-plugins
           hostPath:
             path: /var/lib/kubelet/device-plugins
+        - name: plugins-registry
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
         - name: dev-fs
           hostPath:
             path: /dev
