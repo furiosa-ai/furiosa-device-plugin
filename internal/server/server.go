@@ -43,8 +43,9 @@ func dialWithTimeout(socket string, timeout time.Duration) (*grpc.ClientConn, er
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
 	defer cancelFunc()
 
-	conn, err := grpc.NewClient(socket,
+	conn, err := grpc.DialContext(ctx, socket,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
 		//TODO(@bg): pass dialFn for mocking if needed
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
 			return net.Dial("unix", addr)
