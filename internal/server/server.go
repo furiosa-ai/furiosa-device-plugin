@@ -19,6 +19,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	pluginRegistrationV1 "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 )
 
 const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
@@ -215,6 +216,29 @@ func (p *PluginServer) Allocate(ctx context.Context, request *devicePluginAPIv1B
 func (p *PluginServer) PreStartContainer(_ context.Context, _ *devicePluginAPIv1Beta1.PreStartContainerRequest) (*devicePluginAPIv1Beta1.PreStartContainerResponse, error) {
 	// NOTE(@bg): we don't need reinitialization of device.
 	return &devicePluginAPIv1Beta1.PreStartContainerResponse{}, nil
+}
+
+func (p *PluginServer) GetInfo(ctx context.Context, _ *pluginRegistrationV1.InfoRequest) (*pluginRegistrationV1.PluginInfo, error) {
+	logger := zerolog.Ctx(ctx)
+	logger.Info().Msg("plugin registration request using `plugins_registry` received")
+
+	return &pluginRegistrationV1.PluginInfo{
+		Type:              pluginRegistrationV1.DevicePlugin,
+		Name:              p.deviceManager.ResourceName(),
+		Endpoint:          path.Base(p.socket),
+		SupportedVersions: []string{devicePluginAPIv1Beta1.Version},
+	}, nil
+}
+
+func (p *PluginServer) NotifyRegistrationStatus(ctx context.Context, registrationStatus *pluginRegistrationV1.RegistrationStatus) (*pluginRegistrationV1.RegistrationStatusResponse, error) {
+	logger := zerolog.Ctx(ctx)
+	if registrationStatus.PluginRegistered {
+		logger.Info().Msg("successfully registered plugin using `plugins_registry`")
+	} else {
+		logger.Warn().Msg("failed to register plugin using `plugins_registry`")
+	}
+
+	return &pluginRegistrationV1.RegistrationStatusResponse{}, nil
 }
 
 func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, config *config.Config) PluginServer {
