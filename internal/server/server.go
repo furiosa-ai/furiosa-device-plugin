@@ -28,6 +28,7 @@ const (
 )
 
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
+var _ pluginRegistrationV1.RegistrationServer = (*PluginServer)(nil)
 
 type PluginServer struct {
 	config                *config.Config
@@ -66,6 +67,7 @@ func dialWithTimeout(socket string, timeout time.Duration) (*grpc.ClientConn, er
 func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan error) error {
 	logger := zerolog.Ctx(ctx)
 	devicePluginAPIv1Beta1.RegisterDevicePluginServer(p.server, p)
+	pluginRegistrationV1.RegisterRegistrationServer(p.server, p)
 
 	err := os.Remove(p.socket)
 	if err != nil && !os.IsNotExist(err) {
@@ -86,12 +88,6 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 		return err
 	}
 
-	// create symbolic link from unix socket
-	if err := os.Symlink(p.socket, p.socketSymLink); err != nil {
-		logger.Err(err).Msg(fmt.Sprintf("couldn't create symbolic link %s", p.socketSymLink))
-		return err
-	}
-
 	// run grpc server.serve in a new goroutine
 	go func() {
 		logger.Info().Msg(fmt.Sprintf("start listening %s", sock))
@@ -100,6 +96,12 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 			grpcErrChan <- serveRrr
 		}
 	}()
+
+	// create symbolic link from unix socket
+	if err := os.Symlink(p.socket, p.socketSymLink); err != nil {
+		logger.Err(err).Msg(fmt.Sprintf("couldn't create symbolic link %s", p.socketSymLink))
+		return err
+	}
 
 	// check server liveliness
 	conn, err := dialWithTimeout(p.socket, 5*time.Second)
