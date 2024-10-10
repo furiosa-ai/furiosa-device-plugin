@@ -243,7 +243,6 @@ func (p *PluginServer) GetInfo(ctx context.Context, _ *pluginRegistrationV1.Info
 	return &pluginRegistrationV1.PluginInfo{
 		Type:              pluginRegistrationV1.DevicePlugin,
 		Name:              p.deviceManager.ResourceName(),
-		Endpoint:          path.Base(p.socket),
 		SupportedVersions: []string{devicePluginAPIv1Beta1.Version},
 	}, nil
 }
