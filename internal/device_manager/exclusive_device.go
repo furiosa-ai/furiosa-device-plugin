@@ -12,28 +12,14 @@ var _ FuriosaDevice = (*exclusiveDevice)(nil)
 type exclusiveDevice struct {
 	origin     smi.Device
 	manifest   manifest.Manifest
-	deviceID   string
+	uuid       string
 	pciBusID   string
 	numaNode   int
 	isDisabled bool
 }
 
-func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
-	info, err := originDevice.DeviceInfo()
-	if err != nil {
-		return 0, "", "", 0, err
-	}
-
-	arch = info.Arch()
-	deviceID = info.UUID()
-	pciBusID, err = parseBusIDfromBDF(info.BDF())
-	numaNode = uint(info.NumaNode())
-
-	return arch, deviceID, pciBusID, numaNode, err
-}
-
 func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+	arch, uuid, pciBusID, numaNode, err := parseOriginDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +40,13 @@ func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice
 	}
 
 	return &exclusiveDevice{
-		origin:     originDevice,
-		manifest:   newExclusiveDeviceManifest,
-		deviceID:   deviceID,
+		origin:   originDevice,
+		manifest: newExclusiveDeviceManifest,
+
+		// Use UUID as deviceID for exclusive device.
+		// For partitioned device, we have to use alternative way.
+		uuid: uuid,
+
 		pciBusID:   pciBusID,
 		numaNode:   int(numaNode),
 		isDisabled: isDisabled,
@@ -64,7 +54,9 @@ func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice
 }
 
 func (f *exclusiveDevice) DeviceID() string {
-	return f.deviceID
+	// Use UUID as deviceID for exclusive device.
+	// For partitioned device, we have to use alternative way.
+	return f.uuid
 }
 
 func (f *exclusiveDevice) PCIBusID() string {

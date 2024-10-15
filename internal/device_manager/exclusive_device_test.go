@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
-
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 func NewMockExclusiveDevice(mockDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	_, deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
+	_, uuid, pciBusID, numaNode, err := parseOriginDeviceInfo(mockDevice)
 	if err != nil {
 		return nil, err
 	}
@@ -25,14 +24,14 @@ func NewMockExclusiveDevice(mockDevice smi.Device, isDisabled bool) (FuriosaDevi
 	return &exclusiveDevice{
 		origin:     mockDevice,
 		manifest:   mockManifest,
-		deviceID:   deviceID,
+		uuid:       uuid,
 		pciBusID:   pciBusID,
 		numaNode:   int(numaNode),
 		isDisabled: isDisabled,
 	}, nil
 }
 
-func TestDeviceID(t *testing.T) {
+func TestDeviceID_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -59,7 +58,7 @@ func TestDeviceID(t *testing.T) {
 	}
 }
 
-func TestPCIBusID(t *testing.T) {
+func TestPCIBusID_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -92,7 +91,7 @@ func TestPCIBusID(t *testing.T) {
 	}
 }
 
-func TestNUMANode(t *testing.T) {
+func TestNUMANode_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -127,7 +126,7 @@ func TestNUMANode(t *testing.T) {
 	}
 }
 
-func TestDeviceSpecs(t *testing.T) {
+func TestDeviceSpecs_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -197,7 +196,7 @@ func TestDeviceSpecs(t *testing.T) {
 }
 
 // This function tests the IsHealthy API only in terms of the deny list.
-func TestIsHealthy(t *testing.T) {
+func TestIsHealthy_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -237,7 +236,7 @@ func TestIsHealthy(t *testing.T) {
 	}
 }
 
-func TestMounts(t *testing.T) {
+func TestMounts_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -305,7 +304,7 @@ func TestMounts(t *testing.T) {
 	}
 }
 
-func TestID(t *testing.T) {
+func TestID_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -332,7 +331,7 @@ func TestID(t *testing.T) {
 	}
 }
 
-func TestTopologyHintKey(t *testing.T) {
+func TestTopologyHintKey_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description    string
 		mockDevice     smi.Device
@@ -360,7 +359,7 @@ func TestTopologyHintKey(t *testing.T) {
 	}
 }
 
-func TestEqual(t *testing.T) {
+func TestEqual_ExclusiveDevice(t *testing.T) {
 	tests := []struct {
 		description      string
 		mockSourceDevice smi.Device

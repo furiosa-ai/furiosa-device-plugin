@@ -195,8 +195,16 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 
 			return []FuriosaDevice{newExclusiveDevice}, nil
 		}
+
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
-		ret = NewPartitionedDevices
+		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
+			newPartitionedDevices, err := NewPartitionedDevices(originDevice, strategy, isDisabled)
+			if err != nil {
+				return nil, err
+			}
+
+			return newPartitionedDevices, nil
+		}
 	}
 
 	return ret

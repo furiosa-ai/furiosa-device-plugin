@@ -61,20 +61,28 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		devices := smi.GetStaticMockDevices(smi.ArchWarboy)
-		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
-		for _, actualDevice := range actualDevices {
-			if tc.expectExclusiveDevice {
-				if _, ok := actualDevice.(*exclusiveDevice); !ok {
-					t.Errorf("expect exclusive device but type assertion failed")
+		for _, arch := range []smi.Arch{smi.ArchWarboy, smi.ArchRngd} {
+			devices := smi.GetStaticMockDevices(arch)
+			actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
+			if err != nil {
+				if arch == smi.ArchWarboy && tc.strategy == config.QuadCoreStrategy {
+					// WARBOY does not support quad-core strategy. -> Expected behavior
+				} else {
+					t.Errorf("unexpected error %t", err)
 				}
-			} else {
-				if _, ok := actualDevice.(*partitionedDevice); !ok {
-					t.Errorf("expect partitioned device but type assertion failed")
+
+				continue
+			}
+
+			for _, actualDevice := range actualDevices {
+				if tc.expectExclusiveDevice {
+					if _, ok := actualDevice.(*exclusiveDevice); !ok {
+						t.Errorf("expect exclusive device but type assertion failed")
+					}
+				} else {
+					if _, ok := actualDevice.(*partitionedDevice); !ok {
+						t.Errorf("expect partitioned device but type assertion failed")
+					}
 				}
 			}
 		}

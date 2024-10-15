@@ -3,6 +3,8 @@ package device_manager
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 )
 
 const (
@@ -26,6 +28,25 @@ func parseBusIDfromBDF(bdf string) (string, error) {
 	}
 
 	return matches[subExpIndex], nil
+}
+
+// parseOriginDeviceInfo returns below information.
+//   - arch: ArchWarboy, ArchRngd, ArchRngdMax, ArchRngdS
+//   - uuid: UUID string of origin device (board)
+//   - pciBusID
+//   - numaNode
+func parseOriginDeviceInfo(originDevice smi.Device) (arch smi.Arch, uuid, pciBusID string, numaNode uint, err error) {
+	info, err := originDevice.DeviceInfo()
+	if err != nil {
+		return 0, "", "", 0, err
+	}
+
+	arch = info.Arch()
+	uuid = info.UUID()
+	pciBusID, err = parseBusIDfromBDF(info.BDF())
+	numaNode = uint(info.NumaNode())
+
+	return arch, uuid, pciBusID, numaNode, err
 }
 
 func contains[T comparable](s []T, e T) bool {
