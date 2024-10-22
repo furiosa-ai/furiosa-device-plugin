@@ -324,7 +324,7 @@ func TestID(t *testing.T) {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
-		actualResult := exclusiveDev.GetID()
+		actualResult := exclusiveDev.ID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -352,7 +352,7 @@ func TestTopologyHintKey(t *testing.T) {
 			continue
 		}
 
-		actualResult := exclusiveDev.GetTopologyHintKey()
+		actualResult := exclusiveDev.TopologyHintKey()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue

@@ -64,12 +64,17 @@ func (p partitionedDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (p partitionedDevice) GetID() string {
+func (p partitionedDevice) Index() int {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p partitionedDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+func (p partitionedDevice) ID() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p partitionedDevice) TopologyHintKey() npu_allocator.TopologyHintKey {
 	//TODO implement me
 	panic("implement me")
 }

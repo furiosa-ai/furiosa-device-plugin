@@ -10,6 +10,7 @@ import (
 var _ FuriosaDevice = (*exclusiveDevice)(nil)
 
 type exclusiveDevice struct {
+	index      int
 	origin     smi.Device
 	manifest   manifest.Manifest
 	deviceID   string
@@ -146,11 +147,15 @@ func (f *exclusiveDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (f *exclusiveDevice) GetID() string {
+func (f *exclusiveDevice) Index() int {
+	return f.index
+}
+
+func (f *exclusiveDevice) ID() string {
 	return f.DeviceID()
 }
 
-func (f *exclusiveDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+func (f *exclusiveDevice) TopologyHintKey() npu_allocator.TopologyHintKey {
 	return npu_allocator.TopologyHintKey(f.PCIBusID())
 }
 

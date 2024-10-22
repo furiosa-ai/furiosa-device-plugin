@@ -156,8 +156,8 @@ func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
 		"ca": {"ca": 70},
 	}
 	return func(device1, device2 npu_allocator.Device) uint {
-		topologyHintKey1 := device1.GetTopologyHintKey()
-		topologyHintKey2 := device2.GetTopologyHintKey()
+		topologyHintKey1 := device1.TopologyHintKey()
+		topologyHintKey2 := device2.TopologyHintKey()
 
 		if topologyHintKey1 > topologyHintKey2 {
 			topologyHintKey1, topologyHintKey2 = topologyHintKey2, topologyHintKey1

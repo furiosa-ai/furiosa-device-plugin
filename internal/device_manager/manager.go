@@ -123,7 +123,7 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 	var allocated []string
 	allocatedDeviceSet := d.allocator.Allocate(availableDevices, requiredDevices, request)
 	for _, allocatedDevice := range allocatedDeviceSet {
-		allocated = append(allocated, allocatedDevice.GetID())
+		allocated = append(allocated, allocatedDevice.ID())
 	}
 
 	return &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
