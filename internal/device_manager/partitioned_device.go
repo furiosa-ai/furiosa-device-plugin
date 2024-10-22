@@ -11,7 +11,7 @@ var _ FuriosaDevice = (*partitionedDevice)(nil)
 type partitionedDevice struct {
 }
 
-func NewPartitionedDevices(_ smi.Device, _ bool) ([]FuriosaDevice, error) {
+func NewPartitionedDevices(_ int, _ smi.Device, _ bool) ([]FuriosaDevice, error) {
 	return nil, nil
 }
 

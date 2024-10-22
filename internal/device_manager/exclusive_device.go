@@ -33,7 +33,7 @@ func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID
 	return arch, deviceID, pciBusID, numaNode, err
 }
 
-func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
+func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
 	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
@@ -55,6 +55,7 @@ func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice
 	}
 
 	return &exclusiveDevice{
+		index:      index,
 		origin:     originDevice,
 		manifest:   newExclusiveDeviceManifest,
 		deviceID:   deviceID,
