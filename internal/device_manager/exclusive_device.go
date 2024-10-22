@@ -19,22 +19,8 @@ type exclusiveDevice struct {
 	isDisabled bool
 }
 
-func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
-	info, err := originDevice.DeviceInfo()
-	if err != nil {
-		return 0, "", "", 0, err
-	}
-
-	arch = info.Arch()
-	deviceID = info.UUID()
-	pciBusID, err = parseBusIDfromBDF(info.BDF())
-	numaNode = uint(info.NumaNode())
-
-	return arch, deviceID, pciBusID, numaNode, err
-}
-
 func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+	arch, deviceID, pciBusID, numaNode, err := parseSMIDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
