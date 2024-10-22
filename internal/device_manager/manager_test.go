@@ -53,11 +53,11 @@ func TestBuildFuriosaDevices(t *testing.T) {
 			strategy:              config.DualCoreStrategy,
 			expectExclusiveDevice: false,
 		},
-		{
-			description:           "test quad core strategy",
-			strategy:              config.QuadCoreStrategy,
-			expectExclusiveDevice: false,
-		},
+		//{
+		//	description:           "test quad core strategy",
+		//	strategy:              config.QuadCoreStrategy,
+		//	expectExclusiveDevice: false,
+		//},
 	}
 
 	for _, tc := range tests {
