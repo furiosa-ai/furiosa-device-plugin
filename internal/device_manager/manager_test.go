@@ -61,7 +61,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		devices := smi.GetStaticMockDevices(smi.ArchWarboy)
+		devices := smi.GetStaticMockDevices(smi.ArchRngd)
 		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
