@@ -20,7 +20,7 @@ type exclusiveDevice struct {
 }
 
 func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	arch, deviceID, pciBusID, numaNode, err := parseSMIDeviceInfo(originDevice)
+	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}

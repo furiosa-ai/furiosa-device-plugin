@@ -91,7 +91,7 @@ func generatePartitionsByArchAndStrategy(arch smi.Arch, strategy config.Resource
 
 // NewPartitionedDevices returns list of FuriosaDevice based on given config.ResourceUnitStrategy.
 func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy config.ResourceUnitStrategy, isDisabled bool) ([]FuriosaDevice, error) {
-	arch, uuid, pciBusID, numaNode, err := parseSMIDeviceInfo(originDevice)
+	arch, uuid, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy co
 
 	for partitionIndex, partition := range partitions {
 		// TODO(@hoony9x): must implement rest of the partitioned device logic
-		var partitionedManifest manifest.Manifest = originalManifest // nolint:all
+		var partitionedManifest = originalManifest // nolint:all
 		//partitionedManifest, err := NewPartitionedDeviceManifest(arch, originalManifest, partition)
 		//if err != nil {
 		//	return nil, err

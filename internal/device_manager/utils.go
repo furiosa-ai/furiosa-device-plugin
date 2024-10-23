@@ -30,7 +30,7 @@ func parseBusIDfromBDF(bdf string) (string, error) {
 	return matches[subExpIndex], nil
 }
 
-func parseSMIDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
+func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
 	info, err := originDevice.DeviceInfo()
 	if err != nil {
 		return 0, "", "", 0, err
