@@ -89,6 +89,11 @@ func generatePartitionsByArchAndStrategy(arch smi.Arch, strategy config.Resource
 	return nil, fmt.Errorf("unsupported strategy %s for architecture %s", strategy, arch.ToString())
 }
 
+// generateIndexForPartitionedDevice generated final index value for Partitioned Device
+func generateIndexForPartitionedDevice(originalIndex, partitionIndex, partitionsLength int) int {
+	return originalIndex*partitionsLength + partitionIndex
+}
+
 // NewPartitionedDevices returns list of FuriosaDevice based on given config.ResourceUnitStrategy.
 func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy config.ResourceUnitStrategy, isDisabled bool) ([]FuriosaDevice, error) {
 	arch, uuid, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
@@ -123,14 +128,13 @@ func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy co
 	}
 
 	for partitionIndex, partition := range partitions {
-		// TODO(@hoony9x): must implement rest of the partitioned device logic
 		partitionedManifest, err := NewPartitionedDeviceManifest(arch, originalManifest, partition)
 		if err != nil {
 			return nil, err
 		}
 
 		partitionedDevices = append(partitionedDevices, &partitionedDevice{
-			index:      originIndex*len(partitions) + partitionIndex,
+			index:      generateIndexForPartitionedDevice(originIndex, partitionIndex, len(partitions)),
 			origin:     originDevice,
 			manifest:   partitionedManifest,
 			uuid:       uuid,
