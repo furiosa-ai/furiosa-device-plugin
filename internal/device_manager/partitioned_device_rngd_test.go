@@ -3,12 +3,119 @@ package device_manager
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/stretchr/testify/assert"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
+
+func TestFinalIndexGeneration_RNGD_PartitionedDevice(t *testing.T) {
+	rngdMockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
+
+	tests := []struct {
+		description                  string
+		strategy                     config.ResourceUnitStrategy
+		expectedIndexes              []int
+		expectedIndexToDeviceUUIDMap map[int]string // key: index, value: uuid
+	}{
+		{
+			description: "Single Core Strategy",
+			strategy:    config.SingleCoreStrategy,
+			expectedIndexes: func() []int {
+				indexes := make([]int, 64)
+				for i := range indexes {
+					indexes[i] = i
+				}
+
+				return indexes
+			}(),
+			expectedIndexToDeviceUUIDMap: func() map[int]string {
+				mapping := make(map[int]string)
+				for i := 0; i < 64; i++ {
+					deviceInfo, _ := rngdMockDevices[i/8].DeviceInfo()
+					mapping[i] = deviceInfo.UUID()
+				}
+
+				return mapping
+			}(),
+		},
+		{
+			description: "Dual Core Strategy",
+			strategy:    config.DualCoreStrategy,
+			expectedIndexes: func() []int {
+				indexes := make([]int, 32)
+				for i := range indexes {
+					indexes[i] = i
+				}
+
+				return indexes
+			}(),
+			expectedIndexToDeviceUUIDMap: func() map[int]string {
+				mapping := make(map[int]string)
+				for i := 0; i < 32; i++ {
+					deviceInfo, _ := rngdMockDevices[i/4].DeviceInfo()
+					mapping[i] = deviceInfo.UUID()
+				}
+
+				return mapping
+			}(),
+		},
+		{
+			description: "Quad Core Strategy",
+			strategy:    config.QuadCoreStrategy,
+			expectedIndexes: func() []int {
+				indexes := make([]int, 16)
+				for i := range indexes {
+					indexes[i] = i
+				}
+
+				return indexes
+			}(),
+			expectedIndexToDeviceUUIDMap: func() map[int]string {
+				mapping := make(map[int]string)
+				for i := 0; i < 16; i++ {
+					deviceInfo, _ := rngdMockDevices[i/2].DeviceInfo()
+					mapping[i] = deviceInfo.UUID()
+				}
+
+				return mapping
+			}(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			deviceMgr, _ := NewDeviceManager(smi.ArchRngd, rngdMockDevices, tc.strategy, nil, false)
+
+			furiosaDeviceMap := deviceMgr.(*deviceManager).furiosaDevices
+			furiosaDevices := make([]FuriosaDevice, 0, len(furiosaDeviceMap))
+			for _, device := range furiosaDeviceMap {
+				furiosaDevices = append(furiosaDevices, device)
+			}
+
+			slices.SortFunc(furiosaDevices, func(dev1, dev2 FuriosaDevice) int {
+				return dev1.Index() - dev2.Index()
+			})
+
+			finalIndexes := make([]int, 0, len(furiosaDevices))
+			for _, device := range furiosaDevices {
+				finalIndexes = append(finalIndexes, device.Index())
+			}
+
+			assert.Equal(t, tc.expectedIndexes, finalIndexes)
+
+			finalIndexToDeviceUUIDMap := make(map[int]string)
+			for _, furiosaDevice := range furiosaDevices {
+				finalIndexToDeviceUUIDMap[furiosaDevice.Index()] = furiosaDevice.(*partitionedDevice).uuid
+			}
+
+			assert.Equal(t, tc.expectedIndexToDeviceUUIDMap, finalIndexToDeviceUUIDMap)
+		})
+	}
+}
 
 func TestDeviceIDs_RNGD_PartitionedDevice(t *testing.T) {
 	rngdMockDevice := smi.GetStaticMockDevices(smi.ArchRngd)[0]
