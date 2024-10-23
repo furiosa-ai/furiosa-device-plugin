@@ -5,32 +5,9 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
-
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
-
-func NewMockExclusiveDevice(mockDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	_, deviceID, pciBusID, numaNode, err := parseDeviceInfo(mockDevice)
-	if err != nil {
-		return nil, err
-	}
-
-	mockManifest, err := manifest.NewWarboyManifest(mockDevice)
-	if err != nil {
-		return nil, err
-	}
-
-	return &exclusiveDevice{
-		origin:     mockDevice,
-		manifest:   mockManifest,
-		deviceID:   deviceID,
-		pciBusID:   pciBusID,
-		numaNode:   int(numaNode),
-		isDisabled: isDisabled,
-	}, nil
-}
 
 func TestDeviceID(t *testing.T) {
 	tests := []struct {
@@ -46,7 +23,7 @@ func TestDeviceID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -78,7 +55,7 @@ func TestPCIBusID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -114,7 +91,7 @@ func TestNUMANode(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -183,7 +160,7 @@ func TestDeviceSpecs(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -219,7 +196,7 @@ func TestIsHealthy(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, tc.isDisabled)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, tc.isDisabled)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -292,7 +269,7 @@ func TestMounts(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -319,12 +296,12 @@ func TestID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
-		actualResult := exclusiveDev.GetID()
+		actualResult := exclusiveDev.ID()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -346,13 +323,13 @@ func TestTopologyHintKey(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewMockExclusiveDevice(tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
-		actualResult := exclusiveDev.GetTopologyHintKey()
+		actualResult := exclusiveDev.TopologyHintKey()
 		if actualResult != tc.expectedResult {
 			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
 			continue
@@ -381,13 +358,13 @@ func TestEqual(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		source, err := NewMockExclusiveDevice(tc.mockSourceDevice, false)
+		source, err := NewExclusiveDevice(0, tc.mockSourceDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
-		target, err := NewMockExclusiveDevice(tc.mockTargetDevice, false)
+		target, err := NewExclusiveDevice(0, tc.mockTargetDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue

@@ -1,6 +1,7 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -8,10 +9,10 @@ import (
 
 var _ FuriosaDevice = (*partitionedDevice)(nil)
 
-type partitionedDevice struct {
-}
+type partitionedDevice struct{}
 
-func NewPartitionedDevices(_ smi.Device, _ bool) ([]FuriosaDevice, error) {
+func NewPartitionedDevices(_ int, _ smi.Device, _ config.ResourceUnitStrategy, _ bool) ([]FuriosaDevice, error) {
+	//TODO implement me
 	return nil, nil
 }
 
@@ -64,12 +65,17 @@ func (p partitionedDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (p partitionedDevice) GetID() string {
+func (p partitionedDevice) Index() int {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p partitionedDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+func (p partitionedDevice) ID() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p partitionedDevice) TopologyHintKey() npu_allocator.TopologyHintKey {
 	//TODO implement me
 	panic("implement me")
 }

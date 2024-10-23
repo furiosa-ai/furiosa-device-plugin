@@ -10,6 +10,7 @@ import (
 var _ FuriosaDevice = (*exclusiveDevice)(nil)
 
 type exclusiveDevice struct {
+	index      int
 	origin     smi.Device
 	manifest   manifest.Manifest
 	deviceID   string
@@ -18,21 +19,7 @@ type exclusiveDevice struct {
 	isDisabled bool
 }
 
-func parseDeviceInfo(originDevice smi.Device) (arch smi.Arch, deviceID, pciBusID string, numaNode uint, err error) {
-	info, err := originDevice.DeviceInfo()
-	if err != nil {
-		return 0, "", "", 0, err
-	}
-
-	arch = info.Arch()
-	deviceID = info.UUID()
-	pciBusID, err = parseBusIDfromBDF(info.BDF())
-	numaNode = uint(info.NumaNode())
-
-	return arch, deviceID, pciBusID, numaNode, err
-}
-
-func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
+func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
 	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
@@ -54,6 +41,7 @@ func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice
 	}
 
 	return &exclusiveDevice{
+		index:      index,
 		origin:     originDevice,
 		manifest:   newExclusiveDeviceManifest,
 		deviceID:   deviceID,
@@ -146,11 +134,15 @@ func (f *exclusiveDevice) CDIDevices() []*devicePluginAPIv1Beta1.CDIDevice {
 	return nil
 }
 
-func (f *exclusiveDevice) GetID() string {
+func (f *exclusiveDevice) Index() int {
+	return f.index
+}
+
+func (f *exclusiveDevice) ID() string {
 	return f.DeviceID()
 }
 
-func (f *exclusiveDevice) GetTopologyHintKey() npu_allocator.TopologyHintKey {
+func (f *exclusiveDevice) TopologyHintKey() npu_allocator.TopologyHintKey {
 	return npu_allocator.TopologyHintKey(f.PCIBusID())
 }
 

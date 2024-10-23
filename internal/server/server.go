@@ -38,6 +38,7 @@ func dialWithTimeout(socket string, timeout time.Duration) (*grpc.ClientConn, er
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
 	defer cancelFunc()
 
+	// nolint:staticcheck
 	conn, err := grpc.DialContext(ctx, socket,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),

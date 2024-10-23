@@ -17,10 +17,10 @@ func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]FuriosaDevice)
 	}
 
 	ret = make(map[string]FuriosaDevice, len(mockDevices))
-	for _, mockDevice := range mockDevices {
+	for index, mockDevice := range mockDevices {
 		info, _ := mockDevice.DeviceInfo()
 		key := info.UUID()
-		mockFuriosaDevice, _ := NewMockExclusiveDevice(mockDevice, false)
+		mockFuriosaDevice, _ := NewExclusiveDevice(index, mockDevice, false)
 		ret[key] = mockFuriosaDevice
 	}
 
@@ -61,7 +61,7 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		devices := smi.GetStaticMockDevices(smi.ArchWarboy)
+		devices := smi.GetStaticMockDevices(smi.ArchRngd)
 		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
@@ -156,8 +156,8 @@ func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
 		"ca": {"ca": 70},
 	}
 	return func(device1, device2 npu_allocator.Device) uint {
-		topologyHintKey1 := device1.GetTopologyHintKey()
-		topologyHintKey2 := device2.GetTopologyHintKey()
+		topologyHintKey1 := device1.TopologyHintKey()
+		topologyHintKey2 := device2.TopologyHintKey()
 
 		if topologyHintKey1 > topologyHintKey2 {
 			topologyHintKey1, topologyHintKey2 = topologyHintKey2, topologyHintKey1
