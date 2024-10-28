@@ -68,7 +68,7 @@ func TestFinalIndexGeneration_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			deviceMgr, _ := NewDeviceManager(smi.ArchWarboy, warboyMockDevices, tc.strategy, nil, false)
+			deviceMgr, _ := NewDeviceManager(smi.ArchWarboy, warboyMockDevices, tc.strategy, config.ScoreBased, nil, false)
 
 			furiosaDeviceMap := deviceMgr.(*deviceManager).furiosaDevices
 			furiosaDevices := make([]FuriosaDevice, 0, len(furiosaDeviceMap))

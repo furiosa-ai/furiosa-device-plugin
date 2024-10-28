@@ -231,7 +231,7 @@ func buildFuriosaDevices(devices []smi.Device, blockedList []string, newDevFunc 
 	return furiosaDevicesMap, nil
 }
 
-func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
+func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, allocationMode config.AllocationMode, blockedList []string, debugMode bool) (DeviceManager, error) {
 	resName, err := buildAndValidateFullResourceEndpointName(arch, strategy)
 	if err != nil {
 		return nil, err
@@ -242,10 +242,23 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 		return nil, err
 	}
 
-	// NOTE(@bg): we may need to support configuration option for various allocators
-	allocator, err := npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
-	if err != nil {
-		return nil, err
+	var allocator npu_allocator.NpuAllocator
+	switch allocationMode {
+	case config.ScoreBased:
+		allocator, err = npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
+		if err != nil {
+			return nil, err
+		}
+
+	case config.BinPacking:
+		allocator, err = npu_allocator.NewBinPackingNpuAllocator(devices)
+		if err != nil {
+			return nil, err
+		}
+
+	default:
+		// should not reach here!
+		return nil, fmt.Errorf("unsupported allocation mode: %s", allocationMode)
 	}
 
 	return &deviceManager{
