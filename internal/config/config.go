@@ -33,17 +33,9 @@ const (
 	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
-type AllocationMode string
-
-const (
-	ScoreBased AllocationMode = "ScoreBased"
-	BinPacking AllocationMode = "BinPacking"
-)
-
 // Config holds the configuration for running this device plugin.
 type Config struct {
 	ResourceStrategy          ResourceUnitStrategy `yaml:"resourceStrategy"`
-	AllocationMode            AllocationMode       `yaml:"allocationMode"`
 	DisabledDeviceUUIDListMap map[string][]string  `yaml:"disabledDeviceUUIDListMap"`
 	DebugMode                 bool                 `yaml:"debugMode"`
 }
@@ -51,7 +43,6 @@ type Config struct {
 func getDefaultConfig() *Config {
 	return &Config{
 		ResourceStrategy:          GenericStrategy,
-		AllocationMode:            ScoreBased,
 		DisabledDeviceUUIDListMap: nil,
 		DebugMode:                 false,
 	}
@@ -79,14 +70,6 @@ func getConfigFromFile(configPath string) (*Config, error) {
 	err, config := validateConfigYaml(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate config file: %w", err)
-	}
-
-	if config.ResourceStrategy == "" {
-		config.ResourceStrategy = GenericStrategy
-	}
-
-	if config.AllocationMode == "" {
-		config.AllocationMode = ScoreBased
 	}
 
 	return config, nil

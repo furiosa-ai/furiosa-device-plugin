@@ -98,7 +98,7 @@ func start(ctx context.Context) error {
 		disabledDeviceUUIDList := conf.DisabledDeviceUUIDListMap[nodeName]
 		logger.Info().Msg(fmt.Sprintf("disabled device list for %s: %v", nodeName, disabledDeviceUUIDList))
 
-		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, conf.AllocationMode, disabledDeviceUUIDList, conf.DebugMode)
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, disabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err

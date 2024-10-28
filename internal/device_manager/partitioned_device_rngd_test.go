@@ -89,7 +89,7 @@ func TestFinalIndexGeneration_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			deviceMgr, _ := NewDeviceManager(smi.ArchRngd, rngdMockDevices, tc.strategy, config.BinPacking, nil, false)
+			deviceMgr, _ := NewDeviceManager(smi.ArchRngd, rngdMockDevices, tc.strategy, nil, false)
 
 			furiosaDeviceMap := deviceMgr.(*deviceManager).furiosaDevices
 			furiosaDevices := make([]FuriosaDevice, 0, len(furiosaDeviceMap))

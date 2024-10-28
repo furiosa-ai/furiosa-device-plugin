@@ -1,10 +1,9 @@
 package config
 
 import (
+	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetConfigFromFile(t *testing.T) {
@@ -19,7 +18,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/legacy_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: LegacyStrategy,
-				AllocationMode:   ScoreBased,
 				DebugMode:        true,
 			},
 			expectedError: false,
@@ -29,7 +27,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/generic_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: GenericStrategy,
-				AllocationMode:   ScoreBased,
 				DebugMode:        true,
 			},
 			expectedError: false,
@@ -39,7 +36,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/single_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: SingleCoreStrategy,
-				AllocationMode:   ScoreBased,
 				DebugMode:        true,
 			},
 			expectedError: false,
@@ -49,7 +45,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/dual_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: DualCoreStrategy,
-				AllocationMode:   ScoreBased,
 				DebugMode:        true,
 			},
 			expectedError: false,
@@ -59,7 +54,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/quad_core_strategy.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: QuadCoreStrategy,
-				AllocationMode:   ScoreBased,
 				DebugMode:        true,
 			},
 			expectedError: false,
@@ -69,7 +63,6 @@ func TestGetConfigFromFile(t *testing.T) {
 			configPath:  "./tests/with_disabled_devices.yaml",
 			expectedResult: &Config{
 				ResourceStrategy: GenericStrategy,
-				AllocationMode:   ScoreBased,
 				DisabledDeviceUUIDListMap: map[string][]string{
 					"node_a": {"uuid1", "uuid2"},
 					"node_b": {"uuid1", "uuid2"},
