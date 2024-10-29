@@ -151,12 +151,12 @@ var (
 )
 
 func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
-	deviceNodes, err := generateRngdPartitionedDeviceNodes(original, partition)
+	deviceNodes, err := filterRngdPartitionedDeviceNodes(original, partition)
 	if err != nil {
 		return nil, err
 	}
 
-	mounts, err := generateRngdPartitionedMounts(original, partition)
+	mounts, err := filterRngdPartitionedMounts(original, partition)
 	if err != nil {
 		return nil, err
 	}
@@ -170,9 +170,9 @@ func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Part
 	}, nil
 }
 
-// generateRngdPartitionedDeviceNodes generates (actually filters) Device Nodes by following rules.
+// filterRngdPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
 //   - /dev/rngd/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
-func generateRngdPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
+func filterRngdPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
 	originalDeviceNodes := original.DeviceNodes()
 	survivedDeviceNodes := make([]*manifest.DeviceNode, 0, len(originalDeviceNodes))
 	for _, deviceNode := range originalDeviceNodes {
@@ -200,8 +200,8 @@ func generateRngdPartitionedDeviceNodes(original manifest.Manifest, partition Pa
 	return survivedDeviceNodes, nil
 }
 
-// generateWarboyPartitionedMounts generates Mounts
-func generateRngdPartitionedMounts(original manifest.Manifest, _ Partition) ([]*manifest.Mount, error) {
+// filterRngdPartitionedMounts filters Mounts
+func filterRngdPartitionedMounts(original manifest.Manifest, _ Partition) ([]*manifest.Mount, error) {
 	// right now, we don't need to filter any mount paths.
 	return original.MountPaths(), nil
 }
