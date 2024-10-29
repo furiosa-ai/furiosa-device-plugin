@@ -47,8 +47,7 @@ func (p *partitionedDeviceManifest) MountPaths() []*manifest.Mount {
 }
 
 var (
-	warboyDeviceNodeWholeDeviceRegex = regexp.MustCompile(`^/dev/npu[0-9]+$`)
-	warboyDeviceNodePeRegex          = regexp.MustCompile(`^/dev/npu[0-9]+pe\S+$`)
+	warboyDeviceNodePeRegex = regexp.MustCompile(`^/dev/npu[0-9]+pe\S+$`)
 )
 
 func NewPartitionedDeviceManifestWarboy(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
@@ -92,11 +91,6 @@ func generateWarboyPartitionedDeviceNodes(original manifest.Manifest, partition 
 				survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
 			}
 		} else {
-			if warboyDeviceNodeWholeDeviceRegex.MatchString(path) {
-				// /dev/npu{N} will be dropped
-				continue
-			}
-
 			survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
 		}
 	}
