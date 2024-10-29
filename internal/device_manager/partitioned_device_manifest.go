@@ -73,9 +73,8 @@ func NewPartitionedDeviceManifestWarboy(original manifest.Manifest, partition Pa
 //   - /dev/npu{N} will be dropped
 //   - /dev/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
 func generateWarboyPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
-	originalDeviceNodes := original.DeviceNodes()
-	survivedDeviceNodes := make([]*manifest.DeviceNode, 0, len(originalDeviceNodes))
-	for _, deviceNode := range originalDeviceNodes {
+	var survivedDeviceNodes []*manifest.DeviceNode
+	for _, deviceNode := range original.DeviceNodes() {
 		path := deviceNode.ContainerPath
 		if warboyDeviceNodePeRegex.MatchString(path) {
 			// /dev/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
@@ -127,9 +126,8 @@ func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Part
 // filterRngdPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
 //   - /dev/rngd/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
 func filterRngdPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
-	originalDeviceNodes := original.DeviceNodes()
-	survivedDeviceNodes := make([]*manifest.DeviceNode, 0, len(originalDeviceNodes))
-	for _, deviceNode := range originalDeviceNodes {
+	var survivedDeviceNodes []*manifest.DeviceNode
+	for _, deviceNode := range original.DeviceNodes() {
 		path := deviceNode.ContainerPath
 		if rngdDeviceNodePeRegex.MatchString(path) {
 			// /dev/rngd/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
