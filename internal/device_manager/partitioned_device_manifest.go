@@ -68,6 +68,21 @@ func NewPartitionedDeviceManifestWarboy(original manifest.Manifest, partition Pa
 	}, nil
 }
 
+func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
+	deviceNodes, err := filterPartitionedDeviceNodes(original, partition)
+	if err != nil {
+		return nil, err
+	}
+
+	return &partitionedDeviceManifest{
+		arch:        smi.ArchRngd,
+		original:    original,
+		partition:   partition,
+		deviceNodes: deviceNodes,
+		mounts:      original.MountPaths(), // right now, we don't need to filter any mount paths.
+	}, nil
+}
+
 // filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
 //   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
 func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
@@ -95,19 +110,4 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 	}
 
 	return survivedDeviceNodes, nil
-}
-
-func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
-	deviceNodes, err := filterPartitionedDeviceNodes(original, partition)
-	if err != nil {
-		return nil, err
-	}
-
-	return &partitionedDeviceManifest{
-		arch:        smi.ArchRngd,
-		original:    original,
-		partition:   partition,
-		deviceNodes: deviceNodes,
-		mounts:      original.MountPaths(), // right now, we don't need to filter any mount paths.
-	}, nil
 }
