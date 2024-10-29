@@ -198,7 +198,33 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
 		ret = func(index int, originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, strategy, isDisabled)
+			deviceInfo, err := originDevice.DeviceInfo()
+			if err != nil {
+				return nil, err
+			}
+
+			var totalCores int
+			switch deviceInfo.Arch() {
+			case smi.ArchWarboy:
+				totalCores = 2
+
+			case smi.ArchRngd:
+				totalCores = 8
+
+			default:
+				return nil, fmt.Errorf("unsupported architecture: %s", deviceInfo.Arch().ToString())
+			}
+
+			numOfCoresPerPartition, err := strategy.ToNumOfCoresPerPartition()
+			if err != nil {
+				return nil, err
+			}
+
+			if numOfCoresPerPartition > totalCores {
+				return nil, fmt.Errorf("unsupported strategy %s for architecture %s", strategy, deviceInfo.Arch().ToString())
+			}
+
+			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
 			if err != nil {
 				return nil, err
 			}

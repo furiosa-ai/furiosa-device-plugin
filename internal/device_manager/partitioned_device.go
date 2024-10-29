@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
+	"github.com/bradfitz/iter"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
@@ -32,58 +32,15 @@ func (p Partition) String() string {
 	return fmt.Sprintf("%d-%d", p.start, p.end)
 }
 
-var (
-	WarboySingleCorePartitions = []Partition{{0, 0}, {1, 1}}
-	WarboyDualCorePartitions   = []Partition{{0, 1}}
-
-	RngdSingleCorePartitions = []Partition{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}, {7, 7}}
-	RngdDualCorePartitions   = []Partition{{0, 1}, {2, 3}, {4, 5}, {6, 7}}
-	RngdQuadCorePartitions   = []Partition{{0, 3}, {4, 7}}
-)
-
 type partitionedDevice struct {
 	index      int
 	origin     smi.Device
 	manifest   manifest.Manifest
 	uuid       string
 	partition  Partition
-	strategy   config.ResourceUnitStrategy
 	pciBusID   string
 	numaNode   int
 	isDisabled bool
-}
-
-// generatePartitionsByArchAndStrategy generates N partitions based on architecture and strategy.
-// If specific strategy is not applicable to given architecture, it returns error.
-func generatePartitionsByArchAndStrategy(arch smi.Arch, strategy config.ResourceUnitStrategy) []Partition {
-	switch strategy {
-	case config.SingleCoreStrategy:
-		switch arch {
-		case smi.ArchWarboy: // warboy: 0, 1
-			return WarboySingleCorePartitions
-
-		case smi.ArchRngd: // rngd: 0, 1, 2, 3, 4, 5, 6, 7
-			return RngdSingleCorePartitions
-		}
-
-	case config.DualCoreStrategy:
-		switch arch {
-		case smi.ArchWarboy: // warboy: 0-1
-			return WarboyDualCorePartitions
-
-		case smi.ArchRngd: // rngd: 0-1, 2-3, 4-5, 6-7
-			return RngdDualCorePartitions
-		}
-
-	case config.QuadCoreStrategy:
-		switch arch {
-		case smi.ArchRngd: // rngd: 0-3, 4-7
-			return RngdQuadCorePartitions
-		}
-	}
-
-	// should not reach here!
-	panic(fmt.Errorf("unsupported strategy %s for architecture %s", strategy, arch.ToString()))
 }
 
 // generateIndexForPartitionedDevice generated final index value for Partitioned Device
@@ -92,48 +49,48 @@ func generateIndexForPartitionedDevice(originalIndex, partitionIndex, partitions
 }
 
 // NewPartitionedDevices returns list of FuriosaDevice based on given config.ResourceUnitStrategy.
-func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy config.ResourceUnitStrategy, isDisabled bool) ([]FuriosaDevice, error) {
+func NewPartitionedDevices(originIndex int, originDevice smi.Device, numOfCoresPerPartition int, numOfPartitions int, isDisabled bool) ([]FuriosaDevice, error) {
 	arch, uuid, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
 
-	var originalManifest manifest.Manifest
-	var manifestErr error
-
 	// This block checks architecture and gets manifest of it.
 	// If architecture is invalid, it returns error.
+	var originalManifest manifest.Manifest
 	switch arch {
 	case smi.ArchWarboy:
-		originalManifest, manifestErr = manifest.NewWarboyManifest(originDevice)
+		if originalManifest, err = manifest.NewWarboyManifest(originDevice); err != nil {
+			return nil, err
+		}
 
 	case smi.ArchRngd:
-		originalManifest, manifestErr = manifest.NewRngdManifest(originDevice)
+		if originalManifest, err = manifest.NewRngdManifest(originDevice); err != nil {
+			return nil, err
+		}
 
 	default:
 		return nil, fmt.Errorf("unsupported architecture: %s", arch.ToString())
 	}
 
-	if manifestErr != nil {
-		return nil, manifestErr
-	}
-
 	partitionedDevices := make([]FuriosaDevice, 0)
-	partitions := generatePartitionsByArchAndStrategy(arch, strategy)
+	for partitionIndex := range iter.N(numOfPartitions) {
+		partition := Partition{
+			start: partitionIndex * numOfCoresPerPartition,
+			end:   (partitionIndex+1)*numOfCoresPerPartition - 1,
+		}
 
-	for partitionIndex, partition := range partitions {
 		partitionedManifest, err := NewPartitionedDeviceManifest(arch, originalManifest, partition)
 		if err != nil {
 			return nil, err
 		}
 
 		partitionedDevices = append(partitionedDevices, &partitionedDevice{
-			index:      generateIndexForPartitionedDevice(originIndex, partitionIndex, len(partitions)),
+			index:      generateIndexForPartitionedDevice(originIndex, partitionIndex, numOfPartitions),
 			origin:     originDevice,
 			manifest:   partitionedManifest,
 			uuid:       uuid,
 			partition:  partition,
-			strategy:   strategy,
 			pciBusID:   pciBusID,
 			numaNode:   int(numaNode),
 			isDisabled: isDisabled,

@@ -33,6 +33,22 @@ const (
 	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
+func (strategy ResourceUnitStrategy) ToNumOfCoresPerPartition() (int, error) {
+	switch strategy {
+	case SingleCoreStrategy:
+		return 1, nil
+
+	case DualCoreStrategy:
+		return 2, nil
+
+	case QuadCoreStrategy:
+		return 4, nil
+
+	default:
+		return 0, fmt.Errorf("unsupported strategy %v at `ToNumOfCores()`", strategy)
+	}
+}
+
 // Config holds the configuration for running this device plugin.
 type Config struct {
 	ResourceStrategy          ResourceUnitStrategy `yaml:"resourceStrategy"`
