@@ -55,38 +55,35 @@ type partitionedDevice struct {
 
 // generatePartitionsByArchAndStrategy generates N partitions based on architecture and strategy.
 // If specific strategy is not applicable to given architecture, it returns error.
-func generatePartitionsByArchAndStrategy(arch smi.Arch, strategy config.ResourceUnitStrategy) ([]Partition, error) {
+func generatePartitionsByArchAndStrategy(arch smi.Arch, strategy config.ResourceUnitStrategy) []Partition {
 	switch strategy {
 	case config.SingleCoreStrategy:
 		switch arch {
 		case smi.ArchWarboy: // warboy: 0, 1
-			return WarboySingleCorePartitions, nil
+			return WarboySingleCorePartitions
 
 		case smi.ArchRngd: // rngd: 0, 1, 2, 3, 4, 5, 6, 7
-			return RngdSingleCorePartitions, nil
+			return RngdSingleCorePartitions
 		}
 
 	case config.DualCoreStrategy:
 		switch arch {
 		case smi.ArchWarboy: // warboy: 0-1
-			return WarboyDualCorePartitions, nil
+			return WarboyDualCorePartitions
 
 		case smi.ArchRngd: // rngd: 0-1, 2-3, 4-5, 6-7
-			return RngdDualCorePartitions, nil
+			return RngdDualCorePartitions
 		}
 
 	case config.QuadCoreStrategy:
 		switch arch {
-		case smi.ArchWarboy: // Warboy only supports SingleCore and DualCore strategy.
-			return nil, fmt.Errorf("warboy only supports single-core and dual-core strategies")
-
 		case smi.ArchRngd: // rngd: 0-3, 4-7
-			return RngdQuadCorePartitions, nil
+			return RngdQuadCorePartitions
 		}
 	}
 
 	// should not reach here!
-	return nil, fmt.Errorf("unsupported strategy %s for architecture %s", strategy, arch.ToString())
+	panic(fmt.Errorf("unsupported strategy %s for architecture %s", strategy, arch.ToString()))
 }
 
 // generateIndexForPartitionedDevice generated final index value for Partitioned Device
@@ -122,10 +119,7 @@ func NewPartitionedDevices(originIndex int, originDevice smi.Device, strategy co
 	}
 
 	partitionedDevices := make([]FuriosaDevice, 0)
-	partitions, err := generatePartitionsByArchAndStrategy(arch, strategy)
-	if err != nil {
-		return nil, err
-	}
+	partitions := generatePartitionsByArchAndStrategy(arch, strategy)
 
 	for partitionIndex, partition := range partitions {
 		partitionedManifest, err := NewPartitionedDeviceManifest(arch, originalManifest, partition)
