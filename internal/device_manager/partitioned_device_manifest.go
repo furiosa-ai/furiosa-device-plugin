@@ -18,16 +18,21 @@ type partitionedDeviceManifest struct {
 }
 
 func NewPartitionedDeviceManifest(arch smi.Arch, original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
-	switch arch {
-	case smi.ArchWarboy:
-		return NewPartitionedDeviceManifestWarboy(original, partition)
-
-	case smi.ArchRngd:
-		return NewPartitionedDeviceManifestRngd(original, partition)
-
-	default:
-		return nil, fmt.Errorf("unsupported architecture: %s", arch.ToString())
+	deviceNodes, err := filterPartitionedDeviceNodes(original, partition)
+	if err != nil {
+		return nil, err
 	}
+
+	return &partitionedDeviceManifest{
+		arch:        arch,
+		original:    original,
+		partition:   partition,
+		deviceNodes: deviceNodes,
+
+		// do not filter any mount paths right now as right now, we don't need to filter any mount paths.
+		// see: https://github.com/furiosa-ai/furiosa-device-plugin/pull/30#discussion_r1819763238
+		mounts: original.MountPaths(),
+	}, nil
 }
 
 func (p *partitionedDeviceManifest) EnvVars() map[string]string {
@@ -49,39 +54,6 @@ func (p *partitionedDeviceManifest) MountPaths() []*manifest.Mount {
 var (
 	deviceNodePeRegex = regexp.MustCompile(`^\S+npu[0-9]+pe\S+$`)
 )
-
-func NewPartitionedDeviceManifestWarboy(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
-	deviceNodes, err := filterPartitionedDeviceNodes(original, partition)
-	if err != nil {
-		return nil, err
-	}
-
-	return &partitionedDeviceManifest{
-		arch:        smi.ArchWarboy,
-		original:    original,
-		partition:   partition,
-		deviceNodes: deviceNodes,
-
-		// do not filter any mount paths right now
-		// see: https://github.com/furiosa-ai/furiosa-device-plugin/pull/30#discussion_r1819763238
-		mounts: original.MountPaths(),
-	}, nil
-}
-
-func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
-	deviceNodes, err := filterPartitionedDeviceNodes(original, partition)
-	if err != nil {
-		return nil, err
-	}
-
-	return &partitionedDeviceManifest{
-		arch:        smi.ArchRngd,
-		original:    original,
-		partition:   partition,
-		deviceNodes: deviceNodes,
-		mounts:      original.MountPaths(), // right now, we don't need to filter any mount paths.
-	}, nil
-}
 
 // filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
 //   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
