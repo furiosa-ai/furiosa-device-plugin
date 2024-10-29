@@ -106,7 +106,7 @@ func generateWarboyPartitionedDeviceNodes(original manifest.Manifest, partition 
 }
 
 var (
-	rngdDeviceNodePeRegex, _ = regexp.Compile(`^/dev/rngd/npu[0-9]+pe\S+$`)
+	rngdDeviceNodePeRegex = regexp.MustCompile(`^/dev/rngd/npu[0-9]+pe\S+$`)
 )
 
 func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Partition) (manifest.Manifest, error) {
