@@ -156,17 +156,12 @@ func NewPartitionedDeviceManifestRngd(original manifest.Manifest, partition Part
 		return nil, err
 	}
 
-	mounts, err := filterRngdPartitionedMounts(original, partition)
-	if err != nil {
-		return nil, err
-	}
-
 	return &partitionedDeviceManifest{
 		arch:        smi.ArchRngd,
 		original:    original,
 		partition:   partition,
 		deviceNodes: deviceNodes,
-		mounts:      mounts,
+		mounts:      original.MountPaths(), // right now, we don't need to filter any mount paths.
 	}, nil
 }
 
@@ -198,10 +193,4 @@ func filterRngdPartitionedDeviceNodes(original manifest.Manifest, partition Part
 	}
 
 	return survivedDeviceNodes, nil
-}
-
-// filterRngdPartitionedMounts filters Mounts
-func filterRngdPartitionedMounts(original manifest.Manifest, _ Partition) ([]*manifest.Mount, error) {
-	// right now, we don't need to filter any mount paths.
-	return original.MountPaths(), nil
 }
