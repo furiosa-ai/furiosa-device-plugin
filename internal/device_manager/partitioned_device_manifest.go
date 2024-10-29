@@ -60,17 +60,15 @@ func NewPartitionedDeviceManifestWarboy(original manifest.Manifest, partition Pa
 		return nil, err
 	}
 
-	mounts, err := generateWarboyPartitionedMounts(original, partition)
-	if err != nil {
-		return nil, err
-	}
-
 	return &partitionedDeviceManifest{
 		arch:        smi.ArchWarboy,
 		original:    original,
 		partition:   partition,
 		deviceNodes: deviceNodes,
-		mounts:      mounts,
+
+		// do not filter any mount paths right now
+		// see: https://github.com/furiosa-ai/furiosa-device-plugin/pull/30#discussion_r1819763238
+		mounts: original.MountPaths(),
 	}, nil
 }
 
@@ -108,42 +106,6 @@ func generateWarboyPartitionedDeviceNodes(original manifest.Manifest, partition 
 	}
 
 	return survivedDeviceNodes, nil
-}
-
-// generateWarboyPartitionedMounts generates (actually filters) Mounts by following rules.
-//   - npu{N} will be dropped
-//   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
-func generateWarboyPartitionedMounts(original manifest.Manifest, partition Partition) ([]*manifest.Mount, error) {
-	originalMounts := original.MountPaths()
-	survivedMounts := make([]*manifest.Mount, 0, len(originalMounts))
-	for _, mount := range originalMounts {
-		path := mount.ContainerPath
-		if warboyMountPeRegex.MatchString(path) {
-			// npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
-			elements := strings.Split(path, "/")
-			target := elements[len(elements)-1]
-
-			var devNum int
-			var partitionPostfix string
-			_, err := fmt.Sscanf(target, "npu%dpe%s", &devNum, &partitionPostfix)
-			if err != nil {
-				return nil, err
-			}
-
-			if partitionPostfix == partition.String() {
-				survivedMounts = append(survivedMounts, mount)
-			}
-		} else {
-			if warboyMountWholeDeviceRegex.MatchString(path) {
-				// npu{N} will be dropped
-				continue
-			}
-
-			survivedMounts = append(survivedMounts, mount)
-		}
-	}
-
-	return survivedMounts, nil
 }
 
 var (
