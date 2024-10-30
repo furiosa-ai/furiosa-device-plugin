@@ -203,23 +203,12 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 				return nil, err
 			}
 
-			var totalCores int
-			switch deviceInfo.Arch() {
-			case smi.ArchWarboy:
-				totalCores = 2
-
-			case smi.ArchRngd:
-				totalCores = 8
-
-			default:
-				return nil, fmt.Errorf("unsupported architecture: %s", deviceInfo.Arch().ToString())
-			}
-
 			numOfCoresPerPartition, err := strategy.ToNumOfCoresPerPartition()
 			if err != nil {
 				return nil, err
 			}
 
+			totalCores := int(deviceInfo.CoreNum())
 			if numOfCoresPerPartition > totalCores {
 				return nil, fmt.Errorf("unsupported strategy %s for architecture %s", strategy, deviceInfo.Arch().ToString())
 			}
