@@ -209,10 +209,6 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 			}
 
 			totalCores := int(deviceInfo.CoreNum())
-			if numOfCoresPerPartition > totalCores {
-				return nil, fmt.Errorf("unsupported strategy %s for architecture %s", strategy, deviceInfo.Arch().ToString())
-			}
-
 			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
 			if err != nil {
 				return nil, err
