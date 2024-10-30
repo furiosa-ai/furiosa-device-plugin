@@ -33,19 +33,20 @@ const (
 	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
-func (strategy ResourceUnitStrategy) ToNumOfCoresPerPartition() (int, error) {
+// CoreSize returns the number of cores per partition
+func (strategy ResourceUnitStrategy) CoreSize() int {
 	switch strategy {
 	case SingleCoreStrategy:
-		return 1, nil
+		return 1
 
 	case DualCoreStrategy:
-		return 2, nil
+		return 2
 
 	case QuadCoreStrategy:
-		return 4, nil
+		return 4
 
-	default:
-		return 0, fmt.Errorf("unsupported strategy %v at `ToNumOfCores()`", strategy)
+	default: // `LegacyStrategy` and `SingleCoreStrategy` should not be used here!
+		return -1
 	}
 }
 
