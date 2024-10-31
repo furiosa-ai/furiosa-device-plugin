@@ -3,7 +3,6 @@ package device_manager
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
@@ -51,8 +50,17 @@ func (p *partitionedDeviceManifest) MountPaths() []*manifest.Mount {
 	return p.mounts
 }
 
+const (
+	deviceIdExp  = "device_id"
+	startCoreExp = "start_core"
+	endCoreExp   = "end_core"
+
+	regexpPattern = `^\S+npu(?P<` + deviceIdExp + `>\d+)((?:pe)(?P<` + startCoreExp + `>\d+)(-(?P<` + endCoreExp + `>\d+))?)?$`
+)
+
 var (
-	deviceNodePeRegex = regexp.MustCompile(`^\S+npu[0-9]+pe\S+$`)
+	deviceNodePeRegex = regexp.MustCompile(regexpPattern)
+	deviceNodeSubExps = deviceNodePeRegex.SubexpNames()
 )
 
 // filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
@@ -61,16 +69,31 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 	var survivedDeviceNodes []*manifest.DeviceNode
 	for _, deviceNode := range original.DeviceNodes() {
 		path := deviceNode.ContainerPath
-		if deviceNodePeRegex.MatchString(path) {
-			// /dev/npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
-			elements := strings.Split(path, "/")
-			target := elements[len(elements)-1]
+		matches := deviceNodePeRegex.FindStringSubmatch(path)
+		namedMatches := map[string]string{}
+		for i, match := range matches {
+			subExp := deviceNodeSubExps[i]
+			if subExp == "" {
+				continue
+			}
 
-			var devNum int
+			namedMatches[subExp] = match
+		}
+
+		if len(namedMatches) > 0 {
+			deviceId := namedMatches[deviceIdExp]
+			if deviceId == "" {
+				continue
+			}
+
+			startCore := namedMatches[startCoreExp]
+			endCore := namedMatches[endCoreExp]
+
 			var partitionPostfix string
-			_, err := fmt.Sscanf(target, "npu%dpe%s", &devNum, &partitionPostfix)
-			if err != nil {
-				return nil, err
+			if endCore == "" {
+				partitionPostfix = startCore
+			} else {
+				partitionPostfix = fmt.Sprintf("%s-%s", startCore, endCore)
 			}
 
 			if partitionPostfix == partition.String() {
