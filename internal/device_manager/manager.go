@@ -198,7 +198,18 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
 		ret = func(index int, originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, strategy, isDisabled)
+			deviceInfo, err := originDevice.DeviceInfo()
+			if err != nil {
+				return nil, err
+			}
+
+			numOfCoresPerPartition := strategy.CoreSize()
+			if numOfCoresPerPartition == -1 {
+				return nil, fmt.Errorf("unsupported strategy %v for partitioned device", strategy)
+			}
+
+			totalCores := int(deviceInfo.CoreNum())
+			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
 			if err != nil {
 				return nil, err
 			}
@@ -242,8 +253,7 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 		return nil, err
 	}
 
-	// NOTE(@bg): we may need to support configuration option for various allocators
-	allocator, err := npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
+	allocator, err := getNpuAllocatorByStrategy(devices, strategy)
 	if err != nil {
 		return nil, err
 	}
@@ -255,4 +265,18 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 		debugMode:      debugMode,
 		allocator:      allocator,
 	}, nil
+}
+
+func getNpuAllocatorByStrategy(devices []smi.Device, strategy config.ResourceUnitStrategy) (npu_allocator.NpuAllocator, error) {
+	switch strategy {
+	case config.LegacyStrategy, config.GenericStrategy:
+		return npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
+
+	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
+		return npu_allocator.NewBinPackingNpuAllocator(devices)
+
+	default:
+		// should not reach here!
+		return nil, fmt.Errorf("unknown resource unit strategy %v", strategy)
+	}
 }

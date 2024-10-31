@@ -1,4 +1,4 @@
-package npu_allocator
+package util
 
 import (
 	"fmt"

@@ -33,6 +33,23 @@ const (
 	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
 )
 
+// CoreSize returns the number of cores per partition
+func (strategy ResourceUnitStrategy) CoreSize() int {
+	switch strategy {
+	case SingleCoreStrategy:
+		return 1
+
+	case DualCoreStrategy:
+		return 2
+
+	case QuadCoreStrategy:
+		return 4
+
+	default: // `LegacyStrategy` and `SingleCoreStrategy` should not be used here!
+		return -1
+	}
+}
+
 // Config holds the configuration for running this device plugin.
 type Config struct {
 	ResourceStrategy          ResourceUnitStrategy `yaml:"resourceStrategy"`
