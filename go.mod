@@ -4,11 +4,11 @@ go 1.22.6
 
 require (
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
-	github.com/fsnotify/fsnotify v1.7.0
-	github.com/furiosa-ai/furiosa-smi-go v0.0.2
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.31
+	github.com/fsnotify/fsnotify v1.8.0
+	github.com/furiosa-ai/furiosa-smi-go v0.0.3-0.20241102031342-922912250127
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.32-0.20241104053011-9efb3c22c72a
 	github.com/onsi/ginkgo/v2 v2.21.0
-	github.com/onsi/gomega v1.35.0
+	github.com/onsi/gomega v1.35.1
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
