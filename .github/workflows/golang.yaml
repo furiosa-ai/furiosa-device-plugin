@@ -19,9 +19,6 @@ jobs:
         with:
           repository: furiosa-ai/furiosa-smi
           token: ${{ secrets.TOKEN_FOR_CLONE_ANOTHER_REPO}}
-          # FIXME(@hoony9x): Due to breaking change from https://github.com/furiosa-ai/furiosa-smi/pull/89, we need to deal with this change too.
-          # It must be handled in the next PR immediately.
-          ref: c618316a701c6db23827a72fa09c67abd39dbfdf
           path: furiosa-smi
       - name: install furiosa-smi
         run: |
