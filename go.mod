@@ -6,7 +6,7 @@ require (
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/furiosa-ai/furiosa-smi-go v0.1.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.32-0.20241105063112-948a4021d811
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.32
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.35.1
 	github.com/rs/zerolog v1.33.0
