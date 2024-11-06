@@ -49,8 +49,8 @@ func generateIndexForPartitionedDevice(originalIndex, partitionIndex, partitions
 }
 
 // NewPartitionedDevices returns list of FuriosaDevice based on given config.ResourceUnitStrategy.
-func NewPartitionedDevices(originIndex int, originDevice smi.Device, numOfCoresPerPartition int, numOfPartitions int, isDisabled bool) ([]FuriosaDevice, error) {
-	arch, uuid, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+func NewPartitionedDevices(originDevice smi.Device, numOfCoresPerPartition int, numOfPartitions int, isDisabled bool) ([]FuriosaDevice, error) {
+	arch, uuid, pciBusID, numaNode, originIndex, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}

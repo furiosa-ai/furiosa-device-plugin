@@ -132,7 +132,7 @@ func TestDeviceIDs_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -183,7 +183,7 @@ func TestPCIBusIDs_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -229,7 +229,7 @@ func TestNUMANode_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -369,7 +369,7 @@ func TestDeviceSpecs_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -414,7 +414,7 @@ func TestIsHealthy_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, tc.isDisabled)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, tc.isDisabled)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -465,7 +465,7 @@ func TestID_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -516,7 +516,7 @@ func TestTopologyHintKey_Warboy_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -559,13 +559,13 @@ func TestEqual_Warboy_PartitionedDevice(t *testing.T) {
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
 
-		sourcePartitionedDevices, err := NewPartitionedDevices(0, tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		sourcePartitionedDevices, err := NewPartitionedDevices(tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
 		}
 
-		targetPartitionedDevices, err := NewPartitionedDevices(0, tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
+		targetPartitionedDevices, err := NewPartitionedDevices(tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfWarboy/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue

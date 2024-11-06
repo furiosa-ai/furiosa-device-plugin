@@ -17,10 +17,10 @@ func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]FuriosaDevice)
 	}
 
 	ret = make(map[string]FuriosaDevice, len(mockDevices))
-	for index, mockDevice := range mockDevices {
+	for _, mockDevice := range mockDevices {
 		info, _ := mockDevice.DeviceInfo()
 		key := info.UUID()
-		mockFuriosaDevice, _ := NewExclusiveDevice(index, mockDevice, false)
+		mockFuriosaDevice, _ := NewExclusiveDevice(mockDevice, false)
 		ret[key] = mockFuriosaDevice
 	}
 

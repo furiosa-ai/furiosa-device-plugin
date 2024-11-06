@@ -171,7 +171,7 @@ func TestDeviceIDs_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -222,7 +222,7 @@ func TestPCIBusIDs_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -268,7 +268,7 @@ func TestNUMANode_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, true)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, true)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -631,7 +631,7 @@ func TestDeviceSpecs_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -676,7 +676,7 @@ func TestIsHealthy_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, tc.isDisabled)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, tc.isDisabled)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -727,7 +727,7 @@ func TestMounts_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -791,7 +791,7 @@ func TestID_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -842,7 +842,7 @@ func TestTopologyHintKey_RNGD_PartitionedDevice(t *testing.T) {
 
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(0, tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
@@ -885,13 +885,13 @@ func TestEqual_RNGD_PartitionedDevice(t *testing.T) {
 	for _, tc := range tests {
 		numOfCoresPerPartition := tc.strategy.CoreSize()
 
-		sourcePartitionedDevices, err := NewPartitionedDevices(0, tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		sourcePartitionedDevices, err := NewPartitionedDevices(tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue
 		}
 
-		targetPartitionedDevices, err := NewPartitionedDevices(0, tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+		targetPartitionedDevices, err := NewPartitionedDevices(tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error: %v", tc.description, err)
 			continue

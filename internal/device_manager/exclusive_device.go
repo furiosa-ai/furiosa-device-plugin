@@ -19,8 +19,8 @@ type exclusiveDevice struct {
 	isDisabled bool
 }
 
-func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
-	arch, deviceID, pciBusID, numaNode, err := parseDeviceInfo(originDevice)
+func NewExclusiveDevice(originDevice smi.Device, isDisabled bool) (FuriosaDevice, error) {
+	arch, deviceID, pciBusID, numaNode, originIndex, err := parseDeviceInfo(originDevice)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func NewExclusiveDevice(index int, originDevice smi.Device, isDisabled bool) (Fu
 	}
 
 	return &exclusiveDevice{
-		index:      index,
+		index:      originIndex,
 		origin:     originDevice,
 		manifest:   newExclusiveDeviceManifest,
 		deviceID:   deviceID,

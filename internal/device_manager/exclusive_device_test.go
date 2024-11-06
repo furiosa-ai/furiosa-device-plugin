@@ -23,7 +23,7 @@ func TestDeviceID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -55,7 +55,7 @@ func TestPCIBusID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -91,7 +91,7 @@ func TestNUMANode(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -160,7 +160,7 @@ func TestDeviceSpecs(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -196,7 +196,7 @@ func TestIsHealthy(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, tc.isDisabled)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, tc.isDisabled)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -269,7 +269,7 @@ func TestMounts(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -296,7 +296,7 @@ func TestID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -323,7 +323,7 @@ func TestTopologyHintKey(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(0, tc.mockDevice, false)
+		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
@@ -358,13 +358,13 @@ func TestEqual(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		source, err := NewExclusiveDevice(0, tc.mockSourceDevice, false)
+		source, err := NewExclusiveDevice(tc.mockSourceDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
 		}
 
-		target, err := NewExclusiveDevice(0, tc.mockTargetDevice, false)
+		target, err := NewExclusiveDevice(tc.mockTargetDevice, false)
 		if err != nil {
 			t.Errorf("unexpected error %t", err)
 			continue
