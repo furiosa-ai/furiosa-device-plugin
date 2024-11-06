@@ -1,6 +1,6 @@
 module github.com/furiosa-ai/furiosa-device-plugin
 
-go 1.22.6
+go 1.23.2
 
 require (
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
