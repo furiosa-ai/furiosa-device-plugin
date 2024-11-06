@@ -22,7 +22,7 @@ type DeviceManager interface {
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
-type newDeviceFunc func(index int, originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error)
+type newDeviceFunc func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error)
 
 var _ DeviceManager = (*deviceManager)(nil)
 
@@ -187,8 +187,8 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
 	case config.LegacyStrategy, config.GenericStrategy:
-		ret = func(index int, originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			newExclusiveDevice, err := NewExclusiveDevice(index, originDevice, isDisabled)
+		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
+			newExclusiveDevice, err := NewExclusiveDevice(originDevice, isDisabled)
 			if err != nil {
 				return nil, err
 			}
@@ -197,7 +197,7 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 		}
 
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
-		ret = func(index int, originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
+		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
 			deviceInfo, err := originDevice.DeviceInfo()
 			if err != nil {
 				return nil, err
@@ -209,7 +209,7 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 			}
 
 			totalCores := int(deviceInfo.CoreNum())
-			newPartitionedDevices, err := NewPartitionedDevices(index, originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
+			newPartitionedDevices, err := NewPartitionedDevices(originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
 			if err != nil {
 				return nil, err
 			}
@@ -223,14 +223,14 @@ func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceF
 
 func buildFuriosaDevices(devices []smi.Device, blockedList []string, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
 	furiosaDevicesMap := map[string]FuriosaDevice{}
-	for index, origin := range devices {
+	for _, origin := range devices {
 		info, err := origin.DeviceInfo()
 		if err != nil {
 			return nil, err
 		}
 
 		isDisabled := contains(blockedList, info.UUID())
-		furiosaDevices, err := newDevFunc(index, origin, isDisabled)
+		furiosaDevices, err := newDevFunc(origin, isDisabled)
 		if err != nil {
 			return nil, err
 		}
