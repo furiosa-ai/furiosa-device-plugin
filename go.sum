@@ -108,6 +108,8 @@ github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/
 github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/furiosa-ai/furiosa-smi-go v0.1.0 h1:I/Pe5QpZzIiFwOffFG/rUPcgCXUrhxll8iAGpEjnRXA=
 github.com/furiosa-ai/furiosa-smi-go v0.1.0/go.mod h1:TIp0vE4/4+rWUoV1x4OD62lQ/0C23aiLD2Ns4eu3KYQ=
+github.com/furiosa-ai/furiosa-smi-go v0.1.1-0.20241106050232-6ac0a9bd52a7 h1:GRQgeeKfdeeU4HoNHD3S1y6smNviH1d0MYXbAOithVs=
+github.com/furiosa-ai/furiosa-smi-go v0.1.1-0.20241106050232-6ac0a9bd52a7/go.mod h1:tfYdEtnlD4Hoyv3K5O/ZcI4iBbdo0jKvqyKIsSx65DA=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.1.32 h1:LlHf/Gg3SixlCRJM0CaJdKD7yJrKf0Dp9mWSw4x2TPQ=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.1.32/go.mod h1:AFFX20dgVUQqUo1X+BrOZe/kgd0y/0dW0yzv0daK+RY=
 github.com/fxamacker/cbor/v2 v2.7.0 h1:iM5WgngdRBanHcxugY4JySA0nk1wZorNOpTgCMedv5E=
