@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 )
@@ -42,10 +43,10 @@ func TestBuildDomainName(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actual := buildDomainName(tc.strategy)
-		if actual != tc.expected {
-			t.Errorf("expectedResult %s but got %s", tc.expected, actual)
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			actual := buildDomainName(tc.strategy)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -130,15 +131,16 @@ func TestBuildFullEndpoint(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actualResult, actualErr := buildFullEndpoint(tc.arch, tc.strategy)
-		if actualErr != nil != tc.expectError {
-			t.Errorf("unexpected error %t", actualErr)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			actualResult, actualErr := buildFullEndpoint(tc.arch, tc.strategy)
+			if tc.expectError {
+				assert.Error(t, actualErr)
+			} else {
+				assert.NoError(t, actualErr)
+			}
 
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-		}
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -223,14 +225,15 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actualResult, actualErr := buildAndValidateFullResourceEndpointName(tc.arch, tc.strategy)
-		if actualErr != nil != tc.expectError {
-			t.Errorf("unexpected error %t", actualErr)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			actualResult, actualErr := buildAndValidateFullResourceEndpointName(tc.arch, tc.strategy)
+			if tc.expectError {
+				assert.Error(t, actualErr)
+			} else {
+				assert.NoError(t, actualErr)
+			}
 
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-		}
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }

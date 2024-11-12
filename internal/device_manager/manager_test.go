@@ -1,12 +1,12 @@
 package device_manager
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/stretchr/testify/assert"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
@@ -61,23 +61,20 @@ func TestBuildFuriosaDevices(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		devices := smi.GetStaticMockDevices(smi.ArchRngd)
-		actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
-		for _, actualDevice := range actualDevices {
-			if tc.expectExclusiveDevice {
-				if _, ok := actualDevice.(*exclusiveDevice); !ok {
-					t.Errorf("expect exclusive device but type assertion failed")
-				}
-			} else {
-				if _, ok := actualDevice.(*partitionedDevice); !ok {
-					t.Errorf("expect partitioned device but type assertion failed")
+		t.Run(tc.description, func(t *testing.T) {
+			devices := smi.GetStaticMockDevices(smi.ArchRngd)
+
+			actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
+			assert.NoError(t, err)
+
+			for _, actualDevice := range actualDevices {
+				if tc.expectExclusiveDevice {
+					assert.IsType(t, new(exclusiveDevice), actualDevice)
+				} else {
+					assert.IsType(t, new(partitionedDevice), actualDevice)
 				}
 			}
-		}
+		})
 	}
 }
 
@@ -96,19 +93,14 @@ func TestFetchByID(t *testing.T) {
 
 	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 	actual, err := fetchByID(mockFuriosaDevices, seedUUID)
-	if err != nil {
-		t.Errorf("failed with error %t", err)
-		return
-	}
+	assert.NoError(t, err)
 
 	var actualIDs []string
 	for _, furiosaDevice := range actual {
 		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
 	}
 
-	if !reflect.DeepEqual(actualIDs, seedUUID) {
-		t.Errorf("expectedResult %v but got %v", seedUUID, actualIDs)
-	}
+	assert.Equal(t, seedUUID, actualIDs)
 }
 
 func TestFetchDevicesByID(t *testing.T) {
@@ -122,24 +114,17 @@ func TestFetchDevicesByID(t *testing.T) {
 
 	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 	actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
-	if err != nil {
-		t.Errorf("failed with error %t", err)
-		return
-	}
+	assert.NoError(t, err)
 
 	var actualIDs []string
 	for _, ele := range actual {
-		if furiosaDevice, ok := ele.(FuriosaDevice); !ok {
-			t.Errorf("type assertion failed")
-			return
-		} else {
-			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
-		}
+		furiosaDevice, ok := ele.(FuriosaDevice)
+		assert.True(t, ok, "type assertion failed")
+
+		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
 	}
 
-	if !reflect.DeepEqual(actualIDs, seedUUID) {
-		t.Errorf("expectedResult %v but got %v", seedUUID, actualIDs)
-	}
+	assert.Equal(t, seedUUID, actualIDs)
 }
 
 // staticMockTopologyHintProvider build hint matrix for optimized 2socket server
@@ -368,28 +353,29 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 	}
 
 	for _, tc := range tests {
-		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-		mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-		allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
-		mockDeviceManager := &deviceManager{
-			origin:         mockDevices,
-			furiosaDevices: mockFuriosaDevices,
-			resourceName:   "furiosa.ai/npu",
-			debugMode:      false,
-			allocator:      allocator,
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
+			mockDeviceManager := &deviceManager{
+				origin:         mockDevices,
+				furiosaDevices: mockFuriosaDevices,
+				resourceName:   "furiosa.ai/npu",
+				debugMode:      false,
+				allocator:      allocator,
+			}
 
-		completeAvailable := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.available)
-		completeRequired := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.required)
-		actualResult, actualError := mockDeviceManager.GetContainerPreferredAllocationResponse(completeAvailable, completeRequired, tc.request)
-		if actualError != nil != tc.expectError {
-			t.Errorf("unexpected error %t", actualError)
-		}
+			completeAvailable := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.available)
+			completeRequired := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.required)
+			actualResult, actualError := mockDeviceManager.GetContainerPreferredAllocationResponse(completeAvailable, completeRequired, tc.request)
+			if actualError != nil != tc.expectError {
+				t.Errorf("unexpected error %t", actualError)
+			}
 
-		completeExpectedResult := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.expectedResult.DeviceIDs)
-		if !reflect.DeepEqual(completeExpectedResult, actualResult.DeviceIDs) {
-			t.Errorf("expectedResult %v but got %v, TC: %s", completeExpectedResult, actualResult.DeviceIDs, tc.description)
-		}
+			completeExpectedResult := prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.expectedResult.DeviceIDs)
+
+			assert.Equal(t, completeExpectedResult, actualResult.DeviceIDs)
+		})
 	}
 }
 
@@ -674,23 +660,25 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-		mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-		mockDeviceManager := &deviceManager{
-			origin:         mockDevices,
-			furiosaDevices: mockFuriosaDevices,
-			resourceName:   "furiosa.ai/npu",
-			debugMode:      false,
-			allocator:      nil,
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			mockDeviceManager := &deviceManager{
+				origin:         mockDevices,
+				furiosaDevices: mockFuriosaDevices,
+				resourceName:   "furiosa.ai/npu",
+				debugMode:      false,
+				allocator:      nil,
+			}
 
-		actualResult, actualError := mockDeviceManager.GetContainerAllocateResponse(prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.deviceIDs))
-		if actualError != nil != tc.expectError {
-			t.Errorf("unexpected error %t", actualError)
-		}
+			actualResult, actualError := mockDeviceManager.GetContainerAllocateResponse(prefix("A76AAD68-6855-40B1-9E86-D080852D1C8", tc.deviceIDs))
+			if tc.expectError {
+				assert.Error(t, actualError)
+			} else {
+				assert.NoError(t, actualError)
+			}
 
-		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
-			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
-		}
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }

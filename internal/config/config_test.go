@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetConfigFromFile(t *testing.T) {
@@ -91,13 +92,15 @@ func TestGetConfigFromFile(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actualConf, actualErr := getConfigFromFile(absPath(tc.configPath))
-		if tc.expectedError {
-			assert.NotNilf(t, actualErr, tc.description)
-		} else {
-			assert.Nilf(t, actualErr, tc.description)
-			assert.Equalf(t, tc.expectedResult, actualConf, tc.description)
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			actualConf, actualErr := getConfigFromFile(absPath(tc.configPath))
+			if tc.expectedError {
+				assert.NotNilf(t, actualErr, tc.description)
+			} else {
+				assert.Nilf(t, actualErr, tc.description)
+				assert.Equalf(t, tc.expectedResult, actualConf, tc.description)
+			}
+		})
 	}
 }
 
@@ -181,8 +184,10 @@ func TestIsEqualConfig(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actual := isEqualConfig(tc.a, tc.b)
-		assert.Equalf(t, tc.expected, actual, tc.description)
+		t.Run(tc.description, func(t *testing.T) {
+			actual := isEqualConfig(tc.a, tc.b)
+			assert.Equalf(t, tc.expected, actual, tc.description)
+		})
 	}
 }
 

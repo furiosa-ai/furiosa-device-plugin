@@ -1,11 +1,11 @@
 package device_manager
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/stretchr/testify/assert"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -23,16 +23,13 @@ func TestDeviceID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
-		actualResult := exclusiveDev.DeviceID()
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
+
+			actualResult := exclusiveDev.DeviceID()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -55,17 +52,13 @@ func TestPCIBusID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
 
-		actualResult := exclusiveDev.PCIBusID()
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-			continue
-		}
+			actualResult := exclusiveDev.PCIBusID()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -91,16 +84,13 @@ func TestNUMANode(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
 
-		actualResult := exclusiveDev.NUMANode()
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %d but got %d", tc.expectedResult, actualResult)
-		}
+			actualResult := exclusiveDev.NUMANode()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -160,16 +150,13 @@ func TestDeviceSpecs(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
 
-		actualResult := exclusiveDev.DeviceSpecs()
-		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
-			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
-		}
+			actualResult := exclusiveDev.DeviceSpecs()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -196,21 +183,15 @@ func TestIsHealthy(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, tc.isDisabled)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, tc.isDisabled)
+			assert.NoError(t, err)
 
-		actualResult, err := exclusiveDev.IsHealthy()
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+			actualResult, err := exclusiveDev.IsHealthy()
+			assert.NoError(t, err)
 
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %t but got %t", tc.expectedResult, actualResult)
-		}
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -269,16 +250,13 @@ func TestMounts(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
 
-		actualResult := exclusiveDev.Mounts()
-		if !reflect.DeepEqual(actualResult, tc.expectedResult) {
-			t.Errorf("expectedResult %v but got %v", tc.expectedResult, actualResult)
-		}
+			actualResult := exclusiveDev.Mounts()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -296,16 +274,13 @@ func TestID(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
-		actualResult := exclusiveDev.ID()
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
+
+			actualResult := exclusiveDev.ID()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -323,17 +298,13 @@ func TestTopologyHintKey(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			exclusiveDev, err := NewExclusiveDevice(tc.mockDevice, false)
+			assert.NoError(t, err)
 
-		actualResult := exclusiveDev.TopologyHintKey()
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-			continue
-		}
+			actualResult := exclusiveDev.TopologyHintKey()
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
 
@@ -358,22 +329,15 @@ func TestEqual(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		source, err := NewExclusiveDevice(tc.mockSourceDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			source, err := NewExclusiveDevice(tc.mockSourceDevice, false)
+			assert.NoError(t, err)
 
-		target, err := NewExclusiveDevice(tc.mockTargetDevice, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+			target, err := NewExclusiveDevice(tc.mockTargetDevice, false)
+			assert.NoError(t, err)
 
-		actual := source.Equal(target)
-		if actual != tc.expected {
-			t.Errorf("expectedResult %v but got %v", tc.expected, actual)
-			continue
-		}
+			actual := source.Equal(target)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }

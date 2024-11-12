@@ -2,7 +2,6 @@ package device_manager
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
 	"testing"
 
@@ -170,26 +169,20 @@ func TestDeviceIDs_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		if len(partitionedDevices) != len(tc.expectedResults) {
-			t.Errorf("length of expectedResults and partitioned devices are not equal for strategy %s: expected: %d, got: %d", tc.strategy, len(tc.expectedResults), len(partitionedDevices))
-			continue
-		}
+			assert.Lenf(t, partitionedDevices, len(tc.expectedResults), "length of expectedResults and partitioned devices are not equal for strategy %s: expected: %d, got: %d", tc.strategy, len(tc.expectedResults), len(partitionedDevices))
 
-		for i, device := range partitionedDevices {
-			expectedDeviceId := tc.expectedResults[i]
-			actualDeviceId := device.DeviceID()
-			if expectedDeviceId != actualDeviceId {
-				t.Errorf("expected Device ID %s, got %s", expectedDeviceId, actualDeviceId)
-				continue
+			for i, device := range partitionedDevices {
+				expectedDeviceId := tc.expectedResults[i]
+				actualDeviceId := device.DeviceID()
+
+				assert.Equal(t, expectedDeviceId, actualDeviceId)
 			}
-		}
+		})
 	}
 }
 
@@ -221,21 +214,17 @@ func TestPCIBusIDs_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		expectedPCIBusID := tc.expectedResult
-		for _, device := range partitionedDevices {
-			actualPCIBusID := device.PCIBusID()
-			if expectedPCIBusID != actualPCIBusID {
-				t.Errorf("expected PCIBusID %s, got %s", expectedPCIBusID, actualPCIBusID)
-				continue
+			expectedPCIBusID := tc.expectedResult
+			for _, device := range partitionedDevices {
+				actualPCIBusID := device.PCIBusID()
+				assert.Equal(t, expectedPCIBusID, actualPCIBusID)
 			}
-		}
+		})
 	}
 }
 
@@ -267,21 +256,17 @@ func TestNUMANode_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, true)
-		if err != nil {
-			t.Errorf("unexpected error %t", err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, true)
+			assert.NoError(t, err)
 
-		expectedNUMANode := tc.expectedResult
-		for _, device := range partitionedDevices {
-			actualNUMANode := device.NUMANode()
-			if expectedNUMANode != actualNUMANode {
-				t.Errorf("expected NUMA node %d, got %d", expectedNUMANode, actualNUMANode)
-				continue
+			expectedNUMANode := tc.expectedResult
+			for _, device := range partitionedDevices {
+				actualNUMANode := device.NUMANode()
+				assert.Equal(t, expectedNUMANode, actualNUMANode)
 			}
-		}
+		})
 	}
 }
 
@@ -630,23 +615,18 @@ func TestDeviceSpecs_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		if len(partitionedDevices) != len(tc.expectedResultCandidates) {
-			t.Errorf("%s: expected %d partitioned devices, got %d", tc.description, len(tc.expectedResultCandidates), len(partitionedDevices))
-		}
+			assert.Len(t, partitionedDevices, len(tc.expectedResultCandidates))
 
-		for i, device := range partitionedDevices {
-			actualResult := device.DeviceSpecs()
-			if !reflect.DeepEqual(actualResult, tc.expectedResultCandidates[i]) {
-				t.Errorf("%s: expected %v, got %v", tc.description, tc.expectedResultCandidates[i], actualResult)
+			for i, device := range partitionedDevices {
+				actualResult := device.DeviceSpecs()
+				assert.Equal(t, tc.expectedResultCandidates[i], actualResult)
 			}
-		}
+		})
 	}
 }
 
@@ -675,24 +655,18 @@ func TestIsHealthy_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, tc.isDisabled)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, tc.isDisabled)
+			assert.NoError(t, err)
 
-		for _, device := range partitionedDevices {
-			actualResult, err := device.IsHealthy()
-			if err != nil {
-				t.Errorf("%s: unexpected error: %v", tc.description, err)
-				continue
-			}
+			for _, device := range partitionedDevices {
+				actualResult, err := device.IsHealthy()
+				assert.NoError(t, err)
 
-			if actualResult != tc.expectedResults {
-				t.Errorf("expectedResults %v but got %v", tc.expectedResults, actualResult)
+				assert.Equal(t, tc.expectedResults, actualResult)
 			}
-		}
+		})
 	}
 }
 
@@ -726,19 +700,16 @@ func TestMounts_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		for _, device := range partitionedDevices {
-			actualResults := device.Mounts()
-			if !reflect.DeepEqual(actualResults, tc.expectedResults) {
-				t.Errorf("expectedResults %v but got %v", tc.expectedResults, actualResults)
+			for _, device := range partitionedDevices {
+				actualResults := device.Mounts()
+				assert.Equal(t, tc.expectedResults, actualResults)
 			}
-		}
+		})
 	}
 }
 
@@ -790,26 +761,20 @@ func TestID_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		if len(partitionedDevices) != len(tc.expectedResults) {
-			t.Errorf("length of expectedResults and partitioned devices are not equal for strategy %s: expected: %d, got: %d", tc.strategy, len(tc.expectedResults), len(partitionedDevices))
-			continue
-		}
+			assert.Lenf(t, partitionedDevices, len(tc.expectedResults), "length of expectedResults and partitioned devices are not equal for strategy %s: expected: %d, got: %d", tc.strategy, len(tc.expectedResults), len(partitionedDevices))
 
-		for i, device := range partitionedDevices {
-			expectedId := tc.expectedResults[i]
-			actualId := device.ID()
-			if expectedId != actualId {
-				t.Errorf("expected ID %s, got %s", expectedId, actualId)
-				continue
+			for i, device := range partitionedDevices {
+				expectedId := tc.expectedResults[i]
+				actualId := device.ID()
+
+				assert.Equal(t, expectedId, actualId)
 			}
-		}
+		})
 	}
 }
 
@@ -841,20 +806,17 @@ func TestTopologyHintKey_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
-		partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
+			partitionedDevices, err := NewPartitionedDevices(tc.mockDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		for _, device := range partitionedDevices {
-			actualResult := device.TopologyHintKey()
-			if actualResult != tc.expectedResult {
-				t.Errorf("expectedResults %s, got %s", tc.expectedResult, actualResult)
-				continue
+			for _, device := range partitionedDevices {
+				actualResult := device.TopologyHintKey()
+
+				assert.Equal(t, tc.expectedResult, actualResult)
 			}
-		}
+		})
 	}
 }
 
@@ -883,34 +845,25 @@ func TestEqual_RNGD_PartitionedDevice(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		numOfCoresPerPartition := tc.strategy.CoreSize()
+		t.Run(tc.description, func(t *testing.T) {
+			numOfCoresPerPartition := tc.strategy.CoreSize()
 
-		sourcePartitionedDevices, err := NewPartitionedDevices(tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+			sourcePartitionedDevices, err := NewPartitionedDevices(tc.mockSourceDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		targetPartitionedDevices, err := NewPartitionedDevices(tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", tc.description, err)
-			continue
-		}
+			targetPartitionedDevices, err := NewPartitionedDevices(tc.mockTargetDevice, numOfCoresPerPartition, totalCoresOfRNGD/numOfCoresPerPartition, false)
+			assert.NoError(t, err)
 
-		if len(sourcePartitionedDevices) != len(targetPartitionedDevices) {
-			t.Errorf("length of sourcePartitionedDevices and targetPartitionedDevices is different!")
-			continue
-		}
+			assert.Len(t, sourcePartitionedDevices, len(targetPartitionedDevices))
 
-		for i := range sourcePartitionedDevices {
-			sourceDevice := sourcePartitionedDevices[i]
-			targetDevice := targetPartitionedDevices[i]
+			for i := range sourcePartitionedDevices {
+				sourceDevice := sourcePartitionedDevices[i]
+				targetDevice := targetPartitionedDevices[i]
 
-			actualResult := sourceDevice.Equal(targetDevice)
-			if actualResult != tc.expected {
-				t.Errorf("expected: %v, got: %v", tc.expected, actualResult)
-				continue
+				actualResult := sourceDevice.Equal(targetDevice)
+
+				assert.Equal(t, tc.expected, actualResult)
 			}
-		}
+		})
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -53,16 +55,11 @@ func TestDevicePluginCommand(t *testing.T) {
 
 		err := cmd.Execute()
 		if err != nil || tc.expectedError != nil {
-			if strings.TrimSpace(safeError(err)) != strings.TrimSpace(safeError(tc.expectedError)) {
-				t.Errorf("expected %t but got actual %t", err, tc.expectedError)
-			}
+			assert.Equal(t, strings.TrimSpace(safeError(err)), strings.TrimSpace(safeError(tc.expectedError)))
 		}
 
 		output := buf.String()
 
-		if strings.TrimSpace(output) != strings.TrimSpace(tc.expectedResult) {
-			t.Errorf("actual result does not match to expected result")
-			println("actual: ", output)
-		}
+		assert.Equal(t, strings.TrimSpace(tc.expectedResult), strings.TrimSpace(output))
 	}
 }
