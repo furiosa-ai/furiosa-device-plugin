@@ -97,28 +97,21 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 			startCore := namedMatches[startCoreExp]
 			endCore := namedMatches[endCoreExp]
 			if endCore == "" {
-				singlePeNum, err := strconv.Atoi(startCore)
-				if err != nil {
-					return nil, err
-				}
+				endCore = startCore
+			}
 
-				if peLowerBound <= singlePeNum && singlePeNum <= peUpperBound {
-					survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
-				}
-			} else {
-				peStartNum, err := strconv.Atoi(startCore)
-				if err != nil {
-					return nil, err
-				}
+			peStartNum, err := strconv.Atoi(startCore)
+			if err != nil {
+				return nil, err
+			}
 
-				peEndNum, err := strconv.Atoi(endCore)
-				if err != nil {
-					return nil, err
-				}
+			peEndNum, err := strconv.Atoi(endCore)
+			if err != nil {
+				return nil, err
+			}
 
-				if peLowerBound <= peStartNum && peEndNum <= peUpperBound {
-					survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
-				}
+			if peLowerBound <= peStartNum && peEndNum <= peUpperBound {
+				survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
 			}
 		} else {
 			survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
