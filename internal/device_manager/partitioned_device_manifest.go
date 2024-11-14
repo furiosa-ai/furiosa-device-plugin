@@ -63,7 +63,7 @@ var (
 	deviceNodeSubExps = deviceNodePeRegex.SubexpNames()
 )
 
-// filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
+// filterPartitionedDeviceNodes filters Device Nodes by following rules.
 //   - npu{N}pe{X} will be dropped if X is not in the range between `peLowerBound` and `peUpperBound`.
 //   - npu{N}pe{X}-{Y} will be dropped if X and Y are not in the range between `peLowerBound` and `peUpperBound`.
 //
