@@ -1,8 +1,8 @@
 package device_manager
 
 import (
-	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
@@ -63,9 +63,17 @@ var (
 	deviceNodeSubExps = deviceNodePeRegex.SubexpNames()
 )
 
-// filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
-//   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
+// filterPartitionedDeviceNodes filters Device Nodes by following rules.
+//   - npu{N}pe{X} will be dropped if X is not in the range between `peLowerBound` and `peUpperBound`.
+//   - npu{N}pe{X}-{Y} will be dropped if X and Y are not in the range between `peLowerBound` and `peUpperBound`.
+//
+// e.g. If strategy is QuadCore and partition range is 0 to 3, below device files will be assigned.
+//   - npu0pe0-3
+//   - npu0pe0-1, npu0pe2-3
+//   - npu0pe0, npu0pe1, npu0pe2, npu0pe3
 func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
+	peLowerBound, peUpperBound := partition.start, partition.end
+
 	var survivedDeviceNodes []*manifest.DeviceNode
 	for _, deviceNode := range original.DeviceNodes() {
 		path := deviceNode.ContainerPath
@@ -80,23 +88,24 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 			namedMatches[subExp] = match
 		}
 
-		if len(namedMatches) > 0 {
-			deviceId := namedMatches[deviceIdExp]
-			if deviceId == "" {
-				continue
-			}
-
+		if len(namedMatches) > 1 {
 			startCore := namedMatches[startCoreExp]
 			endCore := namedMatches[endCoreExp]
-
-			var partitionPostfix string
 			if endCore == "" {
-				partitionPostfix = startCore
-			} else {
-				partitionPostfix = fmt.Sprintf("%s-%s", startCore, endCore)
+				endCore = startCore
 			}
 
-			if partitionPostfix == partition.String() {
+			peStartNum, err := strconv.Atoi(startCore)
+			if err != nil {
+				return nil, err
+			}
+
+			peEndNum, err := strconv.Atoi(endCore)
+			if err != nil {
+				return nil, err
+			}
+
+			if peLowerBound <= peStartNum && peEndNum <= peUpperBound {
 				survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
 			}
 		} else {
