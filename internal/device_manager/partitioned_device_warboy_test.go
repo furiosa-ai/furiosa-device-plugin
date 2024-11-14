@@ -325,6 +325,16 @@ func TestDeviceSpecs_Warboy_PartitionedDevice(t *testing.T) {
 						Permissions:   "rw",
 					},
 					{
+						ContainerPath: "/dev/npu0pe0",
+						HostPath:      "/dev/npu0pe0",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/npu0pe1",
+						HostPath:      "/dev/npu0pe1",
+						Permissions:   "rw",
+					},
+					{
 						ContainerPath: "/dev/npu0pe0-1",
 						HostPath:      "/dev/npu0pe0-1",
 						Permissions:   "rw",
@@ -365,7 +375,7 @@ func TestDeviceSpecs_Warboy_PartitionedDevice(t *testing.T) {
 			for i, device := range partitionedDevices {
 				actualResult := device.DeviceSpecs()
 
-				assert.Equal(t, tc.expectedResultCandidates[i], actualResult)
+				assert.ElementsMatch(t, tc.expectedResultCandidates[i], actualResult)
 			}
 		})
 	}

@@ -393,6 +393,16 @@ func TestDeviceSpecs_RNGD_PartitionedDevice(t *testing.T) {
 					Permissions:   "rw",
 				},
 				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i+1),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i+1),
+					Permissions:   "rw",
+				},
+				{
 					ContainerPath: "/dev/rngd/npu0ch0",
 					HostPath:      "/dev/rngd/npu0ch0",
 					Permissions:   "rw",
@@ -495,6 +505,36 @@ func TestDeviceSpecs_RNGD_PartitionedDevice(t *testing.T) {
 				{
 					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i, i+3),
 					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i, i+3),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i, i+1),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i, i+1),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i+2, i+3),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d-%d", i+2, i+3),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i+1),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i+1),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i+2),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i+2),
+					Permissions:   "rw",
+				},
+				{
+					ContainerPath: fmt.Sprintf("/dev/rngd/npu0pe%d", i+3),
+					HostPath:      fmt.Sprintf("/dev/rngd/npu0pe%d", i+3),
 					Permissions:   "rw",
 				},
 				{
@@ -624,7 +664,8 @@ func TestDeviceSpecs_RNGD_PartitionedDevice(t *testing.T) {
 
 			for i, device := range partitionedDevices {
 				actualResult := device.DeviceSpecs()
-				assert.Equal(t, tc.expectedResultCandidates[i], actualResult)
+
+				assert.ElementsMatch(t, tc.expectedResultCandidates[i], actualResult)
 			}
 		})
 	}

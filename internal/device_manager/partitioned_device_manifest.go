@@ -1,8 +1,8 @@
 package device_manager
 
 import (
-	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest"
@@ -66,6 +66,8 @@ var (
 // filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
 //   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
 func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
+	peLowerBound, peUpperBound := partition.start, partition.end
+
 	var survivedDeviceNodes []*manifest.DeviceNode
 	for _, deviceNode := range original.DeviceNodes() {
 		path := deviceNode.ContainerPath
@@ -88,16 +90,29 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 
 			startCore := namedMatches[startCoreExp]
 			endCore := namedMatches[endCoreExp]
-
-			var partitionPostfix string
 			if endCore == "" {
-				partitionPostfix = startCore
-			} else {
-				partitionPostfix = fmt.Sprintf("%s-%s", startCore, endCore)
-			}
+				singlePeNum, err := strconv.Atoi(startCore)
+				if err != nil {
+					return nil, err
+				}
 
-			if partitionPostfix == partition.String() {
-				survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
+				if peLowerBound <= singlePeNum && singlePeNum <= peUpperBound {
+					survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
+				}
+			} else {
+				peStartNum, err := strconv.Atoi(startCore)
+				if err != nil {
+					return nil, err
+				}
+
+				peEndNum, err := strconv.Atoi(endCore)
+				if err != nil {
+					return nil, err
+				}
+
+				if peLowerBound <= peStartNum && peEndNum <= peUpperBound {
+					survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
+				}
 			}
 		} else {
 			survivedDeviceNodes = append(survivedDeviceNodes, deviceNode)
