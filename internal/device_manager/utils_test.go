@@ -2,6 +2,8 @@ package device_manager
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseBusIDfromBDF(t *testing.T) {
@@ -32,15 +34,15 @@ func TestParseBusIDfromBDF(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actualResult, actualErr := parseBusIDfromBDF(tc.bdf)
-		if actualErr != nil != tc.expectedError {
-			t.Errorf("got unexpected error %t", actualErr)
-			continue
-		}
+		t.Run(tc.description, func(t *testing.T) {
+			actualResult, actualErr := parseBusIDfromBDF(tc.bdf)
+			if tc.expectedError {
+				assert.Error(t, actualErr)
+			} else {
+				assert.NoError(t, actualErr)
+			}
 
-		if actualResult != tc.expectedResult {
-			t.Errorf("expectedResult %s but got %s", tc.expectedResult, actualResult)
-			continue
-		}
+			assert.Equal(t, tc.expectedResult, actualResult)
+		})
 	}
 }
