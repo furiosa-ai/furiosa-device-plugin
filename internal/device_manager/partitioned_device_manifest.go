@@ -51,11 +51,10 @@ func (p *partitionedDeviceManifest) MountPaths() []*manifest.Mount {
 }
 
 const (
-	deviceIdExp  = "device_id"
 	startCoreExp = "start_core"
 	endCoreExp   = "end_core"
 
-	regexpPattern = `^\S+npu(?P<` + deviceIdExp + `>\d+)((?:pe)(?P<` + startCoreExp + `>\d+)(-(?P<` + endCoreExp + `>\d+))?)?$`
+	regexpPattern = `^\S+npu\d+((?:pe)(?P<` + startCoreExp + `>\d+)(-(?P<` + endCoreExp + `>\d+))?)?$`
 )
 
 var (
@@ -88,12 +87,7 @@ func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partitio
 			namedMatches[subExp] = match
 		}
 
-		if len(namedMatches) > 0 {
-			deviceId := namedMatches[deviceIdExp]
-			if deviceId == "" {
-				continue
-			}
-
+		if len(namedMatches) > 1 {
 			startCore := namedMatches[startCoreExp]
 			endCore := namedMatches[endCoreExp]
 			if endCore == "" {
