@@ -64,7 +64,13 @@ var (
 )
 
 // filterPartitionedDeviceNodes filters (actually filters) Device Nodes by following rules.
-//   - npu{N}pe{partition} will be dropped if {partition} does not match with given partition value
+//   - npu{N}pe{X} will be dropped if X is not in the range between `peLowerBound` and `peUpperBound`.
+//   - npu{N}pe{X}-{Y} will be dropped if X and Y are not in the range between `peLowerBound` and `peUpperBound`.
+//
+// e.g. If strategy is QuadCore and partition range is 0 to 3, below device files will be assigned.
+//   - npu0pe0-3
+//   - npu0pe0-1, npu0pe2-3
+//   - npu0pe0, npu0pe1, npu0pe2, npu0pe3
 func filterPartitionedDeviceNodes(original manifest.Manifest, partition Partition) ([]*manifest.DeviceNode, error) {
 	peLowerBound, peUpperBound := partition.start, partition.end
 
