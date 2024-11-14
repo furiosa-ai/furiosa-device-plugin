@@ -51,10 +51,11 @@ func (p *partitionedDeviceManifest) MountPaths() []*manifest.Mount {
 }
 
 const (
+	deviceIdExp  = "device_id"
 	startCoreExp = "start_core"
 	endCoreExp   = "end_core"
 
-	regexpPattern = `^\S+npu\d+((?:pe)(?P<` + startCoreExp + `>\d+)(-(?P<` + endCoreExp + `>\d+))?)?$`
+	regexpPattern = `^\S+npu(?P<` + deviceIdExp + `>\d+)((?:pe)(?P<` + startCoreExp + `>\d+)(-(?P<` + endCoreExp + `>\d+))?)?$`
 )
 
 var (
