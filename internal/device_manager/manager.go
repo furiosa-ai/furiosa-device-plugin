@@ -3,6 +3,8 @@ package device_manager
 import (
 	"fmt"
 	"maps"
+	"slices"
+	"sort"
 	"strings"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -39,6 +41,8 @@ func (d *deviceManager) Devices() (ret []string) {
 		ret = append(ret, id)
 	}
 
+	sort.Strings(ret)
+
 	return ret
 }
 
@@ -71,6 +75,8 @@ func (d *deviceManager) Contains(deviceIDs []string) (bool, []string) {
 	}
 
 	if len(missing) > 0 {
+		sort.Strings(missing)
+
 		return false, missing
 	}
 
@@ -89,8 +95,13 @@ func fetchByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]Furiosa
 	}
 
 	if len(missing) > 0 {
+		sort.Strings(missing)
 		return nil, fmt.Errorf("couldn't found device(s) for device id(s) %s", strings.Join(missing, ", "))
 	}
+
+	slices.SortFunc(found, func(a, b FuriosaDevice) int {
+		return strings.Compare(a.ID(), b.ID())
+	})
 
 	return found, nil
 }
@@ -105,6 +116,10 @@ func fetchDevicesByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]
 	for _, furiosaDevice := range found {
 		devices = append(devices, furiosaDevice)
 	}
+
+	slices.SortFunc(devices, func(a, b npu_allocator.Device) int {
+		return strings.Compare(a.ID(), b.ID())
+	})
 
 	return devices, nil
 }
@@ -125,6 +140,8 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 	for _, allocatedDevice := range allocatedDeviceSet {
 		allocated = append(allocated, allocatedDevice.ID())
 	}
+
+	sort.Strings(allocated)
 
 	return &devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse{
 		DeviceIDs: allocated,
@@ -173,6 +190,10 @@ func (d *deviceManager) GetListAndWatchResponse() *devicePluginAPIv1Beta1.ListAn
 			},
 		})
 	}
+
+	slices.SortFunc(resp, func(a, b *devicePluginAPIv1Beta1.Device) int {
+		return strings.Compare(a.ID, b.ID)
+	})
 
 	return &devicePluginAPIv1Beta1.ListAndWatchResponse{
 		Devices: resp,
@@ -239,6 +260,7 @@ func buildFuriosaDevices(devices []smi.Device, blockedList []string, newDevFunc 
 			furiosaDevicesMap[d.DeviceID()] = d
 		}
 	}
+
 	return furiosaDevicesMap, nil
 }
 

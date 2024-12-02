@@ -2,6 +2,8 @@ package device_manager
 
 import (
 	"fmt"
+	"math/rand"
+	"sort"
 	"testing"
 
 	"github.com/bradfitz/iter"
@@ -104,6 +106,10 @@ func TestFetchByID(t *testing.T) {
 			seedUUID = append(seedUUID, info.UUID())
 		}
 
+		rand.Shuffle(len(seedUUID), func(i, j int) {
+			seedUUID[i], seedUUID[j] = seedUUID[j], seedUUID[i]
+		})
+
 		mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
 		actual, err := fetchByID(mockFuriosaDevices, seedUUID)
 		assert.NoError(t, err)
@@ -112,6 +118,8 @@ func TestFetchByID(t *testing.T) {
 		for _, furiosaDevice := range actual {
 			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
 		}
+
+		sort.Strings(seedUUID)
 
 		assert.Equal(t, seedUUID, actualIDs)
 	})
@@ -133,6 +141,10 @@ func TestFetchByID(t *testing.T) {
 			}
 		}
 
+		rand.Shuffle(len(expectedIDs), func(i, j int) {
+			expectedIDs[i], expectedIDs[j] = expectedIDs[j], expectedIDs[i]
+		})
+
 		mockFuriosaDevices := MockRngdFuriosaDevices(strategy, mockDevices)
 		actual, err := fetchByID(mockFuriosaDevices, expectedIDs)
 		assert.NoError(t, err)
@@ -141,6 +153,8 @@ func TestFetchByID(t *testing.T) {
 		for _, furiosaDevice := range actual {
 			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
 		}
+
+		sort.Strings(expectedIDs)
 
 		assert.Equal(t, expectedIDs, actualIDs)
 	})
@@ -156,6 +170,10 @@ func TestFetchDevicesByID(t *testing.T) {
 			seedUUID = append(seedUUID, info.UUID())
 		}
 
+		rand.Shuffle(len(seedUUID), func(i, j int) {
+			seedUUID[i], seedUUID[j] = seedUUID[j], seedUUID[i]
+		})
+
 		mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
 		actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
 		assert.NoError(t, err)
@@ -167,6 +185,8 @@ func TestFetchDevicesByID(t *testing.T) {
 
 			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
 		}
+
+		sort.Strings(seedUUID)
 
 		assert.Equal(t, seedUUID, actualIDs)
 	})
@@ -188,6 +208,10 @@ func TestFetchDevicesByID(t *testing.T) {
 			}
 		}
 
+		rand.Shuffle(len(expectedIDs), func(i, j int) {
+			expectedIDs[i], expectedIDs[j] = expectedIDs[j], expectedIDs[i]
+		})
+
 		mockFuriosaDevices := MockRngdFuriosaDevices(strategy, mockDevices)
 		actual, err := fetchDevicesByID(mockFuriosaDevices, expectedIDs)
 		assert.NoError(t, err)
@@ -196,6 +220,8 @@ func TestFetchDevicesByID(t *testing.T) {
 		for _, furiosaDevice := range actual {
 			actualIDs = append(actualIDs, furiosaDevice.ID())
 		}
+
+		sort.Strings(expectedIDs)
 
 		assert.Equal(t, expectedIDs, actualIDs)
 	})
