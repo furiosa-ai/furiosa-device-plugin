@@ -1,8 +1,10 @@
 package device_manager
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/bradfitz/iter"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
@@ -11,17 +13,31 @@ import (
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]FuriosaDevice) {
-	if len(mockDevices) == 0 {
-		mockDevices = smi.GetStaticMockDevices(smi.ArchWarboy)
-	}
-
-	ret = make(map[string]FuriosaDevice, len(mockDevices))
+func MockWarboyFuriosaDevices(mockDevices []smi.Device) map[string]FuriosaDevice {
+	ret := make(map[string]FuriosaDevice, len(mockDevices))
 	for _, mockDevice := range mockDevices {
 		info, _ := mockDevice.DeviceInfo()
 		key := info.UUID()
 		mockFuriosaDevice, _ := NewExclusiveDevice(mockDevice, false)
 		ret[key] = mockFuriosaDevice
+	}
+
+	return ret
+}
+
+func MockRngdFuriosaDevices(strategy config.ResourceUnitStrategy, mockDevices []smi.Device) map[string]FuriosaDevice {
+	ret := make(map[string]FuriosaDevice, len(mockDevices))
+	for _, mockDevice := range mockDevices {
+		info, _ := mockDevice.DeviceInfo()
+
+		numOfCoresPerPartition := strategy.CoreSize()
+		totalCores := int(info.CoreNum())
+
+		mockFuriosaDevices, _ := NewPartitionedDevices(mockDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, false)
+		for _, d := range mockFuriosaDevices {
+			key := d.DeviceID()
+			ret[key] = d
+		}
 	}
 
 	return ret
@@ -79,52 +95,110 @@ func TestBuildFuriosaDevices(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-	var seedUUID []string
+	t.Run("Test using Warboy", func(t *testing.T) {
+		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+		var seedUUID []string
 
-	for i, mockDevice := range mockDevices {
-		if i == 2 {
-			break
+		for _, mockDevice := range mockDevices {
+			info, _ := mockDevice.DeviceInfo()
+			seedUUID = append(seedUUID, info.UUID())
 		}
 
-		info, _ := mockDevice.DeviceInfo()
-		seedUUID = append(seedUUID, info.UUID())
-	}
+		mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
+		actual, err := fetchByID(mockFuriosaDevices, seedUUID)
+		assert.NoError(t, err)
 
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchByID(mockFuriosaDevices, seedUUID)
-	assert.NoError(t, err)
+		var actualIDs []string
+		for _, furiosaDevice := range actual {
+			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
+		}
 
-	var actualIDs []string
-	for _, furiosaDevice := range actual {
-		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
-	}
+		assert.Equal(t, seedUUID, actualIDs)
+	})
 
-	assert.Equal(t, seedUUID, actualIDs)
+	t.Run("Test using RNGD", func(t *testing.T) {
+		strategy := config.SingleCoreStrategy
+		mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
+		expectedIDs := make([]string, 0)
+
+		for _, mockDevice := range mockDevices {
+			info, _ := mockDevice.DeviceInfo()
+
+			// right now, use single core strategy at tests.
+			numOfPartitions := int(info.CoreNum()) / strategy.CoreSize()
+
+			for partitionNum := range iter.N(numOfPartitions) {
+				deviceId := fmt.Sprintf("%s%s%d", info.UUID(), deviceIdDelimiter, partitionNum)
+				expectedIDs = append(expectedIDs, deviceId)
+			}
+		}
+
+		mockFuriosaDevices := MockRngdFuriosaDevices(strategy, mockDevices)
+		actual, err := fetchByID(mockFuriosaDevices, expectedIDs)
+		assert.NoError(t, err)
+
+		var actualIDs []string
+		for _, furiosaDevice := range actual {
+			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
+		}
+
+		assert.Equal(t, expectedIDs, actualIDs)
+	})
 }
 
 func TestFetchDevicesByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-	var seedUUID []string
+	t.Run("Test using Warboy", func(t *testing.T) {
+		mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+		var seedUUID []string
 
-	for _, mockDevice := range mockDevices {
-		info, _ := mockDevice.DeviceInfo()
-		seedUUID = append(seedUUID, info.UUID())
-	}
+		for _, mockDevice := range mockDevices {
+			info, _ := mockDevice.DeviceInfo()
+			seedUUID = append(seedUUID, info.UUID())
+		}
 
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
-	actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
-	assert.NoError(t, err)
+		mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
+		actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
+		assert.NoError(t, err)
 
-	var actualIDs []string
-	for _, ele := range actual {
-		furiosaDevice, ok := ele.(FuriosaDevice)
-		assert.True(t, ok, "type assertion failed")
+		var actualIDs []string
+		for _, ele := range actual {
+			furiosaDevice, ok := ele.(FuriosaDevice)
+			assert.True(t, ok, "type assertion failed")
 
-		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
-	}
+			actualIDs = append(actualIDs, furiosaDevice.DeviceID())
+		}
 
-	assert.Equal(t, seedUUID, actualIDs)
+		assert.Equal(t, seedUUID, actualIDs)
+	})
+
+	t.Run("Test using RNGD", func(t *testing.T) {
+		strategy := config.SingleCoreStrategy
+		mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
+		expectedIDs := make([]string, 0)
+
+		for _, mockDevice := range mockDevices {
+			info, _ := mockDevice.DeviceInfo()
+
+			// right now, use single core strategy at tests.
+			numOfPartitions := int(info.CoreNum()) / strategy.CoreSize()
+
+			for partitionNum := range iter.N(numOfPartitions) {
+				deviceId := fmt.Sprintf("%s%s%d", info.UUID(), deviceIdDelimiter, partitionNum)
+				expectedIDs = append(expectedIDs, deviceId)
+			}
+		}
+
+		mockFuriosaDevices := MockRngdFuriosaDevices(strategy, mockDevices)
+		actual, err := fetchDevicesByID(mockFuriosaDevices, expectedIDs)
+		assert.NoError(t, err)
+
+		var actualIDs []string
+		for _, furiosaDevice := range actual {
+			actualIDs = append(actualIDs, furiosaDevice.ID())
+		}
+
+		assert.Equal(t, expectedIDs, actualIDs)
+	})
 }
 
 // staticMockTopologyHintProvider build hint matrix for optimized 2socket server
@@ -355,7 +429,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
 			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
 			allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
 			mockDeviceManager := &deviceManager{
 				origin:         mockDevices,
@@ -662,7 +736,7 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
 			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
-			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			mockFuriosaDevices := MockWarboyFuriosaDevices(mockDevices)
 			mockDeviceManager := &deviceManager{
 				origin:         mockDevices,
 				furiosaDevices: mockFuriosaDevices,
