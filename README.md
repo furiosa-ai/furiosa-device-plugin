@@ -45,7 +45,6 @@ The following table shows the available configurations:
 | Strategy/Arch | Warboy                       |                         | Renegade                    |                         |
 |---------------|------------------------------|-------------------------|-----------------------------|-------------------------|
 |               | Resource Name                | Resource Count Per Card | Resource Name               | Resource Count Per Card |
-| legacy        | beta.furiosa.ai/npu          | 1                       | beta.furiosa.ai/npu         | 1                       |
 | generic       | furiosa.ai/warboy            | 1                       | furiosa.ai/rngd             | 1                       |
 | single-core   | furiosa.ai/warboy-1core.8gb  | 2                       | furiosa.ai/rngd-1core.6gb   | 8                       |
 | dual-core     | furiosa.ai/warboy-2core.16gb | 1                       | furiosa.ai/rngd-2core.12gb  | 4                       |

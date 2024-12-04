@@ -15,15 +15,6 @@ func TestGetConfigFromFile(t *testing.T) {
 		expectedError  bool
 	}{
 		{
-			description: "parse legacy configuration",
-			configPath:  "./tests/legacy_strategy.yaml",
-			expectedResult: &Config{
-				ResourceStrategy: LegacyStrategy,
-				DebugMode:        true,
-			},
-			expectedError: false,
-		},
-		{
 			description: "parse generic configuration",
 			configPath:  "./tests/generic_strategy.yaml",
 			expectedResult: &Config{
