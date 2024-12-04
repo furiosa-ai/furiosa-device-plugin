@@ -45,7 +45,7 @@ func (strategy ResourceUnitStrategy) CoreSize() int {
 	case QuadCoreStrategy:
 		return 4
 
-	default: // `LegacyStrategy` and `SingleCoreStrategy` should not be used here!
+	default: // `LegacyStrategy` and `GenericStrategy` should not be used here!
 		return -1
 	}
 }
