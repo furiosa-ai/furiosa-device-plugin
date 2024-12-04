@@ -34,11 +34,6 @@ func TestBuildFuriosaDevices(t *testing.T) {
 		expectExclusiveDevice bool
 	}{
 		{
-			description:           "test legacy strategy",
-			strategy:              config.LegacyStrategy,
-			expectExclusiveDevice: true,
-		},
-		{
 			description:           "test generic strategy",
 			strategy:              config.GenericStrategy,
 			expectExclusiveDevice: true,

@@ -16,7 +16,6 @@ const (
 )
 
 const (
-	legacyStrategyStr  = "legacy"
 	genericStrategyStr = "generic"
 	singleCoreStr      = "single-core"
 	dualCoreStr        = "dual-core"
@@ -26,7 +25,6 @@ const (
 type ResourceUnitStrategy string
 
 const (
-	LegacyStrategy     ResourceUnitStrategy = legacyStrategyStr
 	GenericStrategy    ResourceUnitStrategy = genericStrategyStr
 	SingleCoreStrategy ResourceUnitStrategy = singleCoreStr
 	DualCoreStrategy   ResourceUnitStrategy = dualCoreStr
@@ -45,7 +43,7 @@ func (strategy ResourceUnitStrategy) CoreSize() int {
 	case QuadCoreStrategy:
 		return 4
 
-	default: // `LegacyStrategy` and `GenericStrategy` should not be used here!
+	default: // `GenericStrategy` should not be used here!
 		return -1
 	}
 }

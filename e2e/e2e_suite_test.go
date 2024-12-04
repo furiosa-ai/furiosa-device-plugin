@@ -37,24 +37,6 @@ func abs(path string) string {
 	return absPath
 }
 
-// Note(@bg): assumption is that this test will be run on the two socket workstation with two NPUs per each socket.
-var _ = Describe("test legacy strategy", Ordered, func() {
-	// deploy device-plugin helm chart for legacy strategy
-	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues("legacy")))
-
-	It("verify node", verifyNode("alpha.furiosa.ai/npu"))
-
-	It("request NPUs", deployVerificationPodAndVerifyEnv("alpha.furiosa.ai/npu"))
-
-	// FIXME(@bg): run inference pod once image is ready
-	/*It("verify pod environment", verifyInferenceEnv("alpha.furiosa.ai/npu"))
-
-	It("clean up verification pod", cleanUpInferencePod())*/
-
-	AfterAll(cleanUpVerificationPodIfExist())
-	AfterAll(e2e.DeleteHelmChart())
-})
-
 var _ = Describe("test generic strategy", Ordered, func() {
 	// deploy device-plugin helm chart for generic strategy
 
@@ -64,7 +46,7 @@ var _ = Describe("test generic strategy", Ordered, func() {
 		return
 	}
 
-	BeforeAll(e2e.DeployHelmChart("legacy-strategy", abs("../deployments/helm"), composeValues("generic")))
+	BeforeAll(e2e.DeployHelmChart("generic-strategy", abs("../deployments/helm"), composeValues("generic")))
 
 	It("verify node", verifyNode(fmt.Sprintf("furiosa.ai/%s", arch)))
 

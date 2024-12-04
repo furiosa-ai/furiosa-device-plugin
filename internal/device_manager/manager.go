@@ -186,7 +186,7 @@ func (d *deviceManager) ResourceName() string {
 func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceFunc) {
 	// Note: config validation ensure that there is no exception other than listed strategies.
 	switch strategy {
-	case config.LegacyStrategy, config.GenericStrategy:
+	case config.GenericStrategy:
 		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
 			newExclusiveDevice, err := NewExclusiveDevice(originDevice, isDisabled)
 			if err != nil {
@@ -269,7 +269,7 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 
 func getNpuAllocatorByStrategy(devices []smi.Device, strategy config.ResourceUnitStrategy) (npu_allocator.NpuAllocator, error) {
 	switch strategy {
-	case config.LegacyStrategy, config.GenericStrategy:
+	case config.GenericStrategy:
 		return npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
 
 	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:

@@ -9,47 +9,6 @@ import (
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 )
 
-func TestBuildDomainName(t *testing.T) {
-	tests := []struct {
-		description string
-		strategy    config.ResourceUnitStrategy
-		expected    string
-	}{
-		{
-			description: "test legacy strategy",
-			strategy:    config.LegacyStrategy,
-			expected:    "alpha.furiosa.ai",
-		},
-		{
-			description: "test generic strategy",
-			strategy:    config.GenericStrategy,
-			expected:    "furiosa.ai",
-		},
-		{
-			description: "test single core strategy",
-			strategy:    config.SingleCoreStrategy,
-			expected:    "furiosa.ai",
-		},
-		{
-			description: "test dual core strategy",
-			strategy:    config.DualCoreStrategy,
-			expected:    "furiosa.ai",
-		},
-		{
-			description: "test quad core strategy",
-			strategy:    config.QuadCoreStrategy,
-			expected:    "furiosa.ai",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.description, func(t *testing.T) {
-			actual := buildDomainName(tc.strategy)
-			assert.Equal(t, tc.expected, actual)
-		})
-	}
-}
-
 func TestBuildFullEndpoint(t *testing.T) {
 	tests := []struct {
 		description    string
@@ -58,13 +17,6 @@ func TestBuildFullEndpoint(t *testing.T) {
 		expectedResult string
 		expectError    bool
 	}{
-		{
-			description:    "test warboy legacy strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.LegacyStrategy,
-			expectedResult: "npu",
-			expectError:    false,
-		},
 		{
 			description:    "test warboy generic strategy",
 			arch:           smi.ArchWarboy,
@@ -92,13 +44,6 @@ func TestBuildFullEndpoint(t *testing.T) {
 			strategy:       config.QuadCoreStrategy,
 			expectedResult: "",
 			expectError:    true,
-		},
-		{
-			description:    "test rngd legacy strategy",
-			arch:           smi.ArchRngd,
-			strategy:       config.LegacyStrategy,
-			expectedResult: "npu",
-			expectError:    false,
 		},
 		{
 			description:    "test rngd generic strategy",
@@ -153,13 +98,6 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 		expectError    bool
 	}{
 		{
-			description:    "test warboy legacy strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.LegacyStrategy,
-			expectedResult: "alpha.furiosa.ai/npu",
-			expectError:    false,
-		},
-		{
 			description:    "test warboy generic strategy",
 			arch:           smi.ArchWarboy,
 			strategy:       config.GenericStrategy,
@@ -186,13 +124,6 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 			strategy:       config.QuadCoreStrategy,
 			expectedResult: "",
 			expectError:    true,
-		},
-		{
-			description:    "test rngd legacy strategy",
-			arch:           smi.ArchRngd,
-			strategy:       config.LegacyStrategy,
-			expectedResult: "alpha.furiosa.ai/npu",
-			expectError:    false,
 		},
 		{
 			description:    "test rngd generic strategy",

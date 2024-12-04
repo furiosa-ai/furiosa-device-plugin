@@ -11,13 +11,11 @@ import (
 
 const (
 	defaultDomain = "furiosa.ai"
-	legacyDomain  = "alpha.furiosa.ai"
 
-	coreUnitTagExp     = "%dcore"
-	memoryUnitTagExp   = "%dgb"
-	taggedResourceExp  = "%s-%s.%s"
-	fullResourceExp    = "%s/%s"
-	legacyResourceName = "npu"
+	coreUnitTagExp    = "%dcore"
+	memoryUnitTagExp  = "%dgb"
+	taggedResourceExp = "%s-%s.%s"
+	fullResourceExp   = "%s/%s"
 
 	warboyMaxMemory = 16
 	warboyMaxCores  = 2
@@ -28,14 +26,6 @@ const (
 	dualCore   = 2
 	quadCore   = 4
 )
-
-func buildDomainName(strategy config.ResourceUnitStrategy) string {
-	if strategy == config.LegacyStrategy {
-		return legacyDomain
-	}
-
-	return defaultDomain
-}
 
 func coreUnitValidator(min, max, core int) error {
 	if core < min || core > max {
@@ -78,10 +68,7 @@ func buildResourceEndpointMemoryUnitTag(arch smi.Arch, coreUnit int) string {
 	return fmt.Sprintf(memoryUnitTagExp, coreUnit*(rngdMaxMemory/rngdMaxCores))
 }
 
-func buildResourceEndpointName(arch smi.Arch, strategy config.ResourceUnitStrategy) string {
-	if strategy == config.LegacyStrategy {
-		return legacyResourceName
-	}
+func buildResourceEndpointName(arch smi.Arch) string {
 	return strings.ToLower(arch.ToString())
 }
 
@@ -96,9 +83,9 @@ func strategyToCoreUnit(strategy config.ResourceUnitStrategy) int {
 }
 
 func buildFullEndpoint(arch smi.Arch, strategy config.ResourceUnitStrategy) (string, error) {
-	endpointName := buildResourceEndpointName(arch, strategy)
+	endpointName := buildResourceEndpointName(arch)
 
-	if strategy == config.LegacyStrategy || strategy == config.GenericStrategy {
+	if strategy == config.GenericStrategy {
 		return endpointName, nil
 	}
 
@@ -114,8 +101,6 @@ func buildFullEndpoint(arch smi.Arch, strategy config.ResourceUnitStrategy) (str
 }
 
 func buildAndValidateFullResourceEndpointName(arch smi.Arch, strategy config.ResourceUnitStrategy) (string, error) {
-	domainName := buildDomainName(strategy)
-
 	fullEndpoint, err := buildFullEndpoint(arch, strategy)
 	if err != nil {
 		return "", err
@@ -126,5 +111,5 @@ func buildAndValidateFullResourceEndpointName(arch smi.Arch, strategy config.Res
 		return "", fmt.Errorf("resource name %s is not valid %v", fullEndpoint, errs)
 	}
 
-	return fmt.Sprintf(fullResourceExp, domainName, fullEndpoint), nil
+	return fmt.Sprintf(fullResourceExp, defaultDomain, fullEndpoint), nil
 }
