@@ -121,8 +121,8 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 	}
 
 	var allocated []string
-	allocatedDeviceSet := d.allocator.Allocate(availableDevices, requiredDevices, request)
-	for _, allocatedDevice := range allocatedDeviceSet {
+	allocatedDeviceSet := d.allocator.Allocate(npu_allocator.NewDeviceSet(availableDevices...), npu_allocator.NewDeviceSet(requiredDevices...), request)
+	for _, allocatedDevice := range allocatedDeviceSet.Devices() {
 		allocated = append(allocated, allocatedDevice.ID())
 	}
 
