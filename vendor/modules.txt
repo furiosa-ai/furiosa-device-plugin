@@ -145,7 +145,7 @@ github.com/fsnotify/fsnotify/internal
 ## explicit; go 1.23.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.35-0.20241205053054-2f55f15b39ee
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.35
 ## explicit; go 1.23.2
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/e2e
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
