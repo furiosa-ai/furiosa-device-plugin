@@ -1,4 +1,4 @@
-package device_manager
+package furiosa_device
 
 import (
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"

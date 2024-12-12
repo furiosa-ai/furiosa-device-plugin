@@ -145,9 +145,10 @@ github.com/fsnotify/fsnotify/internal
 ## explicit; go 1.23.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.35
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.36
 ## explicit; go 1.23.2
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/e2e
+github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/util
@@ -865,7 +866,7 @@ k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/apiserver v0.31.2
+# k8s.io/apiserver v0.31.3
 ## explicit; go 1.22.0
 k8s.io/apiserver/pkg/endpoints/deprecation
 # k8s.io/cli-runtime v0.31.1
@@ -1034,7 +1035,7 @@ k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/watchlist
 k8s.io/client-go/util/workqueue
-# k8s.io/component-base v0.31.2
+# k8s.io/component-base v0.31.3
 ## explicit; go 1.22.0
 k8s.io/component-base/version
 # k8s.io/klog/v2 v2.130.1
@@ -1068,7 +1069,7 @@ k8s.io/kubectl/pkg/util/openapi
 k8s.io/kubectl/pkg/util/templates
 k8s.io/kubectl/pkg/util/term
 k8s.io/kubectl/pkg/validation
-# k8s.io/kubelet v0.31.2
+# k8s.io/kubelet v0.31.3
 ## explicit; go 1.22.0
 k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1
 # k8s.io/utils v0.0.0-20240711033017-18e509b52bc8

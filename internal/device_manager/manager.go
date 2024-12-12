@@ -9,6 +9,7 @@ import (
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 )
 
@@ -22,13 +23,11 @@ type DeviceManager interface {
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
 }
 
-type newDeviceFunc func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error)
-
 var _ DeviceManager = (*deviceManager)(nil)
 
 type deviceManager struct {
 	origin         []smi.Device
-	furiosaDevices map[string]FuriosaDevice
+	furiosaDevices map[string]furiosa_device.FuriosaDevice
 	resourceName   string
 	debugMode      bool
 	allocator      npu_allocator.NpuAllocator
@@ -77,8 +76,8 @@ func (d *deviceManager) Contains(deviceIDs []string) (bool, []string) {
 	return true, nil
 }
 
-func fetchByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]FuriosaDevice, error) {
-	var found []FuriosaDevice
+func fetchByID(furiosaDevices map[string]furiosa_device.FuriosaDevice, IDs []string) ([]furiosa_device.FuriosaDevice, error) {
+	var found []furiosa_device.FuriosaDevice
 	var missing []string
 	for _, id := range IDs {
 		if furiosaDevice, exist := furiosaDevices[id]; exist {
@@ -95,7 +94,7 @@ func fetchByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]Furiosa
 	return found, nil
 }
 
-func fetchDevicesByID(furiosaDevices map[string]FuriosaDevice, IDs []string) ([]npu_allocator.Device, error) {
+func fetchDevicesByID(furiosaDevices map[string]furiosa_device.FuriosaDevice, IDs []string) ([]npu_allocator.Device, error) {
 	found, err := fetchByID(furiosaDevices, IDs)
 	if err != nil {
 		return nil, err
@@ -183,72 +182,13 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func newDeviceFuncResolver(strategy config.ResourceUnitStrategy) (ret newDeviceFunc) {
-	// Note: config validation ensure that there is no exception other than listed strategies.
-	switch strategy {
-	case config.GenericStrategy:
-		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			newExclusiveDevice, err := NewExclusiveDevice(originDevice, isDisabled)
-			if err != nil {
-				return nil, err
-			}
-
-			return []FuriosaDevice{newExclusiveDevice}, nil
-		}
-
-	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
-		ret = func(originDevice smi.Device, isDisabled bool) ([]FuriosaDevice, error) {
-			deviceInfo, err := originDevice.DeviceInfo()
-			if err != nil {
-				return nil, err
-			}
-
-			numOfCoresPerPartition := strategy.CoreSize()
-			if numOfCoresPerPartition == -1 {
-				return nil, fmt.Errorf("unsupported strategy %v for partitioned device", strategy)
-			}
-
-			totalCores := int(deviceInfo.CoreNum())
-			newPartitionedDevices, err := NewPartitionedDevices(originDevice, numOfCoresPerPartition, totalCores/numOfCoresPerPartition, isDisabled)
-			if err != nil {
-				return nil, err
-			}
-
-			return newPartitionedDevices, nil
-		}
-	}
-
-	return ret
-}
-
-func buildFuriosaDevices(devices []smi.Device, blockedList []string, newDevFunc newDeviceFunc) (map[string]FuriosaDevice, error) {
-	furiosaDevicesMap := map[string]FuriosaDevice{}
-	for _, origin := range devices {
-		info, err := origin.DeviceInfo()
-		if err != nil {
-			return nil, err
-		}
-
-		isDisabled := contains(blockedList, info.UUID())
-		furiosaDevices, err := newDevFunc(origin, isDisabled)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, d := range furiosaDevices {
-			furiosaDevicesMap[d.DeviceID()] = d
-		}
-	}
-	return furiosaDevicesMap, nil
-}
-
 func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
 	resName, err := buildAndValidateFullResourceEndpointName(arch, strategy)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := buildFuriosaDevices(devices, blockedList, newDeviceFuncResolver(strategy))
+	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, strategy.Policy())
 	if err != nil {
 		return nil, err
 	}
@@ -258,9 +198,14 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 		return nil, err
 	}
 
+	furiosaDevicesMap := map[string]furiosa_device.FuriosaDevice{}
+	for _, d := range furiosaDevices {
+		furiosaDevicesMap[d.DeviceID()] = d
+	}
+
 	return &deviceManager{
 		origin:         devices,
-		furiosaDevices: furiosaDevices,
+		furiosaDevices: furiosaDevicesMap,
 		resourceName:   resName,
 		debugMode:      debugMode,
 		allocator:      allocator,

@@ -9,6 +9,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
+
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 )
 
 const (
@@ -45,6 +47,26 @@ func (strategy ResourceUnitStrategy) CoreSize() int {
 
 	default: // `GenericStrategy` should not be used here!
 		return -1
+	}
+}
+
+func (strategy ResourceUnitStrategy) Policy() furiosa_device.PartitioningPolicy {
+	switch strategy {
+	case GenericStrategy:
+		return furiosa_device.NonePolicy
+
+	case SingleCoreStrategy:
+		return furiosa_device.SingleCorePolicy
+
+	case DualCoreStrategy:
+		return furiosa_device.DualCorePolicy
+
+	case QuadCoreStrategy:
+		return furiosa_device.QuadCorePolicy
+
+	default:
+		panic("unknown strategy")
+
 	}
 }
 
