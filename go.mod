@@ -3,10 +3,9 @@ module github.com/furiosa-ai/furiosa-device-plugin
 go 1.23.2
 
 require (
-	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/furiosa-ai/furiosa-smi-go v0.1.3
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.35
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.36
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.36.0
 	github.com/rs/zerolog v1.33.0
@@ -18,7 +17,7 @@ require (
 	k8s.io/api v0.31.3
 	k8s.io/apimachinery v0.31.3
 	k8s.io/client-go v0.31.3
-	k8s.io/kubelet v0.31.2
+	k8s.io/kubelet v0.31.3
 )
 
 require (
@@ -35,6 +34,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/containerd/containerd v1.7.12 // indirect
@@ -147,9 +147,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	helm.sh/helm/v3 v3.16.1 // indirect
 	k8s.io/apiextensions-apiserver v0.31.1 // indirect
-	k8s.io/apiserver v0.31.2 // indirect
+	k8s.io/apiserver v0.31.3 // indirect
 	k8s.io/cli-runtime v0.31.1 // indirect
-	k8s.io/component-base v0.31.2 // indirect
+	k8s.io/component-base v0.31.3 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/kubectl v0.31.0 // indirect
