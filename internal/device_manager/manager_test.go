@@ -5,72 +5,26 @@ import (
 
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
 	"github.com/stretchr/testify/assert"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]FuriosaDevice) {
+func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device.FuriosaDevice) {
 	if len(mockDevices) == 0 {
 		mockDevices = smi.GetStaticMockDevices(smi.ArchWarboy)
 	}
 
-	ret = make(map[string]FuriosaDevice, len(mockDevices))
-	for _, mockDevice := range mockDevices {
-		info, _ := mockDevice.DeviceInfo()
-		key := info.UUID()
-		mockFuriosaDevice, _ := NewExclusiveDevice(mockDevice, false)
-		ret[key] = mockFuriosaDevice
+	ret = make(map[string]furiosa_device.FuriosaDevice, len(mockDevices))
+
+	mockFuriosaDevices, _ := furiosa_device.NewFuriosaDevices(mockDevices, nil, config.GenericStrategy.Policy())
+	for _, mockFuriosaDevice := range mockFuriosaDevices {
+		ret[mockFuriosaDevice.DeviceID()] = mockFuriosaDevice
 	}
 
 	return ret
-}
-
-func TestBuildFuriosaDevices(t *testing.T) {
-	tests := []struct {
-		description           string
-		strategy              config.ResourceUnitStrategy
-		expectExclusiveDevice bool
-	}{
-		{
-			description:           "test generic strategy",
-			strategy:              config.GenericStrategy,
-			expectExclusiveDevice: true,
-		},
-		{
-			description:           "test single core strategy",
-			strategy:              config.SingleCoreStrategy,
-			expectExclusiveDevice: false,
-		},
-		{
-			description:           "test dual core strategy",
-			strategy:              config.DualCoreStrategy,
-			expectExclusiveDevice: false,
-		},
-		{
-			description:           "test quad core strategy",
-			strategy:              config.QuadCoreStrategy,
-			expectExclusiveDevice: false,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.description, func(t *testing.T) {
-			devices := smi.GetStaticMockDevices(smi.ArchRngd)
-
-			actualDevices, err := buildFuriosaDevices(devices, nil, newDeviceFuncResolver(tc.strategy))
-			assert.NoError(t, err)
-
-			for _, actualDevice := range actualDevices {
-				if tc.expectExclusiveDevice {
-					assert.IsType(t, new(exclusiveDevice), actualDevice)
-				} else {
-					assert.IsType(t, new(partitionedDevice), actualDevice)
-				}
-			}
-		})
-	}
 }
 
 func TestFetchByID(t *testing.T) {
@@ -113,7 +67,7 @@ func TestFetchDevicesByID(t *testing.T) {
 
 	var actualIDs []string
 	for _, ele := range actual {
-		furiosaDevice, ok := ele.(FuriosaDevice)
+		furiosaDevice, ok := ele.(furiosa_device.FuriosaDevice)
 		assert.True(t, ok, "type assertion failed")
 
 		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
