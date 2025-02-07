@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/furiosa-ai/furiosa-smi-go v0.2.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.37
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.38-0.20250207061106-ea64829d38bd
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.36.0
 	github.com/rs/zerolog v1.33.0
@@ -160,4 +160,5 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.17.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+	tags.cncf.io/container-device-interface/specs-go v0.8.0 // indirect
 )

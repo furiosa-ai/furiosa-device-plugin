@@ -145,11 +145,11 @@ github.com/fsnotify/fsnotify/internal
 ## explicit; go 1.23.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.37
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.38-0.20250207061106-ea64829d38bd
 ## explicit; go 1.23.2
+github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/e2e
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device
-github.com/furiosa-ai/libfuriosa-kubernetes/pkg/manifest
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/util
 # github.com/fxamacker/cbor/v2 v2.7.0
@@ -1196,3 +1196,6 @@ sigs.k8s.io/structured-merge-diff/v4/value
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
 sigs.k8s.io/yaml/goyaml.v3
+# tags.cncf.io/container-device-interface/specs-go v0.8.0
+## explicit; go 1.19
+tags.cncf.io/container-device-interface/specs-go
