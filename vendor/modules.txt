@@ -145,9 +145,10 @@ github.com/fsnotify/fsnotify/internal
 ## explicit; go 1.23.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.38-0.20250207061106-ea64829d38bd
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.40
 ## explicit; go 1.23.2
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec
+github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec_gen
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/e2e
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator
@@ -391,6 +392,14 @@ github.com/opencontainers/go-digest
 ## explicit; go 1.18
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
+# github.com/opencontainers/runtime-spec v1.1.0
+## explicit
+github.com/opencontainers/runtime-spec/specs-go
+# github.com/opencontainers/runtime-tools v0.9.1-0.20221107090550-2e043c6bd626
+## explicit; go 1.16
+github.com/opencontainers/runtime-tools/generate
+github.com/opencontainers/runtime-tools/generate/seccomp
+github.com/opencontainers/runtime-tools/validate/capabilities
 # github.com/peterbourgon/diskv v2.0.1+incompatible
 ## explicit
 github.com/peterbourgon/diskv
@@ -452,6 +461,9 @@ github.com/spf13/pflag
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
+# github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
+## explicit
+github.com/syndtr/gocapability/capability
 # github.com/x448/float16 v0.8.4
 ## explicit; go 1.11
 github.com/x448/float16
@@ -516,6 +528,9 @@ golang.org/x/crypto/openpgp/packet
 golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
+# golang.org/x/mod v0.21.0
+## explicit; go 1.22.0
+golang.org/x/mod/semver
 # golang.org/x/net v0.30.0
 ## explicit; go 1.18
 golang.org/x/net/context
@@ -1196,6 +1211,12 @@ sigs.k8s.io/structured-merge-diff/v4/value
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
 sigs.k8s.io/yaml/goyaml.v3
+# tags.cncf.io/container-device-interface v0.8.0
+## explicit; go 1.20
+tags.cncf.io/container-device-interface/internal/validation
+tags.cncf.io/container-device-interface/internal/validation/k8s
+tags.cncf.io/container-device-interface/pkg/cdi
+tags.cncf.io/container-device-interface/pkg/parser
 # tags.cncf.io/container-device-interface/specs-go v0.8.0
 ## explicit; go 1.19
 tags.cncf.io/container-device-interface/specs-go
