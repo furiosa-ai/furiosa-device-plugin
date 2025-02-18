@@ -66,11 +66,8 @@ func TestFetchDevicesByID(t *testing.T) {
 	assert.NoError(t, err)
 
 	var actualIDs []string
-	for _, ele := range actual {
-		furiosaDevice, ok := ele.(npu_allocator.Device)
-		assert.True(t, ok, "type assertion failed")
-
-		actualIDs = append(actualIDs, furiosaDevice.ID())
+	for _, d := range actual {
+		actualIDs = append(actualIDs, d.ID())
 	}
 
 	assert.Equal(t, seedUUID, actualIDs)
