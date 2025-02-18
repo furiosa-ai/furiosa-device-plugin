@@ -67,10 +67,10 @@ func TestFetchDevicesByID(t *testing.T) {
 
 	var actualIDs []string
 	for _, ele := range actual {
-		furiosaDevice, ok := ele.(furiosa_device.FuriosaDevice)
+		furiosaDevice, ok := ele.(npu_allocator.Device)
 		assert.True(t, ok, "type assertion failed")
 
-		actualIDs = append(actualIDs, furiosaDevice.DeviceID())
+		actualIDs = append(actualIDs, furiosaDevice.ID())
 	}
 
 	assert.Equal(t, seedUUID, actualIDs)
@@ -341,49 +341,8 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 			description: "allocate one device",
 			deviceIDs:   []string{"0"},
 			expectedResult: &devicePluginAPIv1Beta1.ContainerAllocateResponse{
-				Envs: nil,
-				Mounts: []*devicePluginAPIv1Beta1.Mount{
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
-						HostPath:      "/sys/class/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe1",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe0-1",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe0-1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe0-1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe0-1",
-						ReadOnly:      true,
-					},
-				},
+				Envs:   nil,
+				Mounts: nil,
 				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
 					{
 						ContainerPath: "/dev/npu0_mgmt",
@@ -435,89 +394,8 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 			description: "allocate two devices",
 			deviceIDs:   []string{"0", "1"},
 			expectedResult: &devicePluginAPIv1Beta1.ContainerAllocateResponse{
-				Envs: nil,
-				Mounts: []*devicePluginAPIv1Beta1.Mount{
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0_mgmt",
-						HostPath:      "/sys/class/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe0",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe1",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu0pe0-1",
-						HostPath:      "/sys/class/npu_mgmt/npu0pe0-1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu0pe0-1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu0pe0-1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1_mgmt",
-						HostPath:      "/sys/class/npu_mgmt/npu1_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1pe0",
-						HostPath:      "/sys/class/npu_mgmt/npu1pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1pe1",
-						HostPath:      "/sys/class/npu_mgmt/npu1pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/class/npu_mgmt/npu1pe0-1",
-						HostPath:      "/sys/class/npu_mgmt/npu1pe0-1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1_mgmt",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1pe0",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1pe0",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1pe1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1pe1",
-						ReadOnly:      true,
-					},
-					{
-						ContainerPath: "/sys/devices/virtual/npu_mgmt/npu1pe0-1",
-						HostPath:      "/sys/devices/virtual/npu_mgmt/npu1pe0-1",
-						ReadOnly:      true,
-					},
-				},
+				Envs:   nil,
+				Mounts: nil,
 				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
 					{
 						ContainerPath: "/dev/npu0_mgmt",

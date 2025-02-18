@@ -2,7 +2,6 @@ package device_manager
 
 import (
 	"fmt"
-	"maps"
 	"strings"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -102,7 +101,7 @@ func fetchDevicesByID(furiosaDevices map[string]furiosa_device.FuriosaDevice, ID
 
 	var devices []npu_allocator.Device
 	for _, furiosaDevice := range found {
-		devices = append(devices, furiosaDevice)
+		devices = append(devices, npu_allocator.NewDevice(furiosaDevice))
 	}
 
 	return devices, nil
@@ -136,15 +135,10 @@ func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devic
 		return nil, err
 	}
 
-	// TODO(@bg): filter devices marked disabled in configuration and return error if request contains one of them
-
-	resp := &devicePluginAPIv1Beta1.ContainerAllocateResponse{}
-	for _, deviceRequest := range deviceRequests {
-		maps.Copy(resp.Envs, deviceRequest.EnvVars())
-		resp.Mounts = append(resp.Mounts, deviceRequest.Mounts()...)
-		resp.Devices = append(resp.Devices, deviceRequest.DeviceSpecs()...)
-		maps.Copy(resp.Annotations, deviceRequest.Annotations())
-		//TODO(@bg): support CDI
+	//TODO(@bg): support CDI
+	resp, err := buildDeviceSpecToContainerAllocateResponse(deviceRequests...)
+	if err != nil {
+		return nil, err
 	}
 
 	return resp, nil
