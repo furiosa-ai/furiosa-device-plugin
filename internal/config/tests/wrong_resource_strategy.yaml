@@ -1,3 +1,2 @@
-resourceStrategy:
-  -  generic
+wrong: field
 debugMode: true

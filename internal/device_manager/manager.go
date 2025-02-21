@@ -6,7 +6,6 @@ import (
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
@@ -176,18 +175,18 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
-	resName, err := buildAndValidateFullResourceEndpointName(arch, strategy)
+func NewDeviceManager(arch smi.Arch, devices []smi.Device, partitioning furiosa_device.PartitioningPolicy, blockedList []string, debugMode bool) (DeviceManager, error) {
+	resName, err := buildAndValidateFullResourceEndpointName(arch, partitioning)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, strategy.Policy())
+	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, partitioning)
 	if err != nil {
 		return nil, err
 	}
 
-	allocator, err := getNpuAllocatorByStrategy(devices, strategy)
+	allocator, err := getNpuAllocatorByPolicy(devices, partitioning)
 	if err != nil {
 		return nil, err
 	}
@@ -206,16 +205,16 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 	}, nil
 }
 
-func getNpuAllocatorByStrategy(devices []smi.Device, strategy config.ResourceUnitStrategy) (npu_allocator.NpuAllocator, error) {
-	switch strategy {
-	case config.GenericStrategy:
+func getNpuAllocatorByPolicy(devices []smi.Device, policy furiosa_device.PartitioningPolicy) (npu_allocator.NpuAllocator, error) {
+	switch policy {
+	case furiosa_device.NonePolicy:
 		return npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
 
-	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
+	case furiosa_device.SingleCorePolicy, furiosa_device.DualCorePolicy, furiosa_device.QuadCorePolicy:
 		return npu_allocator.NewBinPackingNpuAllocator(devices)
 
 	default:
 		// should not reach here!
-		return nil, fmt.Errorf("unknown resource unit strategy %v", strategy)
+		return nil, fmt.Errorf("unknown partitioning policy %v", policy)
 	}
 }

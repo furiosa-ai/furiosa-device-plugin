@@ -9,79 +9,27 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 )
 
 const (
 	GlobalConfigMountPath = "/etc/config/config.yaml"
+	NonePolicyStr         = "none"
+	Rngd2Core12GbStr      = "2core.12gb"
+	Rngd4Core24GbStr      = "4core.24gb"
 )
-
-const (
-	genericStrategyStr = "generic"
-	singleCoreStr      = "single-core"
-	dualCoreStr        = "dual-core"
-	quadCoreStr        = "quad-core"
-)
-
-type ResourceUnitStrategy string
-
-const (
-	GenericStrategy    ResourceUnitStrategy = genericStrategyStr
-	SingleCoreStrategy ResourceUnitStrategy = singleCoreStr
-	DualCoreStrategy   ResourceUnitStrategy = dualCoreStr
-	QuadCoreStrategy   ResourceUnitStrategy = quadCoreStr
-)
-
-// CoreSize returns the number of cores per partition
-func (strategy ResourceUnitStrategy) CoreSize() int {
-	switch strategy {
-	case SingleCoreStrategy:
-		return 1
-
-	case DualCoreStrategy:
-		return 2
-
-	case QuadCoreStrategy:
-		return 4
-
-	default: // `GenericStrategy` should not be used here!
-		return -1
-	}
-}
-
-func (strategy ResourceUnitStrategy) Policy() furiosa_device.PartitioningPolicy {
-	switch strategy {
-	case GenericStrategy:
-		return furiosa_device.NonePolicy
-
-	case SingleCoreStrategy:
-		return furiosa_device.SingleCorePolicy
-
-	case DualCoreStrategy:
-		return furiosa_device.DualCorePolicy
-
-	case QuadCoreStrategy:
-		return furiosa_device.QuadCorePolicy
-
-	default:
-		panic("unknown strategy")
-
-	}
-}
 
 // Config holds the configuration for running this device plugin.
 type Config struct {
-	ResourceStrategy          ResourceUnitStrategy `yaml:"resourceStrategy"`
-	DisabledDeviceUUIDListMap map[string][]string  `yaml:"disabledDeviceUUIDListMap"`
-	DebugMode                 bool                 `yaml:"debugMode"`
+	Partitioning        string              `yaml:"partitioning"`
+	DebugMode           bool                `yaml:"debugMode"`
+	DisabledDeviceUUIDs map[string][]string `yaml:"disabledDeviceUUIDs"`
 }
 
 func getDefaultConfig() *Config {
 	return &Config{
-		ResourceStrategy:          GenericStrategy,
-		DisabledDeviceUUIDListMap: nil,
-		DebugMode:                 false,
+		Partitioning:        NonePolicyStr,
+		DebugMode:           false,
+		DisabledDeviceUUIDs: nil,
 	}
 }
 
@@ -103,10 +51,24 @@ func GetConfigWithWatcher(configPath string, confUpdateChan chan *ConfigChangeEv
 	return conf, nil
 }
 
+func validatePartitioningPolicy(policy string) error {
+	switch policy {
+	case NonePolicyStr, Rngd2Core12GbStr, Rngd4Core24GbStr:
+		return nil
+	}
+
+	return fmt.Errorf("invalid partitioning policy: %s", policy)
+}
+
 func getConfigFromFile(configPath string) (*Config, error) {
 	err, config := validateConfigYaml(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate config file: %w", err)
+	}
+
+	err = validatePartitioningPolicy(config.Partitioning)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate partitioning policy: %w", err)
 	}
 
 	return config, nil

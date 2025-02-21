@@ -3,7 +3,6 @@ package device_manager
 import (
 	"testing"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
@@ -19,7 +18,7 @@ func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device
 
 	ret = make(map[string]furiosa_device.FuriosaDevice, len(mockDevices))
 
-	mockFuriosaDevices, _ := furiosa_device.NewFuriosaDevices(mockDevices, nil, config.GenericStrategy.Policy())
+	mockFuriosaDevices, _ := furiosa_device.NewFuriosaDevices(mockDevices, nil, furiosa_device.NonePolicy)
 	for _, mockFuriosaDevice := range mockFuriosaDevices {
 		ret[mockFuriosaDevice.DeviceID()] = mockFuriosaDevice
 	}

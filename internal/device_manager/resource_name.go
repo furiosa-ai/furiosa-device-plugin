@@ -2,9 +2,9 @@ package device_manager
 
 import (
 	"fmt"
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"strings"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"k8s.io/apimachinery/pkg/api/validation"
 )
@@ -17,10 +17,8 @@ const (
 	taggedResourceExp = "%s-%s.%s"
 	fullResourceExp   = "%s/%s"
 
-	warboyMaxMemory = 16
-	warboyMaxCores  = 2
-	rngdMaxMemory   = 48
-	rngdMaxCores    = 8
+	rngdMaxMemory = 48
+	rngdMaxCores  = 8
 
 	singleCore = 1
 	dualCore   = 2
@@ -61,10 +59,6 @@ func buildResourceEndpointCoreUnitTag(coreUnit int) string {
 }
 
 func buildResourceEndpointMemoryUnitTag(arch smi.Arch, coreUnit int) string {
-	if arch == smi.ArchWarboy {
-		return fmt.Sprintf(memoryUnitTagExp, coreUnit*(warboyMaxMemory/warboyMaxCores))
-	}
-
 	return fmt.Sprintf(memoryUnitTagExp, coreUnit*(rngdMaxMemory/rngdMaxCores))
 }
 
@@ -72,24 +66,24 @@ func buildResourceEndpointName(arch smi.Arch) string {
 	return strings.ToLower(arch.ToString())
 }
 
-func strategyToCoreUnit(strategy config.ResourceUnitStrategy) int {
-	if strategy == config.SingleCoreStrategy {
+func policyToCoreUnit(policy furiosa_device.PartitioningPolicy) int {
+	if policy == furiosa_device.SingleCorePolicy {
 		return singleCore
-	} else if strategy == config.DualCoreStrategy {
+	} else if policy == furiosa_device.DualCorePolicy {
 		return dualCore
 	}
 
 	return quadCore
 }
 
-func buildFullEndpoint(arch smi.Arch, strategy config.ResourceUnitStrategy) (string, error) {
+func buildFullEndpoint(arch smi.Arch, policy furiosa_device.PartitioningPolicy) (string, error) {
 	endpointName := buildResourceEndpointName(arch)
 
-	if strategy == config.GenericStrategy {
+	if policy == furiosa_device.NonePolicy {
 		return endpointName, nil
 	}
 
-	coreUnit := strategyToCoreUnit(strategy)
+	coreUnit := policyToCoreUnit(policy)
 	if err := validateCoreUnit(arch, coreUnit); err != nil {
 		return "", err
 	}
@@ -100,8 +94,8 @@ func buildFullEndpoint(arch smi.Arch, strategy config.ResourceUnitStrategy) (str
 	return fmt.Sprintf(taggedResourceExp, endpointName, coreUnitTag, memoryTag), nil
 }
 
-func buildAndValidateFullResourceEndpointName(arch smi.Arch, strategy config.ResourceUnitStrategy) (string, error) {
-	fullEndpoint, err := buildFullEndpoint(arch, strategy)
+func buildAndValidateFullResourceEndpointName(arch smi.Arch, policy furiosa_device.PartitioningPolicy) (string, error) {
+	fullEndpoint, err := buildFullEndpoint(arch, policy)
 	if err != nil {
 		return "", err
 	}
