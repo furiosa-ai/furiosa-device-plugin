@@ -2,12 +2,10 @@ package device_manager
 
 import (
 	"fmt"
-	"maps"
 	"strings"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
@@ -102,7 +100,7 @@ func fetchDevicesByID(furiosaDevices map[string]furiosa_device.FuriosaDevice, ID
 
 	var devices []npu_allocator.Device
 	for _, furiosaDevice := range found {
-		devices = append(devices, furiosaDevice)
+		devices = append(devices, npu_allocator.NewDevice(furiosaDevice))
 	}
 
 	return devices, nil
@@ -136,15 +134,10 @@ func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devic
 		return nil, err
 	}
 
-	// TODO(@bg): filter devices marked disabled in configuration and return error if request contains one of them
-
-	resp := &devicePluginAPIv1Beta1.ContainerAllocateResponse{}
-	for _, deviceRequest := range deviceRequests {
-		maps.Copy(resp.Envs, deviceRequest.EnvVars())
-		resp.Mounts = append(resp.Mounts, deviceRequest.Mounts()...)
-		resp.Devices = append(resp.Devices, deviceRequest.DeviceSpecs()...)
-		maps.Copy(resp.Annotations, deviceRequest.Annotations())
-		//TODO(@bg): support CDI
+	//TODO(@bg): support CDI
+	resp, err := buildDeviceSpecToContainerAllocateResponse(deviceRequests...)
+	if err != nil {
+		return nil, err
 	}
 
 	return resp, nil
@@ -182,18 +175,18 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.ResourceUnitStrategy, blockedList []string, debugMode bool) (DeviceManager, error) {
-	resName, err := buildAndValidateFullResourceEndpointName(arch, strategy)
+func NewDeviceManager(arch smi.Arch, devices []smi.Device, partitioning furiosa_device.PartitioningPolicy, blockedList []string, debugMode bool) (DeviceManager, error) {
+	resName, err := buildAndValidateFullResourceEndpointName(arch, partitioning)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, strategy.Policy())
+	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, partitioning)
 	if err != nil {
 		return nil, err
 	}
 
-	allocator, err := getNpuAllocatorByStrategy(devices, strategy)
+	allocator, err := getNpuAllocatorByPolicy(devices, partitioning)
 	if err != nil {
 		return nil, err
 	}
@@ -212,16 +205,16 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, strategy config.Resou
 	}, nil
 }
 
-func getNpuAllocatorByStrategy(devices []smi.Device, strategy config.ResourceUnitStrategy) (npu_allocator.NpuAllocator, error) {
-	switch strategy {
-	case config.GenericStrategy:
+func getNpuAllocatorByPolicy(devices []smi.Device, policy furiosa_device.PartitioningPolicy) (npu_allocator.NpuAllocator, error) {
+	switch policy {
+	case furiosa_device.NonePolicy:
 		return npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
 
-	case config.SingleCoreStrategy, config.DualCoreStrategy, config.QuadCoreStrategy:
+	case furiosa_device.SingleCorePolicy, furiosa_device.DualCorePolicy, furiosa_device.QuadCorePolicy:
 		return npu_allocator.NewBinPackingNpuAllocator(devices)
 
 	default:
 		// should not reach here!
-		return nil, fmt.Errorf("unknown resource unit strategy %v", strategy)
+		return nil, fmt.Errorf("unknown partitioning policy %v", policy)
 	}
 }

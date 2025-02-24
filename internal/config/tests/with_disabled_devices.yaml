@@ -1,4 +1,4 @@
-disabledDeviceUUIDListMap:
+disabledDeviceUUIDs:
   node_a:
     - "uuid1"
     - "uuid2"

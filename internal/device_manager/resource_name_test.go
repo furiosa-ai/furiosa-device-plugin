@@ -1,75 +1,46 @@
 package device_manager
 
 import (
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"testing"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 )
 
 func TestBuildFullEndpoint(t *testing.T) {
 	tests := []struct {
 		description    string
 		arch           smi.Arch
-		strategy       config.ResourceUnitStrategy
+		policy         furiosa_device.PartitioningPolicy
 		expectedResult string
 		expectError    bool
 	}{
 		{
-			description:    "test warboy generic strategy",
+			description:    "test warboy non partitioning policy",
 			arch:           smi.ArchWarboy,
-			strategy:       config.GenericStrategy,
+			policy:         furiosa_device.NonePolicy,
 			expectedResult: "warboy",
 			expectError:    false,
 		},
 		{
-			description:    "test warboy single core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.SingleCoreStrategy,
-			expectedResult: "warboy-1core.8gb",
-			expectError:    false,
-		},
-		{
-			description:    "test warboy dual core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.DualCoreStrategy,
-			expectedResult: "warboy-2core.16gb",
-			expectError:    false,
-		},
-		{
-			description:    "test warboy quad core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.QuadCoreStrategy,
-			expectedResult: "",
-			expectError:    true,
-		},
-		{
-			description:    "test rngd generic strategy",
+			description:    "test rngd non partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.GenericStrategy,
+			policy:         furiosa_device.NonePolicy,
 			expectedResult: "rngd",
 			expectError:    false,
 		},
 		{
-			description:    "test rngd single core strategy",
+			description:    "test rngd 2core.12gb partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.SingleCoreStrategy,
-			expectedResult: "rngd-1core.6gb",
-			expectError:    false,
-		},
-		{
-			description:    "test rngd dual core strategy",
-			arch:           smi.ArchRngd,
-			strategy:       config.DualCoreStrategy,
+			policy:         furiosa_device.DualCorePolicy,
 			expectedResult: "rngd-2core.12gb",
 			expectError:    false,
 		},
 		{
-			description:    "test rngd quad core strategy",
+			description:    "test rngd 4core.24gb partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.QuadCoreStrategy,
+			policy:         furiosa_device.QuadCorePolicy,
 			expectedResult: "rngd-4core.24gb",
 			expectError:    false,
 		},
@@ -77,7 +48,7 @@ func TestBuildFullEndpoint(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			actualResult, actualErr := buildFullEndpoint(tc.arch, tc.strategy)
+			actualResult, actualErr := buildFullEndpoint(tc.arch, tc.policy)
 			if tc.expectError {
 				assert.Error(t, actualErr)
 			} else {
@@ -93,63 +64,35 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 	tests := []struct {
 		description    string
 		arch           smi.Arch
-		strategy       config.ResourceUnitStrategy
+		policy         furiosa_device.PartitioningPolicy
 		expectedResult string
 		expectError    bool
 	}{
 		{
-			description:    "test warboy generic strategy",
+			description:    "test warboy non partitioning policy",
 			arch:           smi.ArchWarboy,
-			strategy:       config.GenericStrategy,
+			policy:         furiosa_device.NonePolicy,
 			expectedResult: "furiosa.ai/warboy",
 			expectError:    false,
 		},
 		{
-			description:    "test warboy single core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.SingleCoreStrategy,
-			expectedResult: "furiosa.ai/warboy-1core.8gb",
-			expectError:    false,
-		},
-		{
-			description:    "test warboy dual core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.DualCoreStrategy,
-			expectedResult: "furiosa.ai/warboy-2core.16gb",
-			expectError:    false,
-		},
-		{
-			description:    "test warboy quad core strategy",
-			arch:           smi.ArchWarboy,
-			strategy:       config.QuadCoreStrategy,
-			expectedResult: "",
-			expectError:    true,
-		},
-		{
-			description:    "test rngd generic strategy",
+			description:    "test rngd non partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.GenericStrategy,
+			policy:         furiosa_device.NonePolicy,
 			expectedResult: "furiosa.ai/rngd",
 			expectError:    false,
 		},
 		{
-			description:    "test rngd single core strategy",
+			description:    "test rngd 2core.12gb partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.SingleCoreStrategy,
-			expectedResult: "furiosa.ai/rngd-1core.6gb",
-			expectError:    false,
-		},
-		{
-			description:    "test rngd dual core strategy",
-			arch:           smi.ArchRngd,
-			strategy:       config.DualCoreStrategy,
+			policy:         furiosa_device.DualCorePolicy,
 			expectedResult: "furiosa.ai/rngd-2core.12gb",
 			expectError:    false,
 		},
 		{
-			description:    "test rngd quad core strategy",
+			description:    "test rngd 4core.24gb partitioning policy",
 			arch:           smi.ArchRngd,
-			strategy:       config.QuadCoreStrategy,
+			policy:         furiosa_device.QuadCorePolicy,
 			expectedResult: "furiosa.ai/rngd-4core.24gb",
 			expectError:    false,
 		},
@@ -157,7 +100,7 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			actualResult, actualErr := buildAndValidateFullResourceEndpointName(tc.arch, tc.strategy)
+			actualResult, actualErr := buildAndValidateFullResourceEndpointName(tc.arch, tc.policy)
 			if tc.expectError {
 				assert.Error(t, actualErr)
 			} else {

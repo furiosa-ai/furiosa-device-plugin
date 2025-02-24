@@ -77,7 +77,7 @@ func start(ctx context.Context) error {
 		close(confUpdateChan)
 	}()
 
-	deviceMap, err := server.BuildDeviceMap()
+	deviceMap, err := device_manager.BuildDeviceMap()
 	if err != nil {
 		logger.Err(err).Msg("couldn't build device-map with device-api")
 		return err
@@ -89,16 +89,21 @@ func start(ctx context.Context) error {
 		return noDeviceError
 	}
 
+	partitioningPolicy, err := device_manager.PreparePartitioningPolicy(deviceMap, conf.Partitioning)
+	if err != nil {
+		return err
+	}
+
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
 
 		//get disabled Device for the current node
 		nodeName := config.NewNodeNameGetter().GetNodename()
-		disabledDeviceUUIDList := conf.DisabledDeviceUUIDListMap[nodeName]
+		disabledDeviceUUIDList := conf.DisabledDeviceUUIDs[nodeName]
 		logger.Info().Msg(fmt.Sprintf("disabled device list for %s: %v", nodeName, disabledDeviceUUIDList))
 
-		deviceManager, err := device_manager.NewDeviceManager(arch, devices, conf.ResourceStrategy, disabledDeviceUUIDList, conf.DebugMode)
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, partitioningPolicy, disabledDeviceUUIDList, conf.DebugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err
