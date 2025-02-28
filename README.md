@@ -27,13 +27,14 @@ We do support the following versions of Kubernetes and CRI runtime:
 
 ## Configuration
 The configuration should be written in following format as yaml and located at `/etc/config/config.yaml`.
- - If resourceStrategy is not specified, the default value is `"generic"`.
+
+- If resourceStrategy is not specified, the default value is `"none"`.
  - If debugMode is not specified, the default value is `false`.
-- If disabledDeviceUUIDListMap is not specified, the default value is empty list `[]`.
+- If disabledDeviceUUIDs is not specified, the default value is empty list `[]`.
 ```yaml
-resourceStrategy: "generic"
+partitioning: "none"
 debugMode: false
-disabledDeviceUUIDListMap:
+disabledDeviceUUIDs:
   - "uuid1"
   - "uuid2"
 ```
