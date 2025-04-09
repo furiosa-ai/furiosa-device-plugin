@@ -63,7 +63,7 @@ Debug Mode
 Disable Device (Experimental)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``disabledDeviceUUIDs`` allows disabling specific devices on a per-node basis.
-The UUID of the device can be obtained using the :ref:`furiosa-smi info <FuriosaSMICLI>` command.
+The UUID of the device can be obtained using the ``furiosa-smi info`` command.
 The following is an example configuration:
 
 .. code-block:: yaml
