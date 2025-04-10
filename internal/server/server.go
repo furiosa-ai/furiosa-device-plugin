@@ -13,11 +13,11 @@ import (
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/rs/zerolog"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"k8s.io/apimachinery/pkg/util/wait"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -119,13 +119,23 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 
 	// start health check loop
 	logger.Info().Msg(fmt.Sprintf("start health check loop for the resource %s", p.deviceManager.ResourceName()))
+
 	//TODO(@bg): parse duration from configuration
+	isHealthCheckErrHappensBefore := false
 	go wait.UntilWithContext(ctx, func(ctx context.Context) {
 		healthCheckLogger := zerolog.Ctx(ctx)
-		if healthCheckErr := p.deviceManager.HealthCheck(); healthCheckErr != nil {
+
+		healthCheckErr := p.deviceManager.HealthCheck()
+		if healthCheckErr != nil {
 			healthCheckLogger.Err(healthCheckErr).Msg("device health check fail")
-			// send error to health check channel, list watcher will process this event
+
+			isHealthCheckErrHappensBefore = true
 			p.deviceHealthCheckChan <- healthCheckErr
+		} else if isHealthCheckErrHappensBefore {
+			healthCheckLogger.Info().Msg("device health back to alive")
+
+			isHealthCheckErrHappensBefore = false
+			p.deviceHealthCheckChan <- nil // NOTE(@hoony9x-furiosa-ai) Send `nil` to trigger `ListAndWatch(...)`
 		}
 	}, 5*time.Second)
 
