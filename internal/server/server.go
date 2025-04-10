@@ -125,7 +125,7 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 		if healthCheckErr := p.deviceManager.HealthCheck(); healthCheckErr != nil {
 			healthCheckLogger.Err(healthCheckErr).Msg("device health check fail")
 			// send error to health check channel, list watcher will process this event
-			p.deviceHealthCheckChan <- err
+			p.deviceHealthCheckChan <- healthCheckErr
 		}
 	}, 5*time.Second)
 
