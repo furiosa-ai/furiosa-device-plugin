@@ -121,22 +121,15 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 	logger.Info().Msg(fmt.Sprintf("start health check loop for the resource %s", p.deviceManager.ResourceName()))
 
 	//TODO(@bg): parse duration from configuration
-	isHealthCheckErrHappensBefore := false
 	go wait.UntilWithContext(ctx, func(ctx context.Context) {
 		healthCheckLogger := zerolog.Ctx(ctx)
 
 		healthCheckErr := p.deviceManager.HealthCheck()
 		if healthCheckErr != nil {
 			healthCheckLogger.Err(healthCheckErr).Msg("device health check fail")
-
-			isHealthCheckErrHappensBefore = true
-			p.deviceHealthCheckChan <- healthCheckErr
-		} else if isHealthCheckErrHappensBefore {
-			healthCheckLogger.Info().Msg("device health back to alive")
-
-			isHealthCheckErrHappensBefore = false
-			p.deviceHealthCheckChan <- nil // NOTE(@hoony9x-furiosa-ai) Send `nil` to trigger `ListAndWatch(...)`
 		}
+
+		p.deviceHealthCheckChan <- healthCheckErr
 	}, 5*time.Second)
 
 	return nil
@@ -167,7 +160,10 @@ func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSr
 	}
 
 	for healthCheckErr := range p.deviceHealthCheckChan {
-		logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
+		if healthCheckErr != nil {
+			logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
+		}
+
 		if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
 			return err
 		}
