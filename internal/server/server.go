@@ -13,11 +13,11 @@ import (
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/rs/zerolog"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"k8s.io/apimachinery/pkg/util/wait"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
@@ -119,14 +119,17 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 
 	// start health check loop
 	logger.Info().Msg(fmt.Sprintf("start health check loop for the resource %s", p.deviceManager.ResourceName()))
+
 	//TODO(@bg): parse duration from configuration
 	go wait.UntilWithContext(ctx, func(ctx context.Context) {
 		healthCheckLogger := zerolog.Ctx(ctx)
-		if healthCheckErr := p.deviceManager.HealthCheck(); healthCheckErr != nil {
+
+		healthCheckErr := p.deviceManager.HealthCheck()
+		if healthCheckErr != nil {
 			healthCheckLogger.Err(healthCheckErr).Msg("device health check fail")
-			// send error to health check channel, list watcher will process this event
-			p.deviceHealthCheckChan <- err
 		}
+
+		p.deviceHealthCheckChan <- healthCheckErr
 	}, 5*time.Second)
 
 	return nil
@@ -157,7 +160,10 @@ func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSr
 	}
 
 	for healthCheckErr := range p.deviceHealthCheckChan {
-		logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
+		if healthCheckErr != nil {
+			logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
+		}
+
 		if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
 			return err
 		}
