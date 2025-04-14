@@ -1,8 +1,9 @@
 package device_manager
 
 import (
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"testing"
+
+	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/stretchr/testify/assert"
