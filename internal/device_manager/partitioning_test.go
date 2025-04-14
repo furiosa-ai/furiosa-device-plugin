@@ -1,12 +1,11 @@
 package device_manager
 
 import (
-	"testing"
-
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestTransformPartitioningConfig(t *testing.T) {

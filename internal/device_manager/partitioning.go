@@ -2,7 +2,6 @@ package device_manager
 
 import (
 	"fmt"
-
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
@@ -39,7 +38,7 @@ func validatePartitioningConfig(deviceMap DeviceMap, policy furiosa_device.Parti
 		return nil
 	}
 
-	for arch := range deviceMap {
+	for arch, _ := range deviceMap {
 		if arch == smi.ArchWarboy {
 			return fmt.Errorf("partitioning is not supported for warboy")
 		}

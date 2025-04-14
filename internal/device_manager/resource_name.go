@@ -2,9 +2,8 @@ package device_manager
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
+	"strings"
 
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
 	"k8s.io/apimachinery/pkg/api/validation"
