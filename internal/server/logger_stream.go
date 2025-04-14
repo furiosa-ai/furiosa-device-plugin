@@ -58,6 +58,7 @@ func NewGrpcStreamLogger(ctx context.Context) grpc.StreamServerInterceptor {
 		wss := &wrappedServerStream{
 			ServerStream: ss,
 			logger:       logger,
+			info:         info,
 		}
 
 		return handler(srv, wss)
