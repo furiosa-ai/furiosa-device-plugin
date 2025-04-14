@@ -11,9 +11,13 @@ import (
 
 type wrappedServerStream struct {
 	grpc.ServerStream
-
+	ctx    context.Context
 	logger *zerolog.Logger
 	info   *grpc.StreamServerInfo
+}
+
+func (w *wrappedServerStream) Context() context.Context {
+	return w.ctx
 }
 
 func (w *wrappedServerStream) SendMsg(m interface{}) error {
@@ -55,8 +59,11 @@ func (w *wrappedServerStream) RecvMsg(m interface{}) error {
 func NewGrpcStreamLogger(ctx context.Context) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		logger := zerolog.Ctx(ctx)
+		streamCtx := logger.WithContext(ss.Context())
+
 		wss := &wrappedServerStream{
 			ServerStream: ss,
+			ctx:          streamCtx,
 			logger:       logger,
 			info:         info,
 		}
