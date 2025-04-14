@@ -10,7 +10,7 @@ jobs:
     runs-on: "ubuntu-latest"
     env:
       PUBLIC_REGISTRY_URL: "registry.corp.furiosa.ai"
-      PUBLIC_IMAGE_NAME: "furiosa/furiosa-metrics-exporter"
+      PUBLIC_IMAGE_NAME: "furiosa/furiosa-device-plugin"
     steps:
       - uses: actions/checkout@v4
         with:
