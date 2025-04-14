@@ -154,8 +154,9 @@ func (p *PluginServer) GetDevicePluginOptions(_ context.Context, _ *devicePlugin
 
 func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSrv devicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
 	logger := zerolog.Ctx(deviceMgrSrv.Context())
-	logger.Info().Msg(fmt.Sprintf("register devices and report initial states for devices %s", strings.Join(p.deviceManager.Devices(), ", ")))
-	if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
+	resp := p.deviceManager.GetListAndWatchResponse()
+	logger.Info().Msg(fmt.Sprintf("register devices and report initial states for devices %v", resp))
+	if err := deviceMgrSrv.Send(resp); err != nil {
 		return err
 	}
 
@@ -164,7 +165,9 @@ func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSr
 			logger.Info().Msg(fmt.Sprintf("device state updated %s", healthCheckErr))
 		}
 
-		if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
+		resp = p.deviceManager.GetListAndWatchResponse()
+		logger.Info().Msg(fmt.Sprintf("send list and watch response: %v", resp))
+		if err := deviceMgrSrv.Send(resp); err != nil {
 			return err
 		}
 	}
