@@ -10,13 +10,14 @@ import (
 )
 
 func NewGrpcUnaryLogger(ctx context.Context) grpc.UnaryServerInterceptor {
-	return func(_ context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(reqCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		var event *zerolog.Event
 		timestamp := time.Now()
 
 		logger := zerolog.Ctx(ctx)
+		reqCtxWithLogger := logger.WithContext(reqCtx)
 
-		resp, err := handler(ctx, req)
+		resp, err := handler(reqCtxWithLogger, req)
 		if err != nil {
 			//Note: error logging is enabled by default
 			event = getNewErrorEventUnaryLogger(logger, timestamp, req, info, err)
