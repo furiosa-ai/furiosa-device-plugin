@@ -24,16 +24,15 @@ func (w *wrappedServerStream) SendMsg(m interface{}) error {
 	timestamp := time.Now()
 
 	err := w.ServerStream.SendMsg(m)
-	defer func() {
-		var event *zerolog.Event
-		if err != nil {
-			event = getNewErrorEventStreamLogger(w.logger, timestamp, m, w.info, err)
-		} else {
-			event = getNewDebugEventStreamLogger(w.logger, timestamp, m, w.info)
-		}
 
-		event.Msg("grpc middleware event stream send logging")
-	}()
+	var event *zerolog.Event
+	if err != nil {
+		event = getNewErrorEventStreamLogger(w.logger, timestamp, m, w.info, err)
+	} else {
+		event = getNewDebugEventStreamLogger(w.logger, timestamp, m, w.info)
+	}
+
+	event.Msg("grpc middleware event stream send logging")
 
 	return err
 }
@@ -42,16 +41,14 @@ func (w *wrappedServerStream) RecvMsg(m interface{}) error {
 	timestamp := time.Now()
 
 	err := w.ServerStream.RecvMsg(m)
-	defer func() {
-		var event *zerolog.Event
-		if err != nil {
-			event = getNewErrorEventStreamLogger(w.logger, timestamp, m, w.info, err)
-		} else {
-			event = getNewDebugEventStreamLogger(w.logger, timestamp, m, w.info)
-		}
+	var event *zerolog.Event
+	if err != nil {
+		event = getNewErrorEventStreamLogger(w.logger, timestamp, m, w.info, err)
+	} else {
+		event = getNewDebugEventStreamLogger(w.logger, timestamp, m, w.info)
+	}
 
-		event.Msg("grpc middleware event stream recv logging")
-	}()
+	event.Msg("grpc middleware event stream recv logging")
 
 	return err
 }
@@ -76,7 +73,7 @@ func getNewErrorEventStreamLogger(logger *zerolog.Logger, time time.Time, m inte
 	statusErr := status.Convert(err)
 	event := logger.Err(err).Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod).Str("error_code", statusErr.Code().String()).Str("msg", statusErr.Message()).Interface("details", statusErr.Details())
 	if raw := getRawJSON(m); raw != nil {
-		event = event.RawJSON("message", raw)
+		event = event.RawJSON("payload", raw)
 	}
 
 	return event
@@ -85,7 +82,7 @@ func getNewErrorEventStreamLogger(logger *zerolog.Logger, time time.Time, m inte
 func getNewDebugEventStreamLogger(logger *zerolog.Logger, time time.Time, m interface{}, info *grpc.StreamServerInfo) *zerolog.Event {
 	event := logger.Debug().Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod)
 	if raw := getRawJSON(m); raw != nil {
-		event = event.RawJSON("message", raw)
+		event = event.RawJSON("payload", raw)
 	}
 
 	return event
