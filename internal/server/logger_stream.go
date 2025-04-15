@@ -58,10 +58,9 @@ func NewGrpcLoggerStreamInterceptor(ctx context.Context) grpc.StreamServerInterc
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		logger := zerolog.Ctx(ctx)
 
-		streamCtx := logger.WithContext(ss.Context())
 		wss := &wrappedServerStream{
 			ServerStream: ss,
-			ctx:          streamCtx,
+			ctx:          logger.WithContext(ss.Context()),
 			logger:       logger,
 			info:         info,
 		}
