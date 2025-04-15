@@ -26,7 +26,6 @@ const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
 type PluginServer struct {
-	ctx                   context.Context
 	config                *config.Config
 	cancelCtxFunc         context.CancelFunc
 	deviceManager         device_manager.DeviceManager
@@ -154,7 +153,7 @@ func (p *PluginServer) GetDevicePluginOptions(_ context.Context, _ *devicePlugin
 }
 
 func (p *PluginServer) ListAndWatch(_ *devicePluginAPIv1Beta1.Empty, deviceMgrSrv devicePluginAPIv1Beta1.DevicePlugin_ListAndWatchServer) error {
-	logger := zerolog.Ctx(p.ctx)
+	logger := zerolog.Ctx(deviceMgrSrv.Context())
 	logger.Info().Msg(fmt.Sprintf("register devices and report initial states for devices %s", strings.Join(p.deviceManager.Devices(), ", ")))
 	if err := deviceMgrSrv.Send(p.deviceManager.GetListAndWatchResponse()); err != nil {
 		return err
@@ -231,7 +230,6 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 	resNameWithoutPrefix := split[1]
 
 	return PluginServer{
-		ctx:                   ctx,
 		socket:                fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
 		config:                config,
 		cancelCtxFunc:         cancelFunc,
