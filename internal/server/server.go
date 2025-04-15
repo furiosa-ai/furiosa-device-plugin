@@ -235,6 +235,7 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 		cancelCtxFunc: cancelFunc,
 		deviceManager: deviceManager,
 		server: grpc.NewServer(
+			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx)),
 			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx)),
 		),
 		deviceHealthCheckChan: make(chan error),
