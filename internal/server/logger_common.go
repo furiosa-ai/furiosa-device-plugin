@@ -1,19 +1,28 @@
 package server
 
 import (
+	"encoding/json"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 func getRawJSON(i interface{}) []byte {
-	if pb, ok := i.(proto.Message); ok {
-		marshal, err := protojson.Marshal(pb)
+	switch msg := i.(type) {
+	case proto.Message:
+		marshaled, err := protojson.Marshal(msg)
 		if err != nil {
 			return nil
 		}
 
-		return marshal
-	}
+		return marshaled
 
-	return nil
+	default:
+		marshaled, err := json.Marshal(msg)
+		if err != nil {
+			return nil
+		}
+
+		return marshaled
+	}
 }
