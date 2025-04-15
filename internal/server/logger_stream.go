@@ -12,9 +12,10 @@ import (
 type wrappedServerStream struct {
 	grpc.ServerStream
 
-	ctx    context.Context
-	logger *zerolog.Logger
-	info   *grpc.StreamServerInfo
+	ctx       context.Context
+	logger    *zerolog.Logger
+	info      *grpc.StreamServerInfo
+	debugMode bool
 }
 
 func (wss *wrappedServerStream) Context() context.Context {
@@ -25,15 +26,15 @@ func (wss *wrappedServerStream) SendMsg(m interface{}) error {
 	timestamp := time.Now()
 
 	err := wss.ServerStream.SendMsg(m)
-
-	var event *zerolog.Event
 	if err != nil {
-		event = getNewErrorEventStreamLogger(wss.logger, timestamp, m, wss.info, err)
-	} else {
-		event = getNewDebugEventStreamLogger(wss.logger, timestamp, m, wss.info)
+		event := getNewErrorEventStreamLogger(wss.logger, timestamp, m, wss.info, err)
+		event.Msg("grpc middleware event stream send error logging")
 	}
 
-	event.Msg("grpc middleware event stream send logging")
+	if wss.debugMode {
+		event := getNewDebugEventStreamLogger(wss.logger, timestamp, m, wss.info)
+		event.Msg("grpc middleware event stream send debug logging")
+	}
 
 	return err
 }
@@ -41,20 +42,21 @@ func (wss *wrappedServerStream) SendMsg(m interface{}) error {
 func (wss *wrappedServerStream) RecvMsg(m interface{}) error {
 	timestamp := time.Now()
 
-	err := wss.ServerStream.RecvMsg(m)
-	var event *zerolog.Event
+	err := wss.ServerStream.SendMsg(m)
 	if err != nil {
-		event = getNewErrorEventStreamLogger(wss.logger, timestamp, m, wss.info, err)
-	} else {
-		event = getNewDebugEventStreamLogger(wss.logger, timestamp, m, wss.info)
+		event := getNewErrorEventStreamLogger(wss.logger, timestamp, m, wss.info, err)
+		event.Msg("grpc middleware event stream recv error logging")
 	}
 
-	event.Msg("grpc middleware event stream recv logging")
+	if wss.debugMode {
+		event := getNewDebugEventStreamLogger(wss.logger, timestamp, m, wss.info)
+		event.Msg("grpc middleware event stream recv debug logging")
+	}
 
 	return err
 }
 
-func NewGrpcLoggerStreamInterceptor(ctx context.Context) grpc.StreamServerInterceptor {
+func NewGrpcLoggerStreamInterceptor(ctx context.Context, debugMode bool) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		logger := zerolog.Ctx(ctx)
 
@@ -63,6 +65,7 @@ func NewGrpcLoggerStreamInterceptor(ctx context.Context) grpc.StreamServerInterc
 			ctx:          logger.WithContext(ss.Context()),
 			logger:       logger,
 			info:         info,
+			debugMode:    debugMode,
 		}
 
 		return handler(srv, wss)

@@ -9,20 +9,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewGrpcLoggerUnaryInterceptor(pluginServerCtx context.Context) grpc.UnaryServerInterceptor {
+func NewGrpcLoggerUnaryInterceptor(pluginServerCtx context.Context, debugMode bool) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		timestamp := time.Now()
 		logger := zerolog.Ctx(pluginServerCtx)
 
-		var event *zerolog.Event
 		resp, err := handler(logger.WithContext(ctx), req)
 		if err != nil {
-			event = getNewErrorEventUnaryLogger(logger, timestamp, req, info, err)
-		} else {
-			event = getNewDebugEventUnaryLogger(logger, timestamp, req, info, resp)
+			event := getNewErrorEventUnaryLogger(logger, timestamp, req, info, err)
+			event.Msg("grpc middleware event unary error logging")
 		}
 
-		event.Msg("grpc middleware event unary logging")
+		if debugMode {
+			event := getNewDebugEventUnaryLogger(logger, timestamp, req, info, resp)
+			event.Msg("grpc middleware event unary debug logging")
+		}
 
 		return resp, err
 	}
