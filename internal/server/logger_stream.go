@@ -75,8 +75,6 @@ func getNewErrorEventStreamLogger(logger *zerolog.Logger, time time.Time, m inte
 	event := logger.Err(err).Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod).Str("error_code", statusErr.Code().String()).Str("msg", statusErr.Message()).Interface("details", statusErr.Details())
 	if raw := getRawJSON(m); raw != nil {
 		event = event.RawJSON("payload", raw)
-	} else {
-		panic("nil")
 	}
 
 	return event
@@ -86,8 +84,6 @@ func getNewDebugEventStreamLogger(logger *zerolog.Logger, time time.Time, m inte
 	event := logger.Debug().Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod)
 	if raw := getRawJSON(m); raw != nil {
 		event = event.RawJSON("payload", raw)
-	} else {
-		panic("nil")
 	}
 
 	return event
