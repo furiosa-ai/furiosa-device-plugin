@@ -230,11 +230,13 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 	resNameWithoutPrefix := split[1]
 
 	return PluginServer{
-		socket:                fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
-		config:                config,
-		cancelCtxFunc:         cancelFunc,
-		deviceManager:         deviceManager,
-		server:                grpc.NewServer(grpc.UnaryInterceptor(NewGrpcMiddleWareLogger(ctx))),
+		socket:        fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
+		config:        config,
+		cancelCtxFunc: cancelFunc,
+		deviceManager: deviceManager,
+		server: grpc.NewServer(
+			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx)),
+		),
 		deviceHealthCheckChan: make(chan error),
 	}
 }
