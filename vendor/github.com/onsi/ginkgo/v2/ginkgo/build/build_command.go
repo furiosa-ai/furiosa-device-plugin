@@ -44,7 +44,7 @@ func buildSpecs(args []string, cliConfig types.CLIConfig, goFlagsConfig types.Go
 	internal.VerifyCLIAndFrameworkVersion(suites)
 
 	opc := internal.NewOrderedParallelCompiler(cliConfig.ComputedNumCompilers())
-	opc.StartCompiling(suites, goFlagsConfig, true)
+	opc.StartCompiling(suites, goFlagsConfig)
 
 	for {
 		suiteIdx, suite := opc.Next()

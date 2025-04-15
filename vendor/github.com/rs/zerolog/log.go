@@ -494,7 +494,7 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 	if level != NoLevel && LevelFieldName != "" {
 		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
 	}
-	if len(l.context) > 1 {
+	if l.context != nil && len(l.context) > 1 {
 		e.buf = enc.AppendObjectData(e.buf, l.context)
 	}
 	if l.stack {
