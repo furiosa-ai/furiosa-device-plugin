@@ -110,8 +110,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
 github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
-github.com/furiosa-ai/furiosa-smi-go v0.3.0 h1:QQzeSqw/cr9y7ssqynW5jLhh0UsV0uT/v0/X2BPqyL4=
-github.com/furiosa-ai/furiosa-smi-go v0.3.0/go.mod h1:JUgTeSIOzCKqdRfbqFLYCPBtyFM0i0G9i8F2AGnTIGc=
+github.com/furiosa-ai/furiosa-smi-go v0.3.1 h1:sEq3hNOC+sUTYkkf0YfYRdZiFlzFT/IDgt0jToiBeeY=
+github.com/furiosa-ai/furiosa-smi-go v0.3.1/go.mod h1:JUgTeSIOzCKqdRfbqFLYCPBtyFM0i0G9i8F2AGnTIGc=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.1.41 h1:UOIBBe9N1Y3Y9zJORUZjHKNReYbM4wU8E3lNGUG3URM=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.1.41/go.mod h1:Rwv4l9BmYy8oYX9uqcc0em2dOFPjXR3eyZSR5i0gveg=
 github.com/fxamacker/cbor/v2 v2.7.0 h1:iM5WgngdRBanHcxugY4JySA0nk1wZorNOpTgCMedv5E=

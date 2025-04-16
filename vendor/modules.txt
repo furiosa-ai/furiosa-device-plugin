@@ -142,7 +142,7 @@ github.com/felixge/httpsnoop
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
 github.com/fsnotify/fsnotify/internal
-# github.com/furiosa-ai/furiosa-smi-go v0.3.0
+# github.com/furiosa-ai/furiosa-smi-go v0.3.1
 ## explicit; go 1.23.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding

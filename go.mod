@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/furiosa-ai/furiosa-smi-go v0.3.0
+	github.com/furiosa-ai/furiosa-smi-go v0.3.1
 	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.41
 	github.com/onsi/ginkgo/v2 v2.23.0
 	github.com/onsi/gomega v1.36.2
