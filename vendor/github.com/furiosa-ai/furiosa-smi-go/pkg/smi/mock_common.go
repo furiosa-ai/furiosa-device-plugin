@@ -1,6 +1,7 @@
 package smi
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/bradfitz/iter"
@@ -100,6 +101,56 @@ func (m *staticMockDeviceFile) Path() string {
 	return m.path
 }
 
+type staticMockCoreFrequency struct {
+	pe []PeFrequency
+}
+
+var _ CoreFrequency = new(staticMockCoreFrequency)
+
+func (m *staticMockCoreFrequency) PeFrequency() []PeFrequency {
+	return m.pe
+}
+
+type staticMockPeFrequency struct {
+	core      uint32
+	frequency uint32
+}
+
+var _ PeFrequency = new(staticMockPeFrequency)
+
+func (m *staticMockPeFrequency) Core() uint32 {
+	return m.core
+}
+
+func (m *staticMockPeFrequency) Frequency() uint32 {
+	return m.frequency
+}
+
+type staticMockCoreStatuses struct {
+	coreStatus []PeStatus
+}
+
+var _ CoreStatuses = new(staticMockCoreStatuses)
+
+func (m staticMockCoreStatuses) PeStatus() []PeStatus {
+	return m.coreStatus
+}
+
+type staticMockPeStatus struct {
+	core   uint32
+	status CoreStatus
+}
+
+var _ PeStatus = new(staticMockPeStatus)
+
+func (m *staticMockPeStatus) Core() uint32 {
+	return m.core
+}
+
+func (m *staticMockPeStatus) Status() CoreStatus {
+	return m.status
+}
+
 type staticMockPeUtilization struct {
 	core       uint32
 	timeWindow uint32
@@ -120,16 +171,14 @@ func (m *staticMockPeUtilization) PeUsagePercentage() float64 {
 	return m.usage
 }
 
-type staticMockMemoryUtilization struct{}
-
-var _ MemoryUtilization = new(staticMockMemoryUtilization)
-
-func (m *staticMockMemoryUtilization) TotalBytes() uint64 {
-	return 0
+type staticMockMemoryFrequency struct {
+	frequency uint32
 }
 
-func (m *staticMockMemoryUtilization) InUseBytes() uint64 {
-	return 0
+var _ MemoryFrequency = new(staticMockMemoryFrequency)
+
+func (m *staticMockMemoryFrequency) Frequency() uint32 {
+	return m.frequency
 }
 
 type staticMockCoreUtilization struct {
@@ -188,6 +237,10 @@ func (m *staticMockVersionInfo) Metadata() string {
 	return m.metadata
 }
 
+func (m *staticMockVersionInfo) String() string {
+	return fmt.Sprintf("%d.%d.%d+%s", m.Major(), m.Minor(), m.Patch(), m.Metadata())
+}
+
 func getDeviceToDeviceLinkType(src, dst Device) (LinkType, error) {
 	selfNodeIdx := src.(*staticRngdMockDevice).nodeIdx
 	targetNodeIdx := dst.(*staticRngdMockDevice).nodeIdx
@@ -218,6 +271,10 @@ var _ PerformanceCounter = new(staticMockPerformanceCounter)
 
 func (s staticMockPerformanceCounter) Timestamp() time.Time {
 	return time.Now()
+}
+
+func (s staticMockPerformanceCounter) Core() uint32 {
+	return 0
 }
 
 func (s staticMockPerformanceCounter) CycleCount() uint64 {
