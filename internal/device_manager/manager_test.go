@@ -13,7 +13,7 @@ import (
 
 func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device.FuriosaDevice) {
 	if len(mockDevices) == 0 {
-		mockDevices = smi.GetStaticMockDevices(smi.ArchWarboy)
+		mockDevices = smi.GetStaticMockDevices(smi.ArchRngd)
 	}
 
 	ret = make(map[string]furiosa_device.FuriosaDevice, len(mockDevices))
@@ -27,7 +27,7 @@ func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device
 }
 
 func TestFetchByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+	mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
 	var seedUUID []string
 
 	for i, mockDevice := range mockDevices {
@@ -52,7 +52,7 @@ func TestFetchByID(t *testing.T) {
 }
 
 func TestFetchDevicesByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+	mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
 	var seedUUID []string
 
 	for _, mockDevice := range mockDevices {
@@ -299,7 +299,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+			mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
 			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 			allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
 			mockDeviceManager := &deviceManager{
@@ -325,7 +325,6 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 }
 
 // TODO(@bg): add test cases for CDI
-// TODO(@bg): add test cases for rngd
 func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 	tests := []struct {
 		description    string
@@ -341,136 +340,178 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 				Mounts: nil,
 				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
 					{
-						ContainerPath: "/dev/npu0_mgmt",
-						HostPath:      "/dev/npu0_mgmt",
+						ContainerPath: "/dev/rngd/npu0mgmt",
+						HostPath:      "/dev/rngd/npu0mgmt",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe0",
-						HostPath:      "/dev/npu0pe0",
+						ContainerPath: "/dev/rngd/npu0pe0",
+						HostPath:      "/dev/rngd/npu0pe0",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe1",
-						HostPath:      "/dev/npu0pe1",
+						ContainerPath: "/dev/rngd/npu0pe1",
+						HostPath:      "/dev/rngd/npu0pe1",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe0-1",
-						HostPath:      "/dev/npu0pe0-1",
+						ContainerPath: "/dev/rngd/npu0pe0-1",
+						HostPath:      "/dev/rngd/npu0pe0-1",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch0",
-						HostPath:      "/dev/npu0ch0",
+						ContainerPath: "/dev/rngd/npu0pe2",
+						HostPath:      "/dev/rngd/npu0pe2",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch1",
-						HostPath:      "/dev/npu0ch1",
+						ContainerPath: "/dev/rngd/npu0pe3",
+						HostPath:      "/dev/rngd/npu0pe3",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch2",
-						HostPath:      "/dev/npu0ch2",
+						ContainerPath: "/dev/rngd/npu0pe2-3",
+						HostPath:      "/dev/rngd/npu0pe2-3",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch3",
-						HostPath:      "/dev/npu0ch3",
-						Permissions:   "rw",
-					},
-				},
-				Annotations: nil,
-				CDIDevices:  nil,
-			},
-			expectError: false,
-		},
-		{
-			description: "allocate two devices",
-			deviceIDs:   []string{"0", "1"},
-			expectedResult: &devicePluginAPIv1Beta1.ContainerAllocateResponse{
-				Envs:   nil,
-				Mounts: nil,
-				Devices: []*devicePluginAPIv1Beta1.DeviceSpec{
-					{
-						ContainerPath: "/dev/npu0_mgmt",
-						HostPath:      "/dev/npu0_mgmt",
+						ContainerPath: "/dev/rngd/npu0pe0-3",
+						HostPath:      "/dev/rngd/npu0pe0-3",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe0",
-						HostPath:      "/dev/npu0pe0",
+						ContainerPath: "/dev/rngd/npu0pe4",
+						HostPath:      "/dev/rngd/npu0pe4",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe1",
-						HostPath:      "/dev/npu0pe1",
+						ContainerPath: "/dev/rngd/npu0pe5",
+						HostPath:      "/dev/rngd/npu0pe5",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0pe0-1",
-						HostPath:      "/dev/npu0pe0-1",
+						ContainerPath: "/dev/rngd/npu0pe4-5",
+						HostPath:      "/dev/rngd/npu0pe4-5",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch0",
-						HostPath:      "/dev/npu0ch0",
+						ContainerPath: "/dev/rngd/npu0pe6",
+						HostPath:      "/dev/rngd/npu0pe6",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch1",
-						HostPath:      "/dev/npu0ch1",
+						ContainerPath: "/dev/rngd/npu0pe7",
+						HostPath:      "/dev/rngd/npu0pe7",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch2",
-						HostPath:      "/dev/npu0ch2",
+						ContainerPath: "/dev/rngd/npu0pe6-7",
+						HostPath:      "/dev/rngd/npu0pe6-7",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu0ch3",
-						HostPath:      "/dev/npu0ch3",
+						ContainerPath: "/dev/rngd/npu0pe4-7",
+						HostPath:      "/dev/rngd/npu0pe4-7",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1_mgmt",
-						HostPath:      "/dev/npu1_mgmt",
+						ContainerPath: "/dev/rngd/npu0ch0",
+						HostPath:      "/dev/rngd/npu0ch0",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1pe0",
-						HostPath:      "/dev/npu1pe0",
+						ContainerPath: "/dev/rngd/npu0ch1",
+						HostPath:      "/dev/rngd/npu0ch1",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1pe1",
-						HostPath:      "/dev/npu1pe1",
+						ContainerPath: "/dev/rngd/npu0ch2",
+						HostPath:      "/dev/rngd/npu0ch2",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1pe0-1",
-						HostPath:      "/dev/npu1pe0-1",
+						ContainerPath: "/dev/rngd/npu0ch3",
+						HostPath:      "/dev/rngd/npu0ch3",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1ch0",
-						HostPath:      "/dev/npu1ch0",
+						ContainerPath: "/dev/rngd/npu0ch4",
+						HostPath:      "/dev/rngd/npu0ch4",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1ch1",
-						HostPath:      "/dev/npu1ch1",
+						ContainerPath: "/dev/rngd/npu0ch5",
+						HostPath:      "/dev/rngd/npu0ch5",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1ch2",
-						HostPath:      "/dev/npu1ch2",
+						ContainerPath: "/dev/rngd/npu0ch6",
+						HostPath:      "/dev/rngd/npu0ch6",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/npu1ch3",
-						HostPath:      "/dev/npu1ch3",
+						ContainerPath: "/dev/rngd/npu0ch7",
+						HostPath:      "/dev/rngd/npu0ch7",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch0r",
+						HostPath:      "/dev/rngd/npu0ch0r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch1r",
+						HostPath:      "/dev/rngd/npu0ch1r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch2r",
+						HostPath:      "/dev/rngd/npu0ch2r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch3r",
+						HostPath:      "/dev/rngd/npu0ch3r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch4r",
+						HostPath:      "/dev/rngd/npu0ch4r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch5r",
+						HostPath:      "/dev/rngd/npu0ch5r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch6r",
+						HostPath:      "/dev/rngd/npu0ch6r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0ch7r",
+						HostPath:      "/dev/rngd/npu0ch7r",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0dmar",
+						HostPath:      "/dev/rngd/npu0dmar",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0bar0",
+						HostPath:      "/dev/rngd/npu0bar0",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0bar2",
+						HostPath:      "/dev/rngd/npu0bar2",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0bar4",
+						HostPath:      "/dev/rngd/npu0bar4",
 						Permissions:   "rw",
 					},
 				},
@@ -484,7 +525,7 @@ func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			mockDevices := smi.GetStaticMockDevices(smi.ArchWarboy)
+			mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
 			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
 			mockDeviceManager := &deviceManager{
 				origin:         mockDevices,

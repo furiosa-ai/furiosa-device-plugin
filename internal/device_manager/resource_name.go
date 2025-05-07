@@ -39,14 +39,11 @@ func coreUnitValidator(min, max, core int) error {
 
 func validateCoreUnit(arch smi.Arch, coreUnit int) error {
 	switch arch {
-	case smi.ArchWarboy:
-		if err := coreUnitValidator(1, 2, coreUnit); err != nil {
-			return err
-		}
 	case smi.ArchRngd:
 		if err := coreUnitValidator(1, 4, coreUnit); err != nil {
 			return err
 		}
+	// TODO: add support for other architectures
 	default:
 		return fmt.Errorf("wrong architecture")
 	}

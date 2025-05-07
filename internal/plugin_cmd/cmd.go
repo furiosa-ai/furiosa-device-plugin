@@ -89,7 +89,7 @@ func start(ctx context.Context) error {
 		return noDeviceError
 	}
 
-	partitioningPolicy, err := device_manager.PreparePartitioningPolicy(deviceMap, conf.Partitioning)
+	partitioningPolicy, err := device_manager.TransformPartitioningConfig(conf.Partitioning)
 	if err != nil {
 		return err
 	}
