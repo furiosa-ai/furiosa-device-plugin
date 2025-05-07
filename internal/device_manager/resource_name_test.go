@@ -17,13 +17,6 @@ func TestBuildFullEndpoint(t *testing.T) {
 		expectError    bool
 	}{
 		{
-			description:    "test warboy non partitioning policy",
-			arch:           smi.ArchWarboy,
-			policy:         furiosa_device.NonePolicy,
-			expectedResult: "warboy",
-			expectError:    false,
-		},
-		{
 			description:    "test rngd non partitioning policy",
 			arch:           smi.ArchRngd,
 			policy:         furiosa_device.NonePolicy,
@@ -68,13 +61,6 @@ func TestBuildAndValidateFullResourceEndpointName(t *testing.T) {
 		expectedResult string
 		expectError    bool
 	}{
-		{
-			description:    "test warboy non partitioning policy",
-			arch:           smi.ArchWarboy,
-			policy:         furiosa_device.NonePolicy,
-			expectedResult: "furiosa.ai/warboy",
-			expectError:    false,
-		},
 		{
 			description:    "test rngd non partitioning policy",
 			arch:           smi.ArchRngd,
