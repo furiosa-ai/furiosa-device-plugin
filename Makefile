@@ -30,9 +30,6 @@ else
     $(error Unsupported OS)
 endif
 
-# regexp to filter some directories from testing
-EXCLUDE_DIR_REGEXP := E2E
-
 .PHONY: all
 all: build fmt lint vet test tidy vendor
 
@@ -54,11 +51,11 @@ vet:
 
 .PHONY: test
 test:
-	SKIP_E2E_FRAMEWORK_INIT=1 $(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) ./...
+	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test ./...
 
 .PHONY: cover
 cover:
-	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -skip $(EXCLUDE_DIR_REGEXP) -coverprofile=coverage.out ./...
+	$(LIBRARY_PATH_VAR)=/usr/local/lib CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go test -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
 
@@ -89,26 +86,3 @@ image-rel:
 .PHONY: image-no-cache-rel
 image-no-cache-rel:
 	docker build . --no-cache -t registry.corp.furiosa.ai/furiosa/furiosa-device-plugin:latest --progress=plain --platform=linux/amd64
-
-.PHONY: helm-lint
-helm-lint:
-	helm lint ./deployments/helm
-
-.PHONY: e2e-inference-pod-image
-e2e-inference-pod-image:
-	docker build --build-arg FURIOSA_IAM_KEY=$(FURIOSA_IAM_KEY) --build-arg FURIOSA_IAM_PWD=$(FURIOSA_IAM_PWD) . -t registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/inference:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/inference_pod/Dockerfile
-
-.PHONY: e2e-verification
-e2e-verification:
-	CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) go build e2e/verification_pod/verification.go
-
-.PHONY: e2e-verification-image
-e2e-verification-image:
-	docker build . -t registry.corp.furiosa.ai/furiosa/furiosa-device-plugin/e2e/verification:latest --no-cache --progress=plain --platform=linux/amd64 -f ./e2e/verification_pod/Dockerfile
-
-.PHONY:e2e
-e2e:
-ifndef FURIOSA_ARCH
-	$(error FURIOSA_ARCH env var is not set)
-endif
-	FURIOSA_ARCH=$(FURIOSA_ARCH) CGO_CFLAGS=$(CGO_CFLAGS) CGO_LDFLAGS=$(CGO_LDFLAGS) E2E_TEST_IMAGE_REGISTRY=$(E2E_TEST_IMAGE_REGISTRY) E2E_TEST_IMAGE_NAME=$(E2E_TEST_IMAGE_NAME) E2E_TEST_IMAGE_TAG=$(E2E_TEST_IMAGE_TAG) ginkgo ./e2e
