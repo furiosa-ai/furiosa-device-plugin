@@ -61,7 +61,7 @@ func validatePartitioningPolicy(policy string) error {
 }
 
 func getConfigFromFile(configPath string) (*Config, error) {
-	err, config := validateConfigYaml(configPath)
+	config, err := validateConfigYaml(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate config file: %w", err)
 	}
@@ -74,20 +74,20 @@ func getConfigFromFile(configPath string) (*Config, error) {
 	return config, nil
 }
 
-func validateConfigYaml(configFilePath string) (error, *Config) {
+func validateConfigYaml(configFilePath string) (*Config, error) {
 	configYaml := getDefaultConfig()
 	file, err := os.Open(configFilePath)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	decoder := yaml.NewDecoder(file)
 	decoder.KnownFields(true)
 	err = decoder.Decode(configYaml)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, configYaml
+	return configYaml, nil
 }
 
 func startWatchingConfigChange(confUpdateChan chan *ConfigChangeEvent, filePath string, prevConf *Config) error {
