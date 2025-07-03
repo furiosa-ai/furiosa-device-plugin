@@ -38,7 +38,7 @@ func validatePartitioningConfig(deviceMap DeviceMap, policy furiosa_device.Parti
 		return nil
 	}
 
-	for arch, _ := range deviceMap {
+	for arch := range deviceMap {
 		if arch == smi.ArchWarboy {
 			return fmt.Errorf("partitioning is not supported for warboy")
 		}

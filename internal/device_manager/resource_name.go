@@ -67,9 +67,10 @@ func buildResourceEndpointName(arch smi.Arch) string {
 }
 
 func policyToCoreUnit(policy furiosa_device.PartitioningPolicy) int {
-	if policy == furiosa_device.SingleCorePolicy {
+	switch policy {
+	case furiosa_device.SingleCorePolicy:
 		return singleCore
-	} else if policy == furiosa_device.DualCorePolicy {
+	case furiosa_device.DualCorePolicy:
 		return dualCore
 	}
 
