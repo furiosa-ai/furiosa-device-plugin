@@ -61,10 +61,10 @@ func start(ctx context.Context) error {
 	//grpc server panic listener
 	grpcErrChan := make(chan error, 1)
 
-	confUpdateChan := make(chan *config.ConfigChangeEvent, 1)
-	conf, err := config.GetConfigWithWatcher(config.GlobalConfigMountPath, confUpdateChan)
+	// load config or default
+	conf, confUpdateChan, err := config.LoadConfigOrGetDefault()
 	if err != nil {
-		logger.Err(err).Msg("couldn't parse configuration")
+		logger.Err(err).Msg("couldn't load configuration")
 		return err
 	}
 
