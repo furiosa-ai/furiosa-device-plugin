@@ -39,7 +39,19 @@ type ConfigChangeEvent struct {
 	Detail   string
 }
 
-func GetConfigWithWatcher(configPath string, confUpdateChan chan *ConfigChangeEvent) (*Config, error) {
+// LoadConfigOrGetDefault attempts to load config from GlobalConfigMountPath if the file exists,
+// otherwise it returns the default config.
+func LoadConfigOrGetDefault() (*Config, chan *ConfigChangeEvent, error) {
+	confUpdateChan := make(chan *ConfigChangeEvent, 1)
+	if _, statErr := os.Stat(GlobalConfigMountPath); statErr == nil {
+		conf, err := getConfigWithWatcher(GlobalConfigMountPath, confUpdateChan)
+		return conf, confUpdateChan, err
+	}
+
+	return getDefaultConfig(), confUpdateChan, nil
+}
+
+func getConfigWithWatcher(configPath string, confUpdateChan chan *ConfigChangeEvent) (*Config, error) {
 	conf, err := getConfigFromFile(configPath)
 	if err != nil {
 		return nil, err
