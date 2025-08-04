@@ -85,10 +85,6 @@ func start(ctx context.Context, debugMode bool) error {
 		return noDeviceError
 	}
 
-	if err != nil {
-		return err
-	}
-
 	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
