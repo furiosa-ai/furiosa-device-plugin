@@ -175,18 +175,18 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func NewDeviceManager(arch smi.Arch, devices []smi.Device, partitioning furiosa_device.PartitioningPolicy, blockedList []string, debugMode bool) (DeviceManager, error) {
-	resName, err := buildAndValidateFullResourceEndpointName(arch, partitioning)
+func NewDeviceManager(arch smi.Arch, devices []smi.Device, debugMode bool) (DeviceManager, error) {
+	resName, err := buildAndValidateFullResourceEndpointName(arch)
 	if err != nil {
 		return nil, err
 	}
 
-	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, blockedList, partitioning)
+	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, nil, furiosa_device.NonePolicy)
 	if err != nil {
 		return nil, err
 	}
 
-	allocator, err := getNpuAllocatorByPolicy(devices, partitioning)
+	allocator, err := npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
 	if err != nil {
 		return nil, err
 	}
@@ -203,18 +203,4 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, partitioning furiosa_
 		debugMode:      debugMode,
 		allocator:      allocator,
 	}, nil
-}
-
-func getNpuAllocatorByPolicy(devices []smi.Device, policy furiosa_device.PartitioningPolicy) (npu_allocator.NpuAllocator, error) {
-	switch policy {
-	case furiosa_device.NonePolicy:
-		return npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
-
-	case furiosa_device.SingleCorePolicy, furiosa_device.DualCorePolicy, furiosa_device.QuadCorePolicy:
-		return npu_allocator.NewBinPackingNpuAllocator(devices)
-
-	default:
-		// should not reach here!
-		return nil, fmt.Errorf("unknown partitioning policy %v", policy)
-	}
 }
