@@ -325,7 +325,7 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 }
 
 // TODO(@bg): add test cases for CDI
-func TestGetContainerAllocateResponseForWarboy(t *testing.T) {
+func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 	tests := []struct {
 		description    string
 		deviceIDs      []string
