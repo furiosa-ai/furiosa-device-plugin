@@ -8,11 +8,11 @@ github.com/davecgh/go-spew/spew
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
 github.com/fsnotify/fsnotify/internal
-# github.com/furiosa-ai/furiosa-smi-go v0.3.3
+# github.com/furiosa-ai/furiosa-smi-go v0.4.0
 ## explicit; go 1.24.2
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi
 github.com/furiosa-ai/furiosa-smi-go/pkg/smi/binding
-# github.com/furiosa-ai/libfuriosa-kubernetes v0.1.43
+# github.com/furiosa-ai/libfuriosa-kubernetes v0.2.0
 ## explicit; go 1.24.2
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec
 github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec_gen
@@ -77,7 +77,6 @@ github.com/pmezard/go-difflib/difflib
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
-github.com/rs/zerolog/log
 # github.com/spf13/cobra v1.8.1
 ## explicit; go 1.15
 github.com/spf13/cobra
