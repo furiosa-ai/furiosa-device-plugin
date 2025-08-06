@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/rs/zerolog"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -26,7 +25,6 @@ const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
 type PluginServer struct {
-	config                *config.Config
 	cancelCtxFunc         context.CancelFunc
 	deviceManager         device_manager.DeviceManager
 	socket                string
@@ -224,19 +222,18 @@ func (p *PluginServer) PreStartContainer(_ context.Context, _ *devicePluginAPIv1
 	return &devicePluginAPIv1Beta1.PreStartContainerResponse{}, nil
 }
 
-func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, config *config.Config) PluginServer {
+func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, debugMode bool) PluginServer {
 	// comment(@bg): full resource name is already validated
 	split := strings.SplitN(deviceManager.ResourceName(), "/", 2)
 	resNameWithoutPrefix := split[1]
 
 	return PluginServer{
 		socket:        fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
-		config:        config,
 		cancelCtxFunc: cancelFunc,
 		deviceManager: deviceManager,
 		server: grpc.NewServer(
-			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx, config.DebugMode)),
-			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx, config.DebugMode)),
+			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx, debugMode)),
+			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx, debugMode)),
 		),
 		deviceHealthCheckChan: make(chan error),
 	}
