@@ -6,8 +6,8 @@ toolchain go1.24.4
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/furiosa-ai/furiosa-smi-go v0.3.3
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.1.43
+	github.com/furiosa-ai/furiosa-smi-go v0.4.0
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.2.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
