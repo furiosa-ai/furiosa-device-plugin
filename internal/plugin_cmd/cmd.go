@@ -79,13 +79,13 @@ func start(ctx context.Context, debugMode bool) error {
 		return err
 	}
 
+	var pluginServers []server.PluginServer
+
 	if len(deviceMap) == 0 {
-		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
-		logger.Err(noDeviceError).Msg("no device detected")
-		return noDeviceError
+		logger.Info().Msg("no NPU device detected")
+		goto Loop
 	}
 
-	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
 		deviceManager, err := device_manager.NewDeviceManager(arch, devices, debugMode)
