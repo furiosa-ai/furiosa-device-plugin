@@ -516,7 +516,7 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 					},
 				},
 				Annotations: nil,
-				CDIDevices:  nil,
+				CdiDevices:  nil,
 			},
 			expectError: false,
 		},
