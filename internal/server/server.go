@@ -25,6 +25,8 @@ const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
 type PluginServer struct {
+	devicePluginAPIv1Beta1.UnimplementedDevicePluginServer
+
 	cancelCtxFunc         context.CancelFunc
 	deviceManager         device_manager.DeviceManager
 	socket                string
@@ -198,13 +200,13 @@ func (p *PluginServer) Allocate(ctx context.Context, request *devicePluginAPIv1B
 	var resp []*devicePluginAPIv1Beta1.ContainerAllocateResponse
 
 	for _, req := range request.ContainerRequests {
-		logger.Info().Msg(fmt.Sprintf("received device allocation request for device id(s) %s", strings.Join(req.DevicesIDs, ", ")))
-		exist, missing := p.deviceManager.Contains(req.DevicesIDs)
+		logger.Info().Msg(fmt.Sprintf("received device allocation request for device id(s) %s", strings.Join(req.GetDevicesIds(), ", ")))
+		exist, missing := p.deviceManager.Contains(req.GetDevicesIds())
 		if !exist {
 			return nil, fmt.Errorf("couldn't find device(s) for device id(s) %s", strings.Join(missing, ", "))
 		}
 
-		allocResp, err := p.deviceManager.GetContainerAllocateResponse(req.DevicesIDs)
+		allocResp, err := p.deviceManager.GetContainerAllocateResponse(req.GetDevicesIds())
 		if err != nil {
 			return nil, err
 		}
