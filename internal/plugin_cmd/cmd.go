@@ -73,7 +73,7 @@ func start(ctx context.Context, debugMode bool) error {
 		close(grpcErrChan)
 	}()
 
-	deviceMap, err := device_manager.BuildDeviceMap()
+	deviceMap, err := device_manager.BuildDeviceMap(logger)
 	if err != nil {
 		logger.Err(err).Msg("couldn't build device-map with device-api")
 		return err
