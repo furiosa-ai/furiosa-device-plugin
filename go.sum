@@ -11,6 +11,8 @@ github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/furiosa-ai/furiosa-smi-go v0.4.4 h1:HCxwimwBGQMpR+TxN9qCi8M6prWngXE4ZGg0A78SNms=
 github.com/furiosa-ai/furiosa-smi-go v0.4.4/go.mod h1:VT0ppptMWZbU5Q/7iJtk4Jk0Ff7bNnUt8Nw24NIsS+g=
+github.com/furiosa-ai/furiosa-smi-go v0.6.0 h1:a7LBruC33DXkeREgJjzwyOBlgAkgD3BOkcypo2Rfc5M=
+github.com/furiosa-ai/furiosa-smi-go v0.6.0/go.mod h1:VT0ppptMWZbU5Q/7iJtk4Jk0Ff7bNnUt8Nw24NIsS+g=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.2.2 h1:1U34iXK8iClqeiIsK/BH7asDkgI7BW4E+Xr252RaQiU=
 github.com/furiosa-ai/libfuriosa-kubernetes v0.2.2/go.mod h1:IQ2o6u9/Acm8ISCsdl90ERvh2+Bshkut4QBtT9OP1yI=
 github.com/fxamacker/cbor/v2 v2.9.0 h1:NpKPmjDBgUfBms6tr6JZkTHtfFGcMKsw3eGcmD/sapM=
