@@ -2,11 +2,12 @@ package device_manager
 
 import (
 	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/rs/zerolog"
 )
 
 type DeviceMap map[smi.Arch][]smi.Device
 
-func BuildDeviceMap() (DeviceMap, error) {
+func BuildDeviceMap(logger zerolog.Logger) (DeviceMap, error) {
 	err := smi.Init()
 	if err != nil {
 		return nil, err
@@ -21,7 +22,8 @@ func BuildDeviceMap() (DeviceMap, error) {
 	for _, d := range devices {
 		info, err := d.DeviceInfo()
 		if err != nil {
-			return nil, err
+			logger.Err(err).Msg("failed to get device info for some device")
+			continue
 		}
 
 		key := info.Arch()
