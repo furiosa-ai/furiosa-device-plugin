@@ -23,7 +23,8 @@ jobs:
           registry: ${{ env.REGISTRY_URL }}
           username: "_json_key"
           password: ${{ secrets.GAR_JSON_KEY }}
-      - name: Build and publish PR image with SHA
+
+      - name: Build and publish PR image with Tag
         uses: docker/build-push-action@v6
         with:
           context: .
