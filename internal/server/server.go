@@ -78,7 +78,7 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 
 	// run grpc server.serve in a new goroutine
 	go func() {
-		logger.Info().Msg(fmt.Sprintf("start listening %s", sock))
+		logger.Info().Msg(fmt.Sprintf("start listening %s", p.socket))
 		if serveRrr := p.server.Serve(sock); serveRrr != nil {
 			logger.Err(serveRrr).Msg("error received from grpc serving framework, the device-plugin will be restarted for recovery")
 			grpcErrChan <- serveRrr
