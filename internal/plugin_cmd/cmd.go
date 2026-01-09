@@ -82,8 +82,9 @@ func start(ctx context.Context, debugMode bool) error {
 	var pluginServers []server.PluginServer
 
 	if len(deviceMap) == 0 {
-		logger.Info().Msg("no NPU device detected")
-		goto Loop
+		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
+		logger.Error().Msg("If this is not a NPU node, please deploy this plugin on NPU nodes only by tolerations or nodeSelector.")
+		return noDeviceError
 	}
 
 	for arch, devices := range deviceMap {
