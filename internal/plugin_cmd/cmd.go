@@ -83,7 +83,7 @@ func start(ctx context.Context, debugMode bool) error {
 
 	if len(deviceMap) == 0 {
 		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
-		logger.Error().Msg("If this is not a NPU node, please deploy this plugin on NPU nodes only by tolerations or nodeSelector.")
+		logger.Err(noDeviceError).Msg("If this is not a NPU node, please deploy this plugin on NPU nodes only by tolerations or nodeSelector.")
 		return noDeviceError
 	}
 
