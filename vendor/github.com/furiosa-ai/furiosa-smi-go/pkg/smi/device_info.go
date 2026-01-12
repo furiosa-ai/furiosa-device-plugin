@@ -11,7 +11,7 @@ type DeviceInfo interface {
 	// CoreNum returns the number of PE cores.
 	CoreNum() uint32
 	// NumaNode returns a numa node of device.
-	NumaNode() uint32
+	NumaNode() int32
 	// Name returns a name of device.
 	Name() string
 	// Serial returns a serial of device.
@@ -26,8 +26,6 @@ type DeviceInfo interface {
 	Minor() uint16
 	// FirmwareVersion returns a firmware version of device.
 	FirmwareVersion() VersionInfo
-	// PertVersion returns a PERT version of device.
-	PertVersion() VersionInfo
 }
 
 var _ DeviceInfo = new(deviceInfo)
@@ -54,7 +52,7 @@ func (d *deviceInfo) CoreNum() uint32 {
 	return d.raw.CoreNum
 }
 
-func (d *deviceInfo) NumaNode() uint32 {
+func (d *deviceInfo) NumaNode() int32 {
 	return d.raw.NumaNode
 }
 
@@ -84,8 +82,4 @@ func (d *deviceInfo) Minor() uint16 {
 
 func (d *deviceInfo) FirmwareVersion() VersionInfo {
 	return newVersionInfo(d.raw.FirmwareVersion)
-}
-
-func (d *deviceInfo) PertVersion() VersionInfo {
-	return newVersionInfo(d.raw.PertVersion)
 }

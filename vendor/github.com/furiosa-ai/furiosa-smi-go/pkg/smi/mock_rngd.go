@@ -1,6 +1,8 @@
 package smi
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var _ Device = new(staticRngdMockDevice)
 
@@ -114,21 +116,6 @@ func (m *staticRngdMockDevice) MemoryFrequency() (MemoryFrequency, error) {
 	return &staticMockMemoryFrequency{frequency: 6000}, nil
 }
 
-func (m *staticRngdMockDevice) CoreUtilization() (CoreUtilization, error) {
-	return &staticMockCoreUtilization{
-		pe: []PeUtilization{
-			&staticMockPeUtilization{core: 0, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 1, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 2, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 3, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 4, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 5, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 6, timeWindow: 1000, usage: 50},
-			&staticMockPeUtilization{core: 7, timeWindow: 1000, usage: 50},
-		},
-	}, nil
-}
-
 func (m *staticRngdMockDevice) PowerConsumption() (float64, error) {
 	return float64(100), nil
 }
@@ -158,6 +145,14 @@ func (m *staticRngdMockDevice) SetGovernorProfile(profile GovernorProfile) error
 	return nil
 }
 
+func (m *staticRngdMockDevice) EnableDevice() error {
+	return nil
+}
+
+func (m *staticRngdMockDevice) DisableDevice() error {
+	return nil
+}
+
 type staticRngdMockDeviceInfo struct {
 	nodeIdx int
 }
@@ -176,8 +171,8 @@ func (m *staticRngdMockDeviceInfo) CoreNum() uint32 {
 	return 8
 }
 
-func (m *staticRngdMockDeviceInfo) NumaNode() uint32 {
-	return uint32(staticMockHintMap[m.nodeIdx].numaNode)
+func (m *staticRngdMockDeviceInfo) NumaNode() int32 {
+	return int32(staticMockHintMap[m.nodeIdx].numaNode)
 }
 
 func (m *staticRngdMockDeviceInfo) Name() string {
@@ -206,9 +201,21 @@ func (m *staticRngdMockDeviceInfo) Minor() uint16 {
 
 // FirmwareVersion e.g. version: 1.6.0, c1bebfd
 func (m *staticRngdMockDeviceInfo) FirmwareVersion() VersionInfo {
-	return newStaticMockVersionInfo(1, 6, 0, "c1bebfd")
+	return newStaticMockVersionInfo(1, 6, 0, "c1bebfd", "dev0")
 }
 
-func (m *staticRngdMockDeviceInfo) PertVersion() VersionInfo {
-	return newStaticMockVersionInfo(0, 0, 0, "")
+func (m *staticRngdMockDevice) PcieInfo() (PcieInfo, error) {
+	return &staticMockPcieInfo{}, nil
+}
+
+func (staticRngdMockDevice) CoreUtilization(observer Observer) ([]CoreUtilization, error) {
+	return nil, nil
+}
+
+func (staticRngdMockDevice) ThrottleReason() (ThrottleReason, error) {
+	return 0, nil
+}
+
+func (staticRngdMockDevice) MemoryUtilization() (MemoryUtilization, error) {
+	return nil, nil
 }

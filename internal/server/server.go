@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/rs/zerolog"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -26,7 +25,8 @@ const socketPathExp = devicePluginAPIv1Beta1.DevicePluginPath + "%s" + ".sock"
 var _ devicePluginAPIv1Beta1.DevicePluginServer = (*PluginServer)(nil)
 
 type PluginServer struct {
-	config                *config.Config
+	devicePluginAPIv1Beta1.UnimplementedDevicePluginServer
+
 	cancelCtxFunc         context.CancelFunc
 	deviceManager         device_manager.DeviceManager
 	socket                string
@@ -78,7 +78,7 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 
 	// run grpc server.serve in a new goroutine
 	go func() {
-		logger.Info().Msg(fmt.Sprintf("start listening %s", sock))
+		logger.Info().Msg(fmt.Sprintf("start listening %s", p.socket))
 		if serveRrr := p.server.Serve(sock); serveRrr != nil {
 			logger.Err(serveRrr).Msg("error received from grpc serving framework, the device-plugin will be restarted for recovery")
 			grpcErrChan <- serveRrr
@@ -200,13 +200,13 @@ func (p *PluginServer) Allocate(ctx context.Context, request *devicePluginAPIv1B
 	var resp []*devicePluginAPIv1Beta1.ContainerAllocateResponse
 
 	for _, req := range request.ContainerRequests {
-		logger.Info().Msg(fmt.Sprintf("received device allocation request for device id(s) %s", strings.Join(req.DevicesIDs, ", ")))
-		exist, missing := p.deviceManager.Contains(req.DevicesIDs)
+		logger.Info().Msg(fmt.Sprintf("received device allocation request for device id(s) %s", strings.Join(req.GetDevicesIds(), ", ")))
+		exist, missing := p.deviceManager.Contains(req.GetDevicesIds())
 		if !exist {
 			return nil, fmt.Errorf("couldn't find device(s) for device id(s) %s", strings.Join(missing, ", "))
 		}
 
-		allocResp, err := p.deviceManager.GetContainerAllocateResponse(req.DevicesIDs)
+		allocResp, err := p.deviceManager.GetContainerAllocateResponse(req.GetDevicesIds())
 		if err != nil {
 			return nil, err
 		}
@@ -224,19 +224,18 @@ func (p *PluginServer) PreStartContainer(_ context.Context, _ *devicePluginAPIv1
 	return &devicePluginAPIv1Beta1.PreStartContainerResponse{}, nil
 }
 
-func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, config *config.Config) PluginServer {
+func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFunc, deviceManager device_manager.DeviceManager, debugMode bool) PluginServer {
 	// comment(@bg): full resource name is already validated
 	split := strings.SplitN(deviceManager.ResourceName(), "/", 2)
 	resNameWithoutPrefix := split[1]
 
 	return PluginServer{
 		socket:        fmt.Sprintf(socketPathExp, resNameWithoutPrefix),
-		config:        config,
 		cancelCtxFunc: cancelFunc,
 		deviceManager: deviceManager,
 		server: grpc.NewServer(
-			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx, config.DebugMode)),
-			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx, config.DebugMode)),
+			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx, debugMode)),
+			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx, debugMode)),
 		),
 		deviceHealthCheckChan: make(chan error),
 	}

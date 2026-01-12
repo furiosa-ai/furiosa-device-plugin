@@ -23,6 +23,24 @@ const (
 	FuriosaSmiMaxDeviceHandleSize = 64
 	// FuriosaSmiMaxCstrSize as defined in smi/furiosa_smi.h:19
 	FuriosaSmiMaxCstrSize = 96
+	// FuriosaSmiThrottleReasonNone as defined in smi/furiosa_smi.h:272
+	FuriosaSmiThrottleReasonNone = 0
+	// FuriosaSmiThrottleReasonIdle as defined in smi/furiosa_smi.h:275
+	FuriosaSmiThrottleReasonIdle = (1 << 0)
+	// FuriosaSmiThrottleReasonThermalSlowdown as defined in smi/furiosa_smi.h:278
+	FuriosaSmiThrottleReasonThermalSlowdown = (1 << 1)
+	// FuriosaSmiThrottleReasonAppPowerCap as defined in smi/furiosa_smi.h:281
+	FuriosaSmiThrottleReasonAppPowerCap = (1 << 2)
+	// FuriosaSmiThrottleReasonAppClockCap as defined in smi/furiosa_smi.h:284
+	FuriosaSmiThrottleReasonAppClockCap = (1 << 3)
+	// FuriosaSmiThrottleReasonHwClockCap as defined in smi/furiosa_smi.h:287
+	FuriosaSmiThrottleReasonHwClockCap = (1 << 4)
+	// FuriosaSmiThrottleReasonHwBusLimit as defined in smi/furiosa_smi.h:290
+	FuriosaSmiThrottleReasonHwBusLimit = (1 << 5)
+	// FuriosaSmiThrottleReasonHwPowerCap as defined in smi/furiosa_smi.h:293
+	FuriosaSmiThrottleReasonHwPowerCap = (1 << 6)
+	// FuriosaSmiThrottleReasonOtherReason as defined in smi/furiosa_smi.h:296
+	FuriosaSmiThrottleReasonOtherReason = (1 << 7)
 )
 
 // FuriosaSmiArch as declared in smi/furiosa_smi.h:31
@@ -66,26 +84,27 @@ const (
 	FuriosaSmiGovernorProfilePowerSave   FuriosaSmiGovernorProfile = 1
 )
 
-// FuriosaSmiReturnCode as declared in smi/furiosa_smi.h:99
+// FuriosaSmiReturnCode as declared in smi/furiosa_smi.h:101
 type FuriosaSmiReturnCode int32
 
-// FuriosaSmiReturnCode enumeration from smi/furiosa_smi.h:99
+// FuriosaSmiReturnCode enumeration from smi/furiosa_smi.h:101
 const (
 	FuriosaSmiReturnCodeOk                       FuriosaSmiReturnCode = iota
 	FuriosaSmiReturnCodeInvalidArgumentError     FuriosaSmiReturnCode = 1
 	FuriosaSmiReturnCodeNullPointerError         FuriosaSmiReturnCode = 2
 	FuriosaSmiReturnCodeMaxBufferSizeExceedError FuriosaSmiReturnCode = 3
 	FuriosaSmiReturnCodeDeviceNotFoundError      FuriosaSmiReturnCode = 4
-	FuriosaSmiReturnCodeDeviceBusyError          FuriosaSmiReturnCode = 5
-	FuriosaSmiReturnCodeIoError                  FuriosaSmiReturnCode = 6
-	FuriosaSmiReturnCodePermissionDeniedError    FuriosaSmiReturnCode = 7
-	FuriosaSmiReturnCodeUnknownArchError         FuriosaSmiReturnCode = 8
-	FuriosaSmiReturnCodeIncompatibleDriverError  FuriosaSmiReturnCode = 9
-	FuriosaSmiReturnCodeUnexpectedValueError     FuriosaSmiReturnCode = 10
-	FuriosaSmiReturnCodeParseError               FuriosaSmiReturnCode = 11
-	FuriosaSmiReturnCodeUnknownError             FuriosaSmiReturnCode = 12
-	FuriosaSmiReturnCodeInternalError            FuriosaSmiReturnCode = 13
-	FuriosaSmiReturnCodeUninitializedError       FuriosaSmiReturnCode = 14
-	FuriosaSmiReturnCodeContextError             FuriosaSmiReturnCode = 15
-	FuriosaSmiReturnCodeNotSupportedError        FuriosaSmiReturnCode = 16
+	FuriosaSmiReturnCodeDeviceLostError          FuriosaSmiReturnCode = 5
+	FuriosaSmiReturnCodeDeviceBusyError          FuriosaSmiReturnCode = 6
+	FuriosaSmiReturnCodeIoError                  FuriosaSmiReturnCode = 7
+	FuriosaSmiReturnCodePermissionDeniedError    FuriosaSmiReturnCode = 8
+	FuriosaSmiReturnCodeUnknownArchError         FuriosaSmiReturnCode = 9
+	FuriosaSmiReturnCodeIncompatibleDriverError  FuriosaSmiReturnCode = 10
+	FuriosaSmiReturnCodeUnexpectedValueError     FuriosaSmiReturnCode = 11
+	FuriosaSmiReturnCodeParseError               FuriosaSmiReturnCode = 12
+	FuriosaSmiReturnCodeUnknownError             FuriosaSmiReturnCode = 13
+	FuriosaSmiReturnCodeInternalError            FuriosaSmiReturnCode = 14
+	FuriosaSmiReturnCodeUninitializedError       FuriosaSmiReturnCode = 15
+	FuriosaSmiReturnCodeContextError             FuriosaSmiReturnCode = 16
+	FuriosaSmiReturnCodeNotSupportedError        FuriosaSmiReturnCode = 17
 )

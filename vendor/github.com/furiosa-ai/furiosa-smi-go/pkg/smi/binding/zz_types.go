@@ -10,27 +10,26 @@ package binding
 */
 import "C"
 
-type FuriosaSmiObserver C.FuriosaSmiObserver
-
 type FuriosaSmiDeviceHandle uint32
 
 type FuriosaSmiDeviceHandles struct {
-	Count          uint32
-	DeviceHandles  [64]FuriosaSmiDeviceHandle
+	Count         uint32
+	DeviceHandles [64]FuriosaSmiDeviceHandle
 }
 
 type FuriosaSmiVersion struct {
-	Major          uint32
-	Minor          uint32
-	Patch          uint32
-	Metadata       [96]byte
+	Major      uint32
+	Minor      uint32
+	Patch      uint32
+	Metadata   [96]byte
+	Prerelease [96]byte
 }
 
 type FuriosaSmiDeviceInfo struct {
 	Index           uint32
 	Arch            FuriosaSmiArch
 	CoreNum         uint32
-	NumaNode        uint32
+	NumaNode        int32
 	Name            [96]byte
 	Serial          [96]byte
 	Uuid            [96]byte
@@ -38,53 +37,41 @@ type FuriosaSmiDeviceInfo struct {
 	Major           uint16
 	Minor           uint16
 	FirmwareVersion FuriosaSmiVersion
-	PertVersion     FuriosaSmiVersion
 }
 
 type FuriosaSmiDeviceFile struct {
-	CoreStart      uint32
-	CoreEnd        uint32
-	Path           [256]byte
+	CoreStart uint32
+	CoreEnd   uint32
+	Path      [256]byte
 }
 
 type FuriosaSmiDeviceFiles struct {
-	Count          uint32
-	DeviceFiles    [64]FuriosaSmiDeviceFile
+	Count       uint32
+	DeviceFiles [64]FuriosaSmiDeviceFile
 }
 
 type FuriosaSmiPeStatus struct {
-	Core           uint32
-	Status         FuriosaSmiCoreStatus
+	Core   uint32
+	Status FuriosaSmiCoreStatus
 }
 
 type FuriosaSmiCoreStatuses struct {
-	Count          uint32
-	CoreStatus     [128]FuriosaSmiPeStatus
-}
-
-type FuriosaSmiPeUtilization struct {
-	Core              uint32
-	TimeWindowMil     uint32
-	PeUsagePercentage float64
-}
-
-type FuriosaSmiCoreUtilization struct {
-	PeCount        uint32
-	Pe             [64]FuriosaSmiPeUtilization
+	Count      uint32
+	CoreStatus [128]FuriosaSmiPeStatus
 }
 
 type FuriosaSmiPeFrequency struct {
-	Core           uint32
-	Frequency      uint32
+	Core      uint32
+	Frequency uint32
 }
 
 type FuriosaSmiCoreFrequency struct {
-	PeCount        uint32
-	Pe             [64]FuriosaSmiPeFrequency
+	PeCount uint32
+	Pe      [64]FuriosaSmiPeFrequency
 }
 
 type FuriosaSmiMemoryFrequency struct {
-	Frequency      uint32
+	Frequency uint32
 }
 
 type FuriosaSmiPePerformanceCounter struct {
@@ -100,10 +87,69 @@ type FuriosaSmiDevicePerformanceCounter struct {
 }
 
 type FuriosaSmiDevicePowerConsumption struct {
-	RmsTotal       float64
+	RmsTotal float64
 }
 
 type FuriosaSmiDeviceTemperature struct {
-	SocPeak        float64
-	Ambient        float64
+	SocPeak float64
+	Ambient float64
+}
+
+type FuriosaSmiBdf [96]byte
+
+type FuriosaSmiDisabledDevices C.FuriosaSmiDisabledDevices
+
+type FuriosaSmiPcieDeviceInfo struct {
+	DeviceId          uint16
+	SubsystemVendorId uint16
+	SubsystemDeviceId uint16
+	RevisionId        byte
+	ClassId           byte
+	SubClassId        byte
+}
+
+type FuriosaSmiPcieLinkInfo struct {
+	PcieGenStatus          byte
+	LinkWidthStatus        uint32
+	LinkSpeedStatus        float64
+	MaxLinkWidthCapability uint32
+	MaxLinkSpeedCapability float64
+}
+
+type FuriosaSmiSriovInfo struct {
+	SriovTotalVfs   uint32
+	SriovEnabledVfs uint32
+}
+
+type FuriosaSmiPcieRootComplexInfo struct {
+	Domain uint16
+	Bus    byte
+}
+
+type FuriosaSmiPcieSwitchInfo struct {
+	Domain   uint16
+	Bus      byte
+	Device   byte
+	Function byte
+}
+
+type FuriosaSmiThrottleReason uint32
+
+type FuriosaSmiMemoryBlock struct {
+	Count      uint32
+	Core       [64]uint32
+	TotalBytes uint64
+	InUseBytes uint64
+}
+
+type FuriosaSmiMemory struct {
+	Count  uint32
+	Memory [64]FuriosaSmiMemoryBlock
+}
+
+type FuriosaSmiMemoryUtilization struct {
+	Dram        FuriosaSmiMemory
+	DramShared  FuriosaSmiMemory
+	Sram        FuriosaSmiMemory
+	Instruction FuriosaSmiMemory
 }

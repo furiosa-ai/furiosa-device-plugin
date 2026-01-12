@@ -72,6 +72,8 @@ typedef enum {
   FURIOSA_SMI_RETURN_CODE_MAX_BUFFER_SIZE_EXCEED_ERROR,
   /// When a device is not found with the given option.
   FURIOSA_SMI_RETURN_CODE_DEVICE_NOT_FOUND_ERROR,
+  /// When a device is lost.
+  FURIOSA_SMI_RETURN_CODE_DEVICE_LOST_ERROR,
   /// When a device state is busy.
   FURIOSA_SMI_RETURN_CODE_DEVICE_BUSY_ERROR,
   /// When a certain operation is failed by an unexpected io error.
@@ -98,8 +100,6 @@ typedef enum {
   FURIOSA_SMI_RETURN_CODE_NOT_SUPPORTED_ERROR,
 } FuriosaSmiReturnCode;
 
-typedef struct FuriosaSmiObserver FuriosaSmiObserver;
-
 typedef uint32_t FuriosaSmiDeviceHandle;
 
 /// \brief Represent a device handle list in the system.
@@ -114,6 +114,7 @@ typedef struct {
   uint32_t minor;
   uint32_t patch;
   char metadata[FURIOSA_SMI_MAX_CSTR_SIZE];
+  char prerelease[FURIOSA_SMI_MAX_CSTR_SIZE];
 } FuriosaSmiVersion;
 
 /// \brief Represent a device information
@@ -121,7 +122,7 @@ typedef struct {
   uint32_t index;
   FuriosaSmiArch arch;
   uint32_t core_num;
-  uint32_t numa_node;
+  int32_t numa_node;
   char name[FURIOSA_SMI_MAX_CSTR_SIZE];
   char serial[FURIOSA_SMI_MAX_CSTR_SIZE];
   char uuid[FURIOSA_SMI_MAX_CSTR_SIZE];
@@ -129,7 +130,6 @@ typedef struct {
   uint16_t major;
   uint16_t minor;
   FuriosaSmiVersion firmware_version;
-  FuriosaSmiVersion pert_version;
 } FuriosaSmiDeviceInfo;
 
 /// \brief Represent a device file information.
@@ -155,21 +155,6 @@ typedef struct {
   uint32_t count;
   FuriosaSmiPeStatus core_status[FURIOSA_SMI_MAX_CORE_STATUS_SIZE];
 } FuriosaSmiCoreStatuses;
-
-typedef FuriosaSmiObserver *FuriosaSmiObserverInstance;
-
-/// \brief Represent a PE utilization.
-typedef struct {
-  uint32_t core;
-  uint32_t time_window_mil;
-  double pe_usage_percentage;
-} FuriosaSmiPeUtilization;
-
-/// \brief Represent a core utilization.
-typedef struct {
-  uint32_t pe_count;
-  FuriosaSmiPeUtilization pe[FURIOSA_SMI_MAX_PE_SIZE];
-} FuriosaSmiCoreUtilization;
 
 typedef struct {
   uint32_t core;
@@ -211,6 +196,104 @@ typedef struct {
   double soc_peak;
   double ambient;
 } FuriosaSmiDeviceTemperature;
+
+typedef char FuriosaSmiBdf[FURIOSA_SMI_MAX_CSTR_SIZE];
+
+typedef struct {
+  uint32_t count;
+  FuriosaSmiBdf bdfs[FURIOSA_SMI_MAX_DEVICE_HANDLE_SIZE];
+} FuriosaSmiDisabledDevices;
+
+/// \brief Represent a PCIe device information.
+typedef struct {
+  uint16_t device_id;
+  uint16_t subsystem_vendor_id;
+  uint16_t subsystem_device_id;
+  uint8_t revision_id;
+  uint8_t class_id;
+  uint8_t sub_class_id;
+} FuriosaSmiPcieDeviceInfo;
+
+/// \brief Represent a PCIe link information.
+typedef struct {
+  uint8_t pcie_gen_status;
+  uint32_t link_width_status;
+  double link_speed_status;
+  uint32_t max_link_width_capability;
+  double max_link_speed_capability;
+} FuriosaSmiPcieLinkInfo;
+
+/// \brief Represent a SR-IOV information.
+typedef struct {
+  uint32_t sriov_total_vfs;
+  uint32_t sriov_enabled_vfs;
+} FuriosaSmiSriovInfo;
+
+/// \brief Represent a PCIe root complex information.
+typedef struct {
+  uint16_t domain;
+  uint8_t bus;
+} FuriosaSmiPcieRootComplexInfo;
+
+/// \brief Represent a PCIe switch information. If switch doesn't exist, all values are max value.
+typedef struct {
+  uint16_t domain;
+  uint8_t bus;
+  uint8_t device;
+  uint8_t function;
+} FuriosaSmiPcieSwitchInfo;
+
+/// \brief Represent a reason for throttling
+typedef uint32_t FuriosaSmiThrottleReason;
+
+/// \brief Represent a (fusioned) memory information.
+typedef struct {
+  uint32_t count;
+  uint32_t core[FURIOSA_SMI_MAX_PE_SIZE];
+  uint64_t total_bytes;
+  uint64_t in_use_bytes;
+} FuriosaSmiMemoryBlock;
+
+/// \brief Represent a total memory information of NPU.
+typedef struct {
+  uint32_t count;
+  FuriosaSmiMemoryBlock memory[FURIOSA_SMI_MAX_PE_SIZE];
+} FuriosaSmiMemory;
+
+/// \brief Represent a memory utilization of NPU.
+typedef struct {
+  FuriosaSmiMemory dram;
+  FuriosaSmiMemory dram_shared;
+  FuriosaSmiMemory sram;
+  FuriosaSmiMemory instruction;
+} FuriosaSmiMemoryUtilization;
+
+/// Throttling not active
+#define FURIOSA_SMI_THROTTLE_REASON_NONE 0
+
+/// Throttling in idle or unused state
+#define FURIOSA_SMI_THROTTLE_REASON_IDLE (1 << 0)
+
+/// Throttling triggered by high temperature
+#define FURIOSA_SMI_THROTTLE_REASON_THERMAL_SLOWDOWN (1 << 1)
+
+/// Throttling due to host-defined power limit
+#define FURIOSA_SMI_THROTTLE_REASON_APP_POWER_CAP (1 << 2)
+
+/// Throttling due to host-defined clock limit
+#define FURIOSA_SMI_THROTTLE_REASON_APP_CLOCK_CAP (1 << 3)
+
+/// Throttling from device-internal clock limit
+#define FURIOSA_SMI_THROTTLE_REASON_HW_CLOCK_CAP (1 << 4)
+
+/// Throttling from internal bus/NoC bandwidth limit
+#define FURIOSA_SMI_THROTTLE_REASON_HW_BUS_LIMIT (1 << 5)
+
+/// Throttling from device-enforced power limit
+#define FURIOSA_SMI_THROTTLE_REASON_HW_POWER_CAP (1 << 6)
+
+/// Throttling due to other undefined reasons
+#define FURIOSA_SMI_THROTTLE_REASON_OTHER_REASON (1 << 7)
 
 /// @defgroup Initialize Initialize
 /// @brief Initialize module for Furiosa smi.
@@ -327,34 +410,6 @@ FuriosaSmiReturnCode furiosa_smi_get_p2p_accessible(FuriosaSmiDeviceHandle handl
 /// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
 FuriosaSmiReturnCode furiosa_smi_get_driver_info(FuriosaSmiVersion *out_driver_info);
 
-/// @}
-
-/// @defgroup Performance Performance
-/// @brief Performance module for Furiosa smi.
-/// @{
-
-/// @brief Create an observer instance to collect device information
-///
-/// @param[out] out_observer_instance output buffer for pointer to FuriosaSmiObserverInstance.
-/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
-FuriosaSmiReturnCode furiosa_smi_create_observer(FuriosaSmiObserverInstance *out_observer_instance);
-
-/// \brief Destroy the observer instance
-///
-/// @param p_observer_instance pointer to FuriosaSmiObserverInstance to be destroyed.
-/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
-FuriosaSmiReturnCode furiosa_smi_destroy_observer(FuriosaSmiObserverInstance *p_observer_instance);
-
-/// \brief Get a core utilization of Furiosa NPU device.
-///
-/// @param observer_instance valid FuriosaSmiObserverInstance created by furiosa_smi_create_observer.
-/// @param handle handle of Furiosa NPU device.
-/// @param[out] out_utilization_info output buffer for pointer to FuriosaSmiCoreUtilization.
-/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
-FuriosaSmiReturnCode furiosa_smi_get_core_utilization(FuriosaSmiObserverInstance observer_instance,
-                                                      FuriosaSmiDeviceHandle handle,
-                                                      FuriosaSmiCoreUtilization *out_utilization_info);
-
 /// \brief Get a core frequency of Furiosa NPU device.
 ///
 /// @param handle handle of Furiosa NPU device.
@@ -404,13 +459,87 @@ FuriosaSmiReturnCode furiosa_smi_get_device_temperature(FuriosaSmiDeviceHandle h
 FuriosaSmiReturnCode furiosa_smi_get_governor_profile(FuriosaSmiDeviceHandle handle,
                                                       FuriosaSmiGovernorProfile *out_governor_profile);
 
-/// \brief Set a governor state into Furiosa NPU device.
+/// \brief Set a governor state into Furiosa NPU device. This requires root privileges.
 ///
 /// @param handle handle of Furiosa NPU device.
 /// @param[in] governor_profile input buffer for pointer to FuriosaSmiGovernorProfile.
 /// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
 FuriosaSmiReturnCode furiosa_smi_set_governor_profile(FuriosaSmiDeviceHandle handle,
                                                       FuriosaSmiGovernorProfile governor_profile);
+
+/// \brief Bind a Furiosa NPU device. This requires root privileges.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_enable_device(FuriosaSmiDeviceHandle handle);
+
+/// \brief Unbind a Furiosa NPU device. This requires root privileges.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_disable_device(FuriosaSmiDeviceHandle handle);
+
+/// \brief Get a list of disabled Furiosa NPU devices.
+///
+/// @param[out] out_disabled_devices output buffer for pointer to FuriosaSmiDisabledDevices.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_disabled_devices(FuriosaSmiDisabledDevices *out_disabled_devices);
+
+/// \brief Get a PCIe information of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_pcie_device_info output buffer for pointer to FuriosaSmiPcieDeviceInfo.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_pcie_device_info(FuriosaSmiDeviceHandle handle,
+                                                      FuriosaSmiPcieDeviceInfo *out_pcie_device_info);
+
+/// \brief Get a PCIe link information of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_pcie_link_info output buffer for pointer to FuriosaSmiPcieLinkInfo.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_pcie_link_info(FuriosaSmiDeviceHandle handle,
+                                                    FuriosaSmiPcieLinkInfo *out_pcie_link_info);
+
+/// \brief Get a SR-IOV information of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_sriov_info output buffer for pointer to FuriosaSmiSriovInfo.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_sriov_info(FuriosaSmiDeviceHandle handle,
+                                                FuriosaSmiSriovInfo *out_sriov_info);
+
+/// \brief Get a PCIe root complex information of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_root_complex_info output buffer for pointer to FuriosaSmiPcieRootComplexInfo.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_pcie_root_complex_info(FuriosaSmiDeviceHandle handle,
+                                                            FuriosaSmiPcieRootComplexInfo *out_root_complex_info);
+
+/// \brief Get a PCIe switch information of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_pcie_switch_info output buffer for pointer to FuriosaSmiPcieSwitchInfo.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_pcie_switch_info(FuriosaSmiDeviceHandle handle,
+                                                      FuriosaSmiPcieSwitchInfo *out_pcie_switch_info);
+
+/// \brief Get a throttle reason of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_throttle_reason output buffer for pointer to FuriosaSmiThrottleReason.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_throttle_reason(FuriosaSmiDeviceHandle handle,
+                                                     FuriosaSmiThrottleReason *out_throttle_reason);
+
+/// \brief Get a memory utilization of Furiosa NPU device.
+///
+/// @param handle handle of Furiosa NPU device.
+/// @param[out] out_memory_utilization output buffer for pointer to FuriosaSmiMemoryUtilization.
+/// @return FURIOSA_SMI_RETURN_CODE_OK if successful, see `FuriosaSmiReturnCode` for error cases.
+FuriosaSmiReturnCode furiosa_smi_get_memory_utilization(FuriosaSmiDeviceHandle handle,
+                                                        FuriosaSmiMemoryUtilization *out_memory_utilization);
 
 /// @}
 

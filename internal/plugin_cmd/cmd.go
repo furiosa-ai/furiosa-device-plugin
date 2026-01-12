@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/furiosa-ai/furiosa-device-plugin/internal/config"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/server"
 	"github.com/rs/zerolog"
@@ -18,9 +17,10 @@ import (
 )
 
 const (
-	cmdUse     = "furiosa-device-plugin"
-	cmdShort   = "Furiosa Device Plugin for Kubernetes"
-	cmdExample = "furiosa-device-plugin"
+	cmdUse       = "furiosa-device-plugin"
+	cmdShort     = "Furiosa Device Plugin for Kubernetes"
+	cmdExample   = "furiosa-device-plugin"
+	debugModeExp = "debugMode"
 )
 
 func NewDevicePluginCommand() *cobra.Command {
@@ -30,13 +30,17 @@ func NewDevicePluginCommand() *cobra.Command {
 		Example: cmdExample,
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return start(cmd.Context())
+			debugMode, _ := cmd.Flags().GetBool(debugModeExp)
+			return start(cmd.Context(), debugMode)
 		},
 	}
+
+	devicePluginCmd.Flags().Bool(debugModeExp, false, "enable debug logging")
+
 	return devicePluginCmd
 }
 
-func start(ctx context.Context) error {
+func start(ctx context.Context, debugMode bool) error {
 	// create core loop logger
 	logger := zerolog.New(os.Stdout).With().Timestamp().Str("subject", "core_loop").Logger()
 	_ = logger.WithContext(ctx)
@@ -61,49 +65,31 @@ func start(ctx context.Context) error {
 	//grpc server panic listener
 	grpcErrChan := make(chan error, 1)
 
-	confUpdateChan := make(chan *config.ConfigChangeEvent, 1)
-	conf, err := config.GetConfigWithWatcher(config.GlobalConfigMountPath, confUpdateChan)
-	if err != nil {
-		logger.Err(err).Msg("couldn't parse configuration")
-		return err
-	}
-
 	defer func() {
 		logger.Info().Msg("closing channels")
 		_ = fsWatcher.Close()
 		signal.Stop(sigChan)
 		close(sigChan)
 		close(grpcErrChan)
-		close(confUpdateChan)
 	}()
 
-	deviceMap, err := device_manager.BuildDeviceMap()
+	deviceMap, err := device_manager.BuildDeviceMap(logger)
 	if err != nil {
 		logger.Err(err).Msg("couldn't build device-map with device-api")
 		return err
 	}
 
+	var pluginServers []server.PluginServer
+
 	if len(deviceMap) == 0 {
 		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
-		logger.Err(noDeviceError).Msg("no device detected")
+		logger.Err(noDeviceError).Msg("If this is not a NPU node, please deploy this plugin on NPU nodes only by tolerations or nodeSelector.")
 		return noDeviceError
 	}
 
-	partitioningPolicy, err := device_manager.PreparePartitioningPolicy(deviceMap, conf.Partitioning)
-	if err != nil {
-		return err
-	}
-
-	var pluginServers []server.PluginServer
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
-
-		//get disabled Device for the current node
-		nodeName := config.NewNodeNameGetter().GetNodename()
-		disabledDeviceUUIDList := conf.DisabledDeviceUUIDs[nodeName]
-		logger.Info().Msg(fmt.Sprintf("disabled device list for %s: %v", nodeName, disabledDeviceUUIDList))
-
-		deviceManager, err := device_manager.NewDeviceManager(arch, devices, partitioningPolicy, disabledDeviceUUIDList, conf.DebugMode)
+		deviceManager, err := device_manager.NewDeviceManager(arch, devices, debugMode)
 		if err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
 			return err
@@ -114,7 +100,7 @@ func start(ctx context.Context) error {
 		newPluginServerLogger := zerolog.New(os.Stdout).With().Timestamp().Str("subject", "plugin_server_"+deviceManager.ResourceName()).Logger()
 		newPluginServerCtx = newPluginServerLogger.WithContext(newPluginServerCtx)
 
-		pluginServer := server.NewPluginServerWithContext(newPluginServerCtx, newPluginServerCancelFunc, deviceManager, conf)
+		pluginServer := server.NewPluginServerWithContext(newPluginServerCtx, newPluginServerCancelFunc, deviceManager, debugMode)
 		if err = startServerWithContext(newPluginServerCtx, pluginServer, grpcErrChan); err != nil {
 			logger.Err(err).Msg(fmt.Sprintf("couldn't start plugin server for %s", deviceManager.ResourceName()))
 			return err
@@ -140,13 +126,6 @@ Loop:
 			break Loop
 		case grpcErr := <-grpcErrChan:
 			logger.Err(grpcErr).Msg("error received from grpc server error channel")
-			break Loop
-		case confChangedEvent := <-confUpdateChan:
-			if confChangedEvent.IsError {
-				logger.Err(err).Msg(fmt.Sprintf("configuration file %s has been changed: %s, restarting device-plugin", confChangedEvent.Filename, confChangedEvent.Detail))
-			} else {
-				logger.Info().Msg(fmt.Sprintf("failed to watch file %s: %s, restarting device-plugin", confChangedEvent.Filename, confChangedEvent.Detail))
-			}
 			break Loop
 		}
 	}

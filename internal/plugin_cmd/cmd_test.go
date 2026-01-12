@@ -18,7 +18,8 @@ Examples:
 furiosa-device-plugin
 
 Flags:
-  -h, --help   help for furiosa-device-plugin
+      --debugMode   enable debug logging
+  -h, --help        help for furiosa-device-plugin
 `
 )
 
