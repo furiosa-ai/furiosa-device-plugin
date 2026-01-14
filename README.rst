@@ -14,6 +14,27 @@ interface for FuriosaAI NPU devices, and its features are as follows:
 * Tracking the health of the devices and reporting to a Kubernetes cluster.
 * Running AI workload on the top of the Furiosa NPU devices within a Kubernetes cluster.
 
+Request Furiosa NPU Resource in Pod
+----------------------------------------------
+
+The Furiosa NPU can be integrated into the Kubernetes cluster.
+A single NPU card can either be exposed as a single resource.
+The following table shows the expected resource names:
+
+.. note::
+
+.. list-table::
+   :align: center
+   :widths: 200 200 200
+   :header-rows: 1
+
+   * - NPU Configuration
+     - Resource Name
+     - Resource Count Per Card
+   * - ``none``
+     - ``furiosa.ai/rngd``
+     - ``1``
+
 Deploying Furiosa Device Plugin with Helm
 -----------------------------------------
 
@@ -25,7 +46,7 @@ You can deploy the Furiosa Device Plugin by running the following commands:
 
   helm repo add furiosa https://furiosa-ai.github.io/helm-charts
   helm repo update
-  helm install furiosa-device-plugin furiosa/furiosa-device-plugin -n kube-system
+  helm install furiosa-device-plugin furiosa/furiosa-device-plugin -n <namespace>
 
 License
 -------
