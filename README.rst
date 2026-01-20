@@ -39,14 +39,12 @@ The following table shows the expected resource names:
 
 .. list-table::
    :align: center
-   :widths: 200 200 200
+   :widths: 200 200
    :header-rows: 1
 
-   * - NPU Configuration
-     - Resource Name
+   * - Resource Name
      - Resource Count Per Card
-   * - ``none``
-     - ``furiosa.ai/rngd``
+   * - ``furiosa.ai/rngd``
      - ``1``
 
 
