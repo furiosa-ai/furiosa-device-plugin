@@ -25,14 +25,15 @@ You can deploy the Furiosa Device Plugin by running the following commands:
 
   helm repo add furiosa https://furiosa-ai.github.io/helm-charts
   helm repo update
-  helm install furiosa-device-plugin furiosa/furiosa-device-plugin -n <namespace>
+  helm install furiosa-device-plugin furiosa/furiosa-device-plugin -n furiosa-system
 
 
 Request Furiosa NPU Resource in Pod
 ----------------------------------------------
 
-The Furiosa NPU can be integrated into the Kubernetes cluster.
-A single NPU card can either be exposed as a single resource.
+Furiosa NPU devices can be integrated into a Kubernetes cluster.
+Each NPU card is exposed as a single resource.
+
 The following table shows the expected resource names:
 
 .. note::
