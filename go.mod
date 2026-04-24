@@ -4,8 +4,8 @@ go 1.25.4
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/furiosa-ai/furiosa-smi-go v0.6.0
-	github.com/furiosa-ai/libfuriosa-kubernetes v0.2.2
+	github.com/furiosa-ai/furiosa-smi-go v0.6.1-0.20260423053636-b0ca0981e92f // v2026.1.1
+	github.com/furiosa-ai/libfuriosa-kubernetes v0.3.3-0.20260424015900-bb728cf1dc35 // v2026.1.1
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
