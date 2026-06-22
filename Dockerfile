@@ -18,12 +18,11 @@ RUN set -e; \
         *) echo >&2 "unsupported architecture: $TARGETARCH"; exit 1 ;; \
     esac; \
     mkdir -p /staging/usr/lib/$libDir; \
-    cp /usr/lib/$libDir/libfuriosa_smi.so /staging/usr/lib/$libDir/; \
-    cp /usr/lib/$libDir/libgcc_s.so.1     /staging/usr/lib/$libDir/
+    cp /usr/lib/$libDir/libfuriosa_smi.so /staging/usr/lib/$libDir/libfuriosa_smi.so; \
+    cp /usr/lib/$libDir/libgcc_s.so.1     /staging/usr/lib/$libDir/libgcc_s.so.1
 
 FROM gcr.io/distroless/base-debian12:latest
 
-# Copy device plugin binary
 WORKDIR /
 
 # Arch-specific dynamic libs (libfuriosa_smi + Rust libgcc_s), landed in the
