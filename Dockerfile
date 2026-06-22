@@ -11,7 +11,7 @@ RUN make build
 # Stage arch-specific runtime libs under their final path so the distroless
 # stage (no shell) can copy them verbatim. Below dynamic libraries are required
 # due to `furiosa-smi` and Rust dependencies.
-RUN set -eux; \
+RUN set -e; \
     case "$TARGETARCH" in \
         amd64) libDir='x86_64-linux-gnu' ;; \
         arm64) libDir='aarch64-linux-gnu' ;; \
