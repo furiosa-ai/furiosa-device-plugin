@@ -35,6 +35,8 @@ LABEL name="furiosa-device-plugin" \
       io.k8s.display-name="furiosa-device-plugin" \
       io.k8s.description="k8s device plugin for rngd devices"
 
+RUN dnf update -y openssl openssl-libs glib2 && dnf clean all
+
 WORKDIR /
 
 COPY --from=build /staging/ /

@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.ubi
           platforms: ${{ matrix.platform }}
           outputs: type=image,name=${{ env.REGISTRY_URL }}/${{ env.REGISTRY_PATH }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
 
