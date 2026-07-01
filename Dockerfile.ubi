@@ -1,0 +1,60 @@
+ARG BASE_IMAGE=asia-northeast3-docker.pkg.dev/next-gen-infra/furiosa-ai/libfuriosa-kubernetes:v2026.1.1
+
+FROM $BASE_IMAGE as build
+ARG TARGETARCH
+
+# Build device-plugin binary
+WORKDIR /
+COPY . /
+RUN make build
+
+# Stage arch-specific runtime libs under their final path so the distroless
+# stage (no shell) can copy them verbatim. Below dynamic libraries are required
+# due to `furiosa-smi` and Rust dependencies.
+RUN set -e; \
+    case "$TARGETARCH" in \
+        amd64) libDir='x86_64-linux-gnu' ;; \
+        arm64) libDir='aarch64-linux-gnu' ;; \
+        *) echo >&2 "unsupported architecture: $TARGETARCH"; exit 1 ;; \
+    esac; \
+    mkdir -p /staging/usr/lib/$libDir; \
+    cp /usr/lib/$libDir/libfuriosa_smi.so /staging/usr/lib/$libDir/libfuriosa_smi.so; \
+    cp /usr/lib/$libDir/libgcc_s.so.1     /staging/usr/lib/$libDir/libgcc_s.so.1
+
+FROM registry.access.redhat.com/ubi9/ubi:9.8
+ARG TARGETARCH
+
+LABEL name="furiosa-device-plugin" \
+      vendor="FuriosaAI, Inc." \
+      version="2026.1.1" \
+      release="1" \
+      summary="k8s device plugin for rngd devices" \
+      description="device plugin for using rngd device on k8s" \
+      maintainer="FuriosaAI Cloud Native Team <sw-devops@furiosa.ai>" \
+      io.openshift.tags="npu,furiosa,rngd,ai,accelerator,inference" \
+      io.k8s.display-name="furiosa-device-plugin" \
+      io.k8s.description="k8s device plugin for rngd devices"
+
+RUN dnf update -y openssl openssl-libs glib2 && dnf clean all
+
+WORKDIR /
+
+COPY --from=build /staging/ /
+COPY --from=build /main /main
+
+COPY LICENSE.txt /licenses/LICENSE.txt
+
+RUN set -e; \
+    case "$TARGETARCH" in \
+        amd64) libDir='x86_64-linux-gnu' ;; \
+        arm64) libDir='aarch64-linux-gnu' ;; \
+        *) echo >&2 "unsupported architecture: $TARGETARCH"; exit 1 ;; \
+    esac; \
+    chmod -R 755 /usr/lib/$libDir/; \
+    echo "/usr/lib/$libDir" > /etc/ld.so.conf.d/furiosa.conf; \
+    ldconfig
+
+RUN setcap cap_dac_override=ep /main && getcap /main
+
+USER 1001
+CMD ["./main"]
