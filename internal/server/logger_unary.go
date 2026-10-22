@@ -10,7 +10,7 @@ import (
 )
 
 func NewGrpcLoggerUnaryInterceptor(pluginServerCtx context.Context, debugMode bool) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		timestamp := time.Now()
 		logger := zerolog.Ctx(pluginServerCtx)
 
@@ -29,7 +29,7 @@ func NewGrpcLoggerUnaryInterceptor(pluginServerCtx context.Context, debugMode bo
 	}
 }
 
-func getNewErrorEventUnaryLogger(logger *zerolog.Logger, time time.Time, req interface{}, info *grpc.UnaryServerInfo, err error) *zerolog.Event {
+func getNewErrorEventUnaryLogger(logger *zerolog.Logger, time time.Time, req any, info *grpc.UnaryServerInfo, err error) *zerolog.Event {
 	statusErr := status.Convert(err)
 	event := logger.Err(err).Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod).Str("error_code", statusErr.Code().String()).Str("msg", statusErr.Message()).Interface("details", statusErr.Details())
 
@@ -40,7 +40,7 @@ func getNewErrorEventUnaryLogger(logger *zerolog.Logger, time time.Time, req int
 	return event
 }
 
-func getNewDebugEventUnaryLogger(logger *zerolog.Logger, time time.Time, req interface{}, info *grpc.UnaryServerInfo, resp interface{}) *zerolog.Event {
+func getNewDebugEventUnaryLogger(logger *zerolog.Logger, time time.Time, req any, info *grpc.UnaryServerInfo, resp any) *zerolog.Event {
 	event := logger.Debug().Time(zerolog.TimestampFieldName, time).Str("method", info.FullMethod)
 
 	if raw := getRawJSON(req); raw != nil {

@@ -117,19 +117,34 @@ func (p *PluginServer) StartWithContext(ctx context.Context, grpcErrChan chan er
 
 	_ = conn.Close()
 
-	// start health check loop
+	// start device sync and health check loop
 	logger.Info().Msg(fmt.Sprintf("start health check loop for the resource %s", p.deviceManager.ResourceName()))
 
 	//TODO(@bg): parse duration from configuration
 	go wait.UntilWithContext(ctx, func(ctx context.Context) {
 		healthCheckLogger := zerolog.Ctx(ctx)
 
+		changed, syncErr := p.deviceManager.SyncDevices()
+		if syncErr != nil {
+			healthCheckLogger.Warn().Err(syncErr).Msg("couldn't re-enumerate devices, keeping the previous device set")
+		}
+
+		if changed {
+			healthCheckLogger.Info().Msg(fmt.Sprintf("device set changed: %s", strings.Join(p.deviceManager.Devices(), ", ")))
+		}
+
 		healthCheckErr := p.deviceManager.HealthCheck()
 		if healthCheckErr != nil {
 			healthCheckLogger.Err(healthCheckErr).Msg("device health check fail")
 		}
 
-		p.deviceHealthCheckChan <- healthCheckErr
+		// ticks coalesce when no ListAndWatch stream is consuming; the consumer
+		// always re-reads the full current device list, so nothing is lost.
+		select {
+		case p.deviceHealthCheckChan <- healthCheckErr:
+
+		default:
+		}
 	}, 5*time.Second)
 
 	return nil
@@ -237,6 +252,6 @@ func NewPluginServerWithContext(ctx context.Context, cancelFunc context.CancelFu
 			grpc.StreamInterceptor(NewGrpcLoggerStreamInterceptor(ctx, debugMode)),
 			grpc.UnaryInterceptor(NewGrpcLoggerUnaryInterceptor(ctx, debugMode)),
 		),
-		deviceHealthCheckChan: make(chan error),
+		deviceHealthCheckChan: make(chan error, 1),
 	}
 }

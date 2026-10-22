@@ -1,8 +1,10 @@
 package device_manager
 
 import (
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/cdi_spec_gen"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
+	"slices"
+
+	"github.com/furiosa-ai/furiosa-cdi/pkg/cdi_spec_gen"
+	"github.com/furiosa-ai/furiosa-cdi/pkg/furiosa_device"
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	"tags.cncf.io/container-device-interface/specs-go"
 )
@@ -56,10 +58,5 @@ func transformMounts(devices []specs.Device) []*devicePluginAPIv1Beta1.Mount {
 }
 
 func optsToReadOnly(opts []string) bool {
-	for _, opt := range opts {
-		if opt == readOnlyOpt {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(opts, readOnlyOpt)
 }

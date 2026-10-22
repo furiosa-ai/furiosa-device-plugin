@@ -14,7 +14,7 @@ var (
 	bdfRegExp = regexp.MustCompile(bdfPattern)
 )
 
-func parseBusIDfromBDF(bdf string) (string, error) {
+func parseBusIDFromBDF(bdf string) (string, error) {
 	matches := bdfRegExp.FindStringSubmatch(bdf)
 	if matches == nil {
 		return "", fmt.Errorf("couldn't parse the given string %s with bdf regex pattern: %s", bdf, bdfPattern)

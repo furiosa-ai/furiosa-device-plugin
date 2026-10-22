@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/api"
 	"k8s.io/apimachinery/pkg/api/validation"
 )
 
@@ -13,11 +13,11 @@ const (
 	fullResourceExp = "%s/%s"
 )
 
-func buildResourceEndpointName(arch smi.Arch) string {
-	return strings.ToLower(arch.ToString())
+func buildResourceEndpointName(arch api.Arch) string {
+	return strings.ToLower(arch.String())
 }
 
-func buildAndValidateFullResourceEndpointName(arch smi.Arch) (string, error) {
+func buildAndValidateFullResourceEndpointName(arch api.Arch) (string, error) {
 	endpointName := buildResourceEndpointName(arch)
 	errs := validation.NameIsDNSSubdomain(endpointName, false)
 	if len(errs) != 0 {

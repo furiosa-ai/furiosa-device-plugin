@@ -1,19 +1,23 @@
 package device_manager
 
 import (
+	"os"
+	"path/filepath"
+	"slices"
 	"testing"
 
-	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/furiosa-ai/furiosa-cdi/pkg/furiosa_device"
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/npu_allocator"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/api"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/api/apitest"
 	"github.com/stretchr/testify/assert"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device.FuriosaDevice) {
+func MockFuriosaDevices(t *testing.T, mockDevices []api.Device) (ret map[string]furiosa_device.FuriosaDevice) {
 	if len(mockDevices) == 0 {
-		mockDevices = smi.GetStaticMockDevices(smi.ArchRngd)
+		mockDevices = apitest.StaticRNGDDevices(t)
 	}
 
 	ret = make(map[string]furiosa_device.FuriosaDevice, len(mockDevices))
@@ -27,19 +31,18 @@ func MockFuriosaDevices(mockDevices []smi.Device) (ret map[string]furiosa_device
 }
 
 func TestFetchByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
+	mockDevices := apitest.StaticRNGDDevices(t)
 	var seedUUID []string
 
-	for i, mockDevice := range mockDevices {
+	for i := range mockDevices {
 		if i == 2 {
 			break
 		}
 
-		info, _ := mockDevice.DeviceInfo()
-		seedUUID = append(seedUUID, info.UUID())
+		seedUUID = append(seedUUID, mockDevices[i].UUID())
 	}
 
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+	mockFuriosaDevices := MockFuriosaDevices(t, mockDevices)
 	actual, err := fetchByID(mockFuriosaDevices, seedUUID)
 	assert.NoError(t, err)
 
@@ -52,15 +55,14 @@ func TestFetchByID(t *testing.T) {
 }
 
 func TestFetchDevicesByID(t *testing.T) {
-	mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
+	mockDevices := apitest.StaticRNGDDevices(t)
 	var seedUUID []string
 
-	for _, mockDevice := range mockDevices {
-		info, _ := mockDevice.DeviceInfo()
-		seedUUID = append(seedUUID, info.UUID())
+	for i := range mockDevices {
+		seedUUID = append(seedUUID, mockDevices[i].UUID())
 	}
 
-	mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+	mockFuriosaDevices := MockFuriosaDevices(t, mockDevices)
 	actual, err := fetchDevicesByID(mockFuriosaDevices, seedUUID)
 	assert.NoError(t, err)
 
@@ -100,8 +102,6 @@ func staticMockTopologyHintProvider() npu_allocator.TopologyHintProvider {
 		return 0
 	}
 }
-
-// TODO(@bg): Add test for bin packing allocator once it is ready.
 
 func prefix(prefix string, origin []string) []string {
 	var ret []string
@@ -299,8 +299,8 @@ func TestGetContainerPreferredAllocationResponseWithScoreBasedOptimalNpuAllocato
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
-			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			mockDevices := apitest.StaticRNGDDevices(t)
+			mockFuriosaDevices := MockFuriosaDevices(t, mockDevices)
 			allocator, _ := npu_allocator.NewMockScoreBasedOptimalNpuAllocator(staticMockTopologyHintProvider())
 			mockDeviceManager := &deviceManager{
 				origin:         mockDevices,
@@ -350,28 +350,8 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe1",
-						HostPath:      "/dev/rngd/npu0pe1",
-						Permissions:   "rw",
-					},
-					{
 						ContainerPath: "/dev/rngd/npu0pe0-1",
 						HostPath:      "/dev/rngd/npu0pe0-1",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/rngd/npu0pe2",
-						HostPath:      "/dev/rngd/npu0pe2",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/rngd/npu0pe3",
-						HostPath:      "/dev/rngd/npu0pe3",
-						Permissions:   "rw",
-					},
-					{
-						ContainerPath: "/dev/rngd/npu0pe2-3",
-						HostPath:      "/dev/rngd/npu0pe2-3",
 						Permissions:   "rw",
 					},
 					{
@@ -380,13 +360,28 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe4",
-						HostPath:      "/dev/rngd/npu0pe4",
+						ContainerPath: "/dev/rngd/npu0pe1",
+						HostPath:      "/dev/rngd/npu0pe1",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe5",
-						HostPath:      "/dev/rngd/npu0pe5",
+						ContainerPath: "/dev/rngd/npu0pe2",
+						HostPath:      "/dev/rngd/npu0pe2",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0pe2-3",
+						HostPath:      "/dev/rngd/npu0pe2-3",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0pe3",
+						HostPath:      "/dev/rngd/npu0pe3",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0pe4",
+						HostPath:      "/dev/rngd/npu0pe4",
 						Permissions:   "rw",
 					},
 					{
@@ -395,13 +390,18 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe6",
-						HostPath:      "/dev/rngd/npu0pe6",
+						ContainerPath: "/dev/rngd/npu0pe4-7",
+						HostPath:      "/dev/rngd/npu0pe4-7",
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe7",
-						HostPath:      "/dev/rngd/npu0pe7",
+						ContainerPath: "/dev/rngd/npu0pe5",
+						HostPath:      "/dev/rngd/npu0pe5",
+						Permissions:   "rw",
+					},
+					{
+						ContainerPath: "/dev/rngd/npu0pe6",
+						HostPath:      "/dev/rngd/npu0pe6",
 						Permissions:   "rw",
 					},
 					{
@@ -410,8 +410,8 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 						Permissions:   "rw",
 					},
 					{
-						ContainerPath: "/dev/rngd/npu0pe4-7",
-						HostPath:      "/dev/rngd/npu0pe4-7",
+						ContainerPath: "/dev/rngd/npu0pe7",
+						HostPath:      "/dev/rngd/npu0pe7",
 						Permissions:   "rw",
 					},
 					{
@@ -525,8 +525,8 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			mockDevices := smi.GetStaticMockDevices(smi.ArchRngd)
-			mockFuriosaDevices := MockFuriosaDevices(mockDevices)
+			mockDevices := apitest.StaticRNGDDevices(t)
+			mockFuriosaDevices := MockFuriosaDevices(t, mockDevices)
 			mockDeviceManager := &deviceManager{
 				origin:         mockDevices,
 				furiosaDevices: mockFuriosaDevices,
@@ -545,4 +545,103 @@ func TestGetContainerAllocateResponseForRNGD(t *testing.T) {
 			assert.Equal(t, tc.expectedResult, actualResult)
 		})
 	}
+}
+
+func TestDeviceManagerSyncDevices(t *testing.T) {
+	mockDir := t.TempDir()
+	apitest.SetMockRoot(t, mockDir)
+	spec := apitest.StaticRNGDSpec()
+	apitest.Build(t, apitest.MockSpec{Devices: spec.Devices[:7]})
+
+	deviceMap, err := BuildDeviceMap()
+	assert.NoError(t, err)
+	assert.Len(t, deviceMap[api.ArchRNGD], 7)
+
+	manager, err := NewDeviceManager(api.ArchRNGD, deviceMap[api.ArchRNGD], false)
+	assert.NoError(t, err)
+	assert.Len(t, manager.Devices(), 7)
+
+	apitest.Build(t, apitest.MockSpec{Devices: spec.Devices[7:]})
+
+	changed, err := manager.SyncDevices()
+	assert.NoError(t, err)
+	assert.True(t, changed)
+	assert.Len(t, manager.Devices(), 8)
+	assert.Len(t, manager.GetListAndWatchResponse().Devices, 8)
+
+	changed, err = manager.SyncDevices()
+	assert.NoError(t, err)
+	assert.False(t, changed)
+	assert.Len(t, manager.Devices(), 8)
+
+	// Removing every management entry leaves the PCI entries in place, so ListDevices
+	// returns an empty slice rather than an error: the device set becomes empty.
+	assert.NoError(t, os.RemoveAll(filepath.Join(mockDir, "sys/class/rngd_mgmt")))
+
+	changed, err = manager.SyncDevices()
+	assert.NoError(t, err)
+	assert.True(t, changed)
+	assert.Empty(t, manager.Devices())
+	assert.Empty(t, manager.GetListAndWatchResponse().Devices)
+
+	changed, err = manager.SyncDevices()
+	assert.NoError(t, err)
+	assert.False(t, changed)
+}
+
+func TestNewDeviceManagerWithoutDevices(t *testing.T) {
+	manager, err := NewDeviceManager(api.ArchRNGD, nil, false)
+	assert.NoError(t, err)
+	assert.Equal(t, "furiosa.ai/rngd", manager.ResourceName())
+	assert.Empty(t, manager.Devices())
+	assert.Empty(t, manager.GetListAndWatchResponse().Devices)
+	assert.NoError(t, manager.HealthCheck())
+}
+
+func assertIndexOrdered(t *testing.T, devices []api.Device, expected []api.Device) {
+	t.Helper()
+
+	assert.Len(t, devices, len(expected))
+	for i := range devices {
+		assert.Equal(t, uint8(i), devices[i].DevNodeIndex())
+		assert.Equal(t, expected[i].UUID(), devices[i].UUID())
+	}
+}
+
+// TestSortDevices must not call t.Parallel(): it installs a process-global mock root.
+func TestSortDevices(t *testing.T) {
+	ordered := apitest.StaticRNGDDevices(t)
+
+	reversed := slices.Clone(ordered)
+	slices.Reverse(reversed)
+
+	permuted := make([]api.Device, 0, len(ordered))
+	for _, i := range []int{3, 0, 7, 1, 6, 2, 5, 4} {
+		permuted = append(permuted, ordered[i])
+	}
+
+	tests := []struct {
+		description string
+		devices     []api.Device
+	}{
+		{description: "already sorted", devices: slices.Clone(ordered)},
+		{description: "reversed", devices: reversed},
+		{description: "permuted", devices: permuted},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			sortDevices(tc.devices)
+			assertIndexOrdered(t, tc.devices, ordered)
+		})
+	}
+}
+
+// TestBuildDeviceMapIsSorted must not call t.Parallel(): it installs a process-global mock root.
+func TestBuildDeviceMapIsSorted(t *testing.T) {
+	ordered := apitest.StaticRNGDDevices(t)
+
+	deviceMap, err := BuildDeviceMap()
+	assert.NoError(t, err)
+	assertIndexOrdered(t, deviceMap[api.ArchRNGD], ordered)
 }

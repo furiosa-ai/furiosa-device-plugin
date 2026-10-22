@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/device_manager"
 	"github.com/furiosa-ai/furiosa-device-plugin/internal/server"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/api"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -73,7 +74,7 @@ func start(ctx context.Context, debugMode bool) error {
 		close(grpcErrChan)
 	}()
 
-	deviceMap, err := device_manager.BuildDeviceMap(logger)
+	deviceMap, err := device_manager.BuildDeviceMap()
 	if err != nil {
 		logger.Err(err).Msg("couldn't build device-map with device-api")
 		return err
@@ -81,17 +82,18 @@ func start(ctx context.Context, debugMode bool) error {
 
 	var pluginServers []server.PluginServer
 
+	// Start the RNGD server even with no device enumerated yet: the device manager
+	// re-enumerates every few seconds and advertises devices that appear later.
 	if len(deviceMap) == 0 {
-		noDeviceError := fmt.Errorf("couldn't recognize any furiosa devices")
-		logger.Err(noDeviceError).Msg("If this is not a NPU node, please deploy this plugin on NPU nodes only by tolerations or nodeSelector.")
-		return noDeviceError
+		logger.Warn().Msg("no devices enumerated at startup, serving an empty device list until devices appear")
+		deviceMap[api.ArchRNGD] = nil
 	}
 
 	for arch, devices := range deviceMap {
 		//FIXME(@bg): handle unknown arch case
 		deviceManager, err := device_manager.NewDeviceManager(arch, devices, debugMode)
 		if err != nil {
-			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.ToString()))
+			logger.Err(err).Msg(fmt.Sprintf("couldn't initialize device manager for %s arch", arch.String()))
 			return err
 		}
 		logger.Info().Msg(fmt.Sprintf("starting new plugin server for %s", deviceManager.ResourceName()))

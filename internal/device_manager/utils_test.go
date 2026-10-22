@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseBusIDfromBDF(t *testing.T) {
+func TestParseBusIDFromBDF(t *testing.T) {
 	tests := []struct {
 		description    string
 		bdf            string
@@ -35,7 +35,7 @@ func TestParseBusIDfromBDF(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			actualResult, actualErr := parseBusIDfromBDF(tc.bdf)
+			actualResult, actualErr := parseBusIDFromBDF(tc.bdf)
 			if tc.expectedError {
 				assert.Error(t, actualErr)
 			} else {

@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func getRawJSON(i interface{}) []byte {
+func getRawJSON(i any) []byte {
 	switch msg := i.(type) {
 	case proto.Message:
 		marshaled, err := protojson.Marshal(msg)

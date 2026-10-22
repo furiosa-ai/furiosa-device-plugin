@@ -3,12 +3,13 @@ package device_manager
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	devicePluginAPIv1Beta1 "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
-	"github.com/furiosa-ai/furiosa-smi-go/pkg/smi"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/furiosa_device"
-	"github.com/furiosa-ai/libfuriosa-kubernetes/pkg/npu_allocator"
+	"github.com/furiosa-ai/furiosa-cdi/pkg/furiosa_device"
+	"github.com/furiosa-ai/furiosa-device-plugin/internal/npu_allocator"
+	"github.com/furiosa-ai/furiosa-smi-go/pkg/api"
 )
 
 type DeviceManager interface {
@@ -19,20 +20,34 @@ type DeviceManager interface {
 	GetListAndWatchResponse() *devicePluginAPIv1Beta1.ListAndWatchResponse
 	GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error)
 	GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error)
+	SyncDevices() (changed bool, err error)
 }
 
 var _ DeviceManager = (*deviceManager)(nil)
 
 type deviceManager struct {
-	origin         []smi.Device
+	sync.RWMutex
+
+	arch           api.Arch
+	origin         []api.Device
 	furiosaDevices map[string]furiosa_device.FuriosaDevice
 	resourceName   string
 	debugMode      bool
 	allocator      npu_allocator.NpuAllocator
 }
 
+// snapshot returns the current device set; SyncDevices replaces the map and
+// the allocator wholesale, so callers can use them without holding the lock.
+func (d *deviceManager) snapshot() (map[string]furiosa_device.FuriosaDevice, npu_allocator.NpuAllocator) {
+	d.RLock()
+	defer d.RUnlock()
+
+	return d.furiosaDevices, d.allocator
+}
+
 func (d *deviceManager) Devices() (ret []string) {
-	for id := range d.furiosaDevices {
+	furiosaDevices, _ := d.snapshot()
+	for id := range furiosaDevices {
 		ret = append(ret, id)
 	}
 
@@ -40,7 +55,8 @@ func (d *deviceManager) Devices() (ret []string) {
 }
 
 func (d *deviceManager) HealthCheck() error {
-	for _, dev := range d.furiosaDevices {
+	furiosaDevices, _ := d.snapshot()
+	for _, dev := range furiosaDevices {
 		healthy, err := dev.IsHealthy()
 		if err != nil {
 			return err
@@ -61,8 +77,9 @@ func (d *deviceManager) Contains(deviceIDs []string) (bool, []string) {
 		return false, nil
 	}
 
+	furiosaDevices, _ := d.snapshot()
 	for _, id := range deviceIDs {
-		if _, ok := d.furiosaDevices[id]; !ok {
+		if _, ok := furiosaDevices[id]; !ok {
 			missing = append(missing, id)
 		}
 	}
@@ -107,18 +124,19 @@ func fetchDevicesByID(furiosaDevices map[string]furiosa_device.FuriosaDevice, ID
 }
 
 func (d *deviceManager) GetContainerPreferredAllocationResponse(available []string, required []string, request int) (*devicePluginAPIv1Beta1.ContainerPreferredAllocationResponse, error) {
-	availableDevices, err := fetchDevicesByID(d.furiosaDevices, available)
+	furiosaDevices, allocator := d.snapshot()
+	availableDevices, err := fetchDevicesByID(furiosaDevices, available)
 	if err != nil {
 		return nil, err
 	}
 
-	requiredDevices, err := fetchDevicesByID(d.furiosaDevices, required)
+	requiredDevices, err := fetchDevicesByID(furiosaDevices, required)
 	if err != nil {
 		return nil, err
 	}
 
 	var allocated []string
-	allocatedDeviceSet := d.allocator.Allocate(npu_allocator.NewDeviceSet(availableDevices...), npu_allocator.NewDeviceSet(requiredDevices...), request)
+	allocatedDeviceSet := allocator.Allocate(npu_allocator.NewDeviceSet(availableDevices...), npu_allocator.NewDeviceSet(requiredDevices...), request)
 	for _, allocatedDevice := range allocatedDeviceSet.Devices() {
 		allocated = append(allocated, allocatedDevice.ID())
 	}
@@ -129,7 +147,8 @@ func (d *deviceManager) GetContainerPreferredAllocationResponse(available []stri
 }
 
 func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devicePluginAPIv1Beta1.ContainerAllocateResponse, error) {
-	deviceRequests, err := fetchByID(d.furiosaDevices, deviceIDs)
+	furiosaDevices, _ := d.snapshot()
+	deviceRequests, err := fetchByID(furiosaDevices, deviceIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +165,8 @@ func (d *deviceManager) GetContainerAllocateResponse(deviceIDs []string) (*devic
 func (d *deviceManager) GetListAndWatchResponse() *devicePluginAPIv1Beta1.ListAndWatchResponse {
 	var resp []*devicePluginAPIv1Beta1.Device
 
-	for _, dev := range d.furiosaDevices {
+	furiosaDevices, _ := d.snapshot()
+	for _, dev := range furiosaDevices {
 		var health = devicePluginAPIv1Beta1.Healthy
 		isHealthy, err := dev.IsHealthy()
 		if err != nil || !isHealthy {
@@ -175,20 +195,68 @@ func (d *deviceManager) ResourceName() string {
 	return d.resourceName
 }
 
-func NewDeviceManager(arch smi.Arch, devices []smi.Device, debugMode bool) (DeviceManager, error) {
-	resName, err := buildAndValidateFullResourceEndpointName(arch)
+// SyncDevices re-enumerates the devices of the manager's arch and replaces the
+// device set when it differs from the current one. An enumeration error keeps
+// the current set; an empty result replaces it with an empty set.
+func (d *deviceManager) SyncDevices() (changed bool, err error) {
+	deviceMap, err := BuildDeviceMap()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
+	d.RLock()
+	origin := d.origin
+	d.RUnlock()
+
+	devices := deviceMap[d.arch]
+	if sameDevices(origin, devices) {
+		return false, nil
+	}
+
+	furiosaDevices, allocator, err := buildDeviceSet(devices)
+	if err != nil {
+		return false, err
+	}
+
+	d.Lock()
+	defer d.Unlock()
+
+	d.origin = devices
+	d.furiosaDevices = furiosaDevices
+	d.allocator = allocator
+
+	return true, nil
+}
+
+// sameDevices reports whether a and b enumerate the same devices in the same
+// order. Both must come from BuildDeviceMap, which sorts them. Device files are
+// not compared: CDI specs are rendered on every call.
+func sameDevices(a, b []api.Device) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i].DeviceName() != b[i].DeviceName() ||
+			a[i].UUID() != b[i].UUID() ||
+			a[i].BDF().String() != b[i].BDF().String() ||
+			a[i].NUMANode() != b[i].NUMANode() {
+			return false
+		}
+	}
+
+	return true
+}
+
+func buildDeviceSet(devices []api.Device) (map[string]furiosa_device.FuriosaDevice, npu_allocator.NpuAllocator, error) {
 	furiosaDevices, err := furiosa_device.NewFuriosaDevices(devices, nil, furiosa_device.NonePolicy)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	allocator, err := npu_allocator.NewScoreBasedOptimalNpuAllocator(devices)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	furiosaDevicesMap := map[string]furiosa_device.FuriosaDevice{}
@@ -196,9 +264,24 @@ func NewDeviceManager(arch smi.Arch, devices []smi.Device, debugMode bool) (Devi
 		furiosaDevicesMap[d.DeviceID()] = d
 	}
 
+	return furiosaDevicesMap, allocator, nil
+}
+
+func NewDeviceManager(arch api.Arch, devices []api.Device, debugMode bool) (DeviceManager, error) {
+	resName, err := buildAndValidateFullResourceEndpointName(arch)
+	if err != nil {
+		return nil, err
+	}
+
+	furiosaDevices, allocator, err := buildDeviceSet(devices)
+	if err != nil {
+		return nil, err
+	}
+
 	return &deviceManager{
+		arch:           arch,
 		origin:         devices,
-		furiosaDevices: furiosaDevicesMap,
+		furiosaDevices: furiosaDevices,
 		resourceName:   resName,
 		debugMode:      debugMode,
 		allocator:      allocator,

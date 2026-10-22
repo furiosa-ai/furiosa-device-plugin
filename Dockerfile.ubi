@@ -1,0 +1,35 @@
+FROM golang:1.27.2-bookworm AS builder
+
+WORKDIR /workspace
+COPY . .
+
+# Build device-plugin binary
+RUN CGO_ENABLED=0 go build -o /main cmd/main.go
+
+FROM registry.access.redhat.com/ubi10/ubi:10.0
+ARG IMAGE_VERSION
+ARG IMAGE_RELEASE=1
+
+LABEL name="furiosa-device-plugin" \
+      vendor="FuriosaAI, Inc." \
+      version="${IMAGE_VERSION}" \
+      release="${IMAGE_RELEASE}" \
+      summary="k8s device plugin for rngd devices" \
+      description="device plugin for using rngd device on k8s" \
+      maintainer="FuriosaAI Cloud Native Team <sw-devops@furiosa.ai>" \
+      io.openshift.tags="npu,furiosa,rngd,ai,accelerator,inference" \
+      io.k8s.display-name="furiosa-device-plugin" \
+      io.k8s.description="k8s device plugin for rngd devices"
+
+RUN dnf update -y openssl openssl-libs glib2 libcap krb5-libs && dnf clean all
+
+WORKDIR /
+
+COPY --from=builder /main /main
+
+COPY LICENSE.txt /licenses/LICENSE.txt
+
+RUN setcap cap_dac_override=ep /main && getcap /main
+
+USER 1001
+CMD ["./main"]
